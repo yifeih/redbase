@@ -26,6 +26,7 @@
 // RM_Record: RM Record interface
 //
 class RM_Record {
+    static const int INVALID_RECORD_SIZE = -1;
 public:
     RM_Record ();
     ~RM_Record();
@@ -36,6 +37,11 @@ public:
 
     // Return the RID associated with the record
     RC GetRid (RID &rid) const;
+    RC SetRecord (RID rec_rid, char *recData, int size);
+private:
+    RID rid;
+    char * data;
+    int size;
 };
 
 //
@@ -57,6 +63,12 @@ public:
     // Forces a page (along with any contents stored in this class)
     // from the buffer pool to disk.  Default value forces all pages.
     RC ForcePages (PageNum pageNum = ALL_PAGES);
+private:
+    RC AllocateNewPage();
+    RC FindFreeRec(PageNum pageNum);
+    struct RM_FileHeader *header;
+    PF_FileHandle *pfh;
+    bool header_modified;
 };
 
 //
@@ -91,11 +103,27 @@ public:
     RC OpenFile   (const char *fileName, RM_FileHandle &fileHandle);
 
     RC CloseFile  (RM_FileHandle &fileHandle);
+private:
+    RC SetUpFileHeader();
 };
 
 //
 // Print-error function
 //
 void RM_PrintError(RC rc);
+
+#define RM_INVALIDRID           (START_RM_WARN + 0)
+#define RM_BADRECORDSIZE        (START_RM_WARN + 1) // record size is invalid
+#define RM_INVALIDRECORD        (START_RM_WARN + 2)
+#define RM_INVALIDBITNUM        (START_RM_WARN + 3)
+#define RM_NORESETBITS          (START_RM_WARN + 4)
+#define RM_INVALIDFILE          (START_RM_WARN + 5)
+#define RM_EOF                  (START_RM_WARN + 6) // end of file 
+#define RM_LASTWARN             RM_EOF
+
+#define RM_ERROR                (START_RM_ERR - 0) // error
+#define RM_LASTERROR            RM_ERROR
+
+
 
 #endif

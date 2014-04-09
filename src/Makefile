@@ -36,13 +36,14 @@ STATS_OPTION   = -DPF_STATS
 PF_SOURCES     = pf_buffermgr.cc pf_error.cc pf_filehandle.cc \
                  pf_pagehandle.cc pf_hashtable.cc pf_manager.cc \
                  pf_statistics.cc statistics.cc
-RM_SOURCES     =
+RM_SOURCES     = rm_manager.cc rm_filehandle.cc rm_record.cc \
+                 rm_filescan.cc rm_error.cc rm_rid.cc rm_recbitmap.cc
 IX_SOURCES     =
 SM_SOURCES     = #sm_stub.cc printer.cc
 QL_SOURCES     = #ql_manager_stub.cc
 UTILS_SOURCES  = #dbcreate.cc dbdestroy.cc redbase.cc
 PARSER_SOURCES = #scan.c parse.c nodes.c interp.c
-TESTER_SOURCES = pf_test1.cc pf_test2.cc pf_test3.cc #rm_test.cc ix_test.cc parser_test.cc
+TESTER_SOURCES = pf_test1.cc pf_test2.cc pf_test3.cc rm_test.cc rm_test_1.cc #ix_test.cc parser_test.cc
 
 PF_OBJECTS     = $(addprefix $(BUILD_DIR), $(PF_SOURCES:.cc=.o))
 RM_OBJECTS     = $(addprefix $(BUILD_DIR), $(RM_SOURCES:.cc=.o))
