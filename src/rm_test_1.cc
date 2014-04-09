@@ -25,6 +25,7 @@
 #include "pf.h"
 #include "rm.h"
 #include "rm_rid.h"
+#include "rm_internal.h"
 
 using namespace std;
 
@@ -66,6 +67,7 @@ RC Test1(void);
 RC Test2(void);
 RC TestRID(void);
 RC TestRecord(void);
+RC TestBitmap(void);
 
 void PrintError(RC rc);
 void LsFile(char *fileName);
@@ -86,13 +88,14 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       4               // number of tests
+#define NUM_TESTS       5               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
     Test1,
     Test2,
     TestRID,
-    TestRecord
+    TestRecord,
+    TestBitmap
 };
 
 //
@@ -559,4 +562,16 @@ RC TestRecord(void){
     printf("Record test done ***** \n");
 
     return (0);
+}
+
+
+RC TestBitmap(void){
+  RC rc;
+  RM_RecBitmap bitmap1(10);
+  printf("Size of bitmap of 10: %d \n", sizeof(bitmap1));
+  RM_RecBitmap bitmap2(200);
+  printf("Size of bitmap of 20: %d \n", sizeof(bitmap2));
+
+  return (0);
+
 }

@@ -65,10 +65,11 @@ public:
     RC ForcePages (PageNum pageNum = ALL_PAGES);
 private:
     RC AllocateNewPage();
-    RC FindFreeRec(PageNum pageNum);
+    RC FindFreeSlot(PageNum pageNum);
     struct RM_FileHeader *header;
     PF_FileHandle *pfh;
     bool header_modified;
+    int pageHeaderSize;
 };
 
 //

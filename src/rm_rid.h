@@ -23,14 +23,6 @@ typedef int PageNum;
 typedef int SlotNum;
 
 
-// Define the RM file header
-struct RM_FileHeader {
-  int recordSize;
-  int numRecordsPerPage;
-  int numPages;
-  PageNum firstFreePage;
-};
-
 //
 // RID: Record id interface
 //
