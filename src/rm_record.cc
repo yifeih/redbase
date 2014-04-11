@@ -18,9 +18,9 @@ RM_Record::~RM_Record(){
 
 RC RM_Record::GetData(char *&pData) const {
   if(data == NULL || size == INVALID_RECORD_SIZE)
-    return RM_INVALIDRECORD;
+    return (RM_INVALIDRECORD);
   pData = data;
-  return 0;
+  return (0);
 }
 
 RC RM_Record::GetRid (RID &rid) const {
@@ -28,7 +28,7 @@ RC RM_Record::GetRid (RID &rid) const {
   if(rc = (this->rid).isValidRID())
     return rc;
   rid = this->rid;
-  return 0;
+  return (0);
 }
 
 RC RM_Record::SetRecord(RID rec_rid, char *recData, int rec_size){
@@ -43,6 +43,6 @@ RC RM_Record::SetRecord(RID rec_rid, char *recData, int rec_size){
   if(data == NULL)
     data = new char[size];
   memcpy(data, recData, size);
-  return 0;
+  return (0);
 }
 

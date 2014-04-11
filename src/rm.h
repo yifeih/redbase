@@ -48,6 +48,8 @@ private:
 // RM_FileHandle: RM File interface
 //
 class RM_FileHandle {
+    static const PageNum NO_FREE_PAGES = -1;
+    friend class RM_Manager;
 public:
     RM_FileHandle ();
     ~RM_FileHandle();
@@ -63,13 +65,25 @@ public:
     // Forces a page (along with any contents stored in this class)
     // from the buffer pool to disk.  Default value forces all pages.
     RC ForcePages (PageNum pageNum = ALL_PAGES);
+    static int NumBitsToCharSize(int size);
 private:
-    RC AllocateNewPage();
-    RC FindFreeSlot(PageNum pageNum);
+    RC AllocateNewPage(PF_PageHandle &ph, PageNum &page);
+    bool isValidFH() const;
+    bool isValidFileHeader() const;
+    RC GetPageDataAndBitmap(PF_PageHandle &ph, char *&bitmap, struct RM_PageHeader *&pageheader) const;
+    RC GetPageNumAndSlot(const RID &rid, PageNum &page, SlotNum &slot) const;
+
+    RC ResetBitmap(char * bitmap, int size);
+    RC SetBit(char * bitmap, int size, int bitnum);
+    RC ResetBit(char * bitmap, int size, int bitnum);
+    RC CheckBitSet(char *bitmap, int size, int bitnum, bool &set) const;
+    RC GetFirstZeroBit(char *bitmap, int size, int &location);
+    bool IsPageFull(char *bitmap, int size);
+
+    bool openedFH;
     struct RM_FileHeader *header;
     PF_FileHandle *pfh;
     bool header_modified;
-    int pageHeaderSize;
 };
 
 //
@@ -89,6 +103,16 @@ public:
                   ClientHint pinHint = NO_HINT); // Initialize a file scan
     RC GetNextRec(RM_Record &rec);               // Get next matching record
     RC CloseScan ();                             // Close the scan
+
+private:
+    RM_FileHandle fileHandle;
+    int (*comparator) (void * , void *, AttrType);
+    int attrOffset;
+    int attrLength;
+    void *value;
+    AttrType attrType;
+    bool openScan;
+    CompOp compOp;
 };
 
 //
@@ -105,7 +129,9 @@ public:
 
     RC CloseFile  (RM_FileHandle &fileHandle);
 private:
-    RC SetUpFileHeader();
+    RC SetUpFH(RM_FileHandle& fileHandle, PF_FileHandle *fh, struct RM_FileHeader* header);
+    RC CleanUpFH(RM_FileHandle &fileHandle);
+    PF_Manager pfm;
 };
 
 //
@@ -116,10 +142,12 @@ void RM_PrintError(RC rc);
 #define RM_INVALIDRID           (START_RM_WARN + 0)
 #define RM_BADRECORDSIZE        (START_RM_WARN + 1) // record size is invalid
 #define RM_INVALIDRECORD        (START_RM_WARN + 2)
-#define RM_INVALIDBITNUM        (START_RM_WARN + 3)
-#define RM_NORESETBITS          (START_RM_WARN + 4)
+#define RM_INVALIDBITOPERATION  (START_RM_WARN + 3)
+#define RM_PAGEFULL             (START_RM_WARN + 4)
 #define RM_INVALIDFILE          (START_RM_WARN + 5)
-#define RM_EOF                  (START_RM_WARN + 6) // end of file 
+#define RM_NULLFILEHANDLE       (START_RM_WARN + 6)
+#define RM_INVALIDSCAN_COMP     (START_RM_WARN + 7)
+#define RM_EOF                  (START_RM_WARN + 8) // end of file 
 #define RM_LASTWARN             RM_EOF
 
 #define RM_ERROR                (START_RM_ERR - 0) // error

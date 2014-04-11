@@ -567,10 +567,63 @@ RC TestRecord(void){
 
 RC TestBitmap(void){
   RC rc;
-  RM_RecBitmap bitmap1(10);
-  printf("Size of bitmap of 10: %d \n", sizeof(bitmap1));
-  RM_RecBitmap bitmap2(200);
-  printf("Size of bitmap of 20: %d \n", sizeof(bitmap2));
+  PF_FileHandle fh;
+  PF_PageHandle ph1;
+  PF_PageHandle ph2;
+  PF_PageHandle ph3;
+  PF_Manager pfm;
+  PageNum page;
+  PageNum page2;
+  PageNum page3;
+
+  if (rc = pfm.OpenFile("file1", fh))
+    printf("Error \n");
+
+  if(rc = fh.AllocatePage(ph1))
+    printf("Error 1 \n");
+  if(rc = ph1.GetPageNum(page))
+    printf("Error 2 \n");
+  printf("page 1: %d \n", page);
+
+  if(rc = fh.AllocatePage(ph2))
+    printf("Error 3 \n");
+  if(rc = ph2.GetPageNum(page2))
+    printf("Error 4 \n");
+  printf("page 2: %d \n", page2);
+  fh.UnpinPage(page);
+
+  //fh.DisposePage(page);
+  if (rc = fh.DisposePage(page))
+    printf("Error in disposal \n");
+
+  PF_PageHandle ph4;
+  PageNum page4;
+  if (rc = fh.GetThisPage(page, ph4))
+    PF_PrintError(rc);
+  if( rc = ph4.GetPageNum(page4))
+    PF_PrintError(rc);
+  printf("page 4: %d \n", page4);
+
+  fh.AllocatePage(ph3);
+  ph3.GetPageNum(page3);
+  printf("page 3: %d \n", page3);
+
+  PF_PageHandle ph5;
+  PageNum page5;
+  if (rc = fh.GetThisPage(page2, ph5))
+    printf("Error 7 \n");
+  if( rc = ph5.GetPageNum(page5))
+    printf("Error 8 \n");
+  printf("page 4: %d \n", page5);
+
+  PF_PageHandle ph6;
+  PageNum page6;
+  if(rc = fh.GetNextPage(80, ph6))
+    printf("Error 9 \n");
+  if( rc = ph6.GetPageNum(page6))
+    printf("Error 10 \n");
+  printf("page 6: %d \n", page6);
+  
 
   return (0);
 

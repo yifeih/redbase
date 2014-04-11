@@ -19,34 +19,35 @@ struct RM_FileHeader {
   int numRecordsPerPage;
   int numPages;
   PageNum firstFreePage;
-  int headerOffset;
+
+  int bitmapOffset;
+  int bitmapSize;
 };
 
+/*
 class RM_RecBitmap {
 public:
-  RM_RecBitmap(int size);
+  RM_RecBitmap(char *bitmap, int size);
   ~RM_RecBitmap();
 
-  RC SetBit(int bitnum);
-  RC ResetBit(int bitnum);
-  RC ResetBitmap();
+  RC SetBit(char *bitmap, int size, int bitnum);
+  RC ResetBit(char *bitmap, int size, int bitnum);
+  RC ResetBitmap(char *bitmap, int size);
 
-  RC GetFirstZeroBit(int &location);
+  RC GetFirstZeroBit(char *bitmap, int size, int &location);
 
 private:
   int CharToBitmapSize(int size);
   char * bitmap;
   int length;
-};
+};*/
 
 
 // Define the RM page header
 struct RM_PageHeader {
   PageNum nextFreePage;
-  RM_RecBitmap recordBitmap;
   int numRecords;
-  RM_PageHeader(RM_RecBitmap bitmap) : recordBitmap(bitmap) {}
-
+  int allocPage;
 };
 
 #endif
