@@ -130,7 +130,8 @@ RC RM_FileScan::OpenScan (const RM_FileHandle &fileHandle,
   }
 
   openScan = true;
-  scanPage = 0;
+  scanEnded = false;
+  scanPage = 1;
   scanSlot = 0;
   return (0);
 } 
@@ -140,7 +141,10 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
   RC rc;
   while(true){
     RM_Record temprec;
-    if((rc=fileHandle.GetNextRecord(scanPage, scanSlot, temprec))){
+    if((rc=fileHandle.GetNextRecord(scanPage, scanSlot, temprec, currentPH))){
+      if(rc == RM_EOF){
+        scanEnded = true;
+      }
       return (rc);
     }
     RID rid;
@@ -170,6 +174,9 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
 RC RM_FileScan::CloseScan () {
   if(openScan == false){
     return (RM_INVALIDSCAN);
+  }
+  if(scanEnded == false){
+    //fileHandle.UnpinPage(scanPage);
   }
   free(value);
   openScan = false;

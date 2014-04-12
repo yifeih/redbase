@@ -71,7 +71,8 @@ public:
     static int CalcNumRecPerPage(int recSize);
     bool isValidFileHeader() const;
     int getRecordSize();
-    RC GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec);
+    RC GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_PageHandle &ph);
+    //RC UnpinPage(PageNum page);
 private:
     RC AllocateNewPage(PF_PageHandle &ph, PageNum &page);
     bool isValidFH() const;
@@ -123,6 +124,8 @@ private:
 
     PageNum scanPage;
     SlotNum scanSlot;
+    PF_PageHandle currentPH;
+    bool scanEnded;
 };
 
 //

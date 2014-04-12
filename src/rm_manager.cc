@@ -159,7 +159,7 @@ RC RM_Manager::CloseFile  (RM_FileHandle &fileHandle) {
     char *pData;
     if((rc = ph.GetData(pData))){
       RC rc2;
-      if(rc2 = fileHandle.pfh.UnpinPage(page))
+      if((rc2 = fileHandle.pfh.UnpinPage(page)))
         return (rc2);
       return (rc);
     }
