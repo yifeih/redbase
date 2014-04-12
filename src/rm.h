@@ -30,6 +30,7 @@ class RM_Record {
 public:
     RM_Record ();
     ~RM_Record();
+    RM_Record& operator= (const RM_Record &record);
 
     // Return the data corresponding to the record.  Sets *pData to the
     // record contents.
@@ -53,6 +54,7 @@ class RM_FileHandle {
 public:
     RM_FileHandle ();
     ~RM_FileHandle();
+    RM_FileHandle& operator= (const RM_FileHandle &fileHandle);
 
     // Given a RID, return the record
     RC GetRec     (const RID &rid, RM_Record &rec) const;
@@ -66,10 +68,13 @@ public:
     // from the buffer pool to disk.  Default value forces all pages.
     RC ForcePages (PageNum pageNum = ALL_PAGES);
     static int NumBitsToCharSize(int size);
+    static int CalcNumRecPerPage(int recSize);
+    bool isValidFileHeader() const;
+    int getRecordSize();
+    RC GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec);
 private:
     RC AllocateNewPage(PF_PageHandle &ph, PageNum &page);
     bool isValidFH() const;
-    bool isValidFileHeader() const;
     RC GetPageDataAndBitmap(PF_PageHandle &ph, char *&bitmap, struct RM_PageHeader *&pageheader) const;
     RC GetPageNumAndSlot(const RID &rid, PageNum &page, SlotNum &slot) const;
 
@@ -78,11 +83,13 @@ private:
     RC ResetBit(char * bitmap, int size, int bitnum);
     RC CheckBitSet(char *bitmap, int size, int bitnum, bool &set) const;
     RC GetFirstZeroBit(char *bitmap, int size, int &location);
+    RC GetNextOneBit(char *bitmap, int size, int start, int &location);
+
     bool IsPageFull(char *bitmap, int size);
 
     bool openedFH;
-    struct RM_FileHeader *header;
-    PF_FileHandle *pfh;
+    struct RM_FileHeader header;
+    PF_FileHandle pfh;
     bool header_modified;
 };
 
@@ -106,13 +113,16 @@ public:
 
 private:
     RM_FileHandle fileHandle;
-    int (*comparator) (void * , void *, AttrType);
+    bool (*comparator) (void * , void *, AttrType, int);
     int attrOffset;
     int attrLength;
     void *value;
     AttrType attrType;
     bool openScan;
     CompOp compOp;
+
+    PageNum scanPage;
+    SlotNum scanSlot;
 };
 
 //
@@ -145,9 +155,10 @@ void RM_PrintError(RC rc);
 #define RM_INVALIDBITOPERATION  (START_RM_WARN + 3)
 #define RM_PAGEFULL             (START_RM_WARN + 4)
 #define RM_INVALIDFILE          (START_RM_WARN + 5)
-#define RM_NULLFILEHANDLE       (START_RM_WARN + 6)
-#define RM_INVALIDSCAN_COMP     (START_RM_WARN + 7)
-#define RM_EOF                  (START_RM_WARN + 8) // end of file 
+#define RM_INVALIDFILEHANDLE    (START_RM_WARN + 6)
+#define RM_INVALIDSCAN          (START_RM_WARN + 7)
+#define RM_ENDOFPAGE            (START_RM_WARN + 8)
+#define RM_EOF                  (START_RM_WARN + 9) // end of file 
 #define RM_LASTWARN             RM_EOF
 
 #define RM_ERROR                (START_RM_ERR - 0) // error

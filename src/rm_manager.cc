@@ -13,7 +13,7 @@ RM_Manager::RM_Manager(PF_Manager &pfm){
 RM_Manager::~RM_Manager(){}
 
 RC RM_Manager::CreateFile (const char *fileName, int recordSize) { 
-  RC rc;
+  RC rc = 0;
   if(recordSize <= 0 || recordSize > PF_PAGE_SIZE)
     return RM_BADRECORDSIZE;
 
@@ -36,27 +36,22 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize) {
   PF_FileHandle fh;
   if((rc = pfm.OpenFile(fileName, fh)))
     return (rc);
-  if((rc = fh.AllocatePage(ph)))
+  PageNum page;
+  if((rc = fh.AllocatePage(ph)) || (rc = ph.GetPageNum(page)))
     return (rc);
 
-  PageNum page;
-  if((rc = ph.GetPageNum(page)) || (rc = fh.UnpinPage(page))){
-    return (rc);
-  }
 
   char *pData;
   if((rc = ph.GetData(pData))){
-    return (rc);
+    goto cleanup_and_exit;
   }
 
   memcpy(pData, &header, sizeof(struct RM_FileHeader));
 
-  if((rc = fh.MarkDirty(page))){
-    return (rc);
-  }
-
-  if((rc = pfm.CloseFile(fh)))
-    return (rc);
+  cleanup_and_exit:
+  RC rc2;
+  if((rc2 = fh.MarkDirty(page)) || (rc2 = fh.UnpinPage(page)) || (rc2 = pfm.CloseFile(fh)))
+    return (rc2);
 
   // error: check size of record 
   // open file with PF_Manager
@@ -64,7 +59,7 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize) {
 
   // Call SetUpFileHeader
 
-  return (0); 
+  return (rc); 
 }
 
 
@@ -77,38 +72,52 @@ RC RM_Manager::DestroyFile(const char *fileName) {
 }
 
 RC RM_Manager::SetUpFH(RM_FileHandle& fileHandle, PF_FileHandle *fh, struct RM_FileHeader* header){
-  fileHandle.header = new struct RM_FileHeader();
-  memcpy(fileHandle.header, header, sizeof(struct RM_FileHeader));
-  fileHandle.pfh = new PF_FileHandle();
-  *fileHandle.pfh = *fh;
+  //fileHandle.header = new struct RM_FileHeader();
+  memcpy(&fileHandle.header, header, sizeof(struct RM_FileHeader));
+  //fileHandle.pfh = new PF_FileHandle();
+  //*fileHandle.pfh = *fh;
+  PF_FileHandle ph_fh;
+  fileHandle.pfh = ph_fh;
   fileHandle.header_modified = false;
 
+  if(! fileHandle.isValidFileHeader())
+    return (RM_INVALIDFILE);
   // TODO: Check for vulnerabilities
+  fileHandle.openedFH = true;
   return (0);
 }
 
 RC RM_Manager::OpenFile   (const char *fileName, RM_FileHandle &fileHandle){
+  if(fileHandle.openedFH == true)
+    return (RM_INVALIDFILEHANDLE);
+
   RC rc;
   PF_FileHandle fh;
+
   if((rc = pfm.OpenFile(fileName, fh)))
     return (rc);
 
   PF_PageHandle ph;
   PageNum page;
-  if((rc = fh.GetFirstPage(ph)) || (ph.GetPageNum(page)) || (rc = fh.UnpinPage(page)))
+  if((rc = fh.GetFirstPage(ph)) || (ph.GetPageNum(page))){
+    fh.UnpinPage(page);
+    pfm.CloseFile(fh);
     return (rc);
+  }
 
-  
   char *pData;
-  if((rc = ph.GetData(pData)))
-    return (rc);
+  ph.GetData(pData);
+
   struct RM_FileHeader * header = (struct RM_FileHeader *) pData;
 
-  if((rc = SetUpFH(fileHandle, &fh, header)))
-    return (rc);
+  rc = SetUpFH(fileHandle, &fh, header);
 
-  if(!fileHandle.isValidFileHeader())
-    return (RM_INVALIDFILE);
+  RC rc2;
+  if((rc2 = fh.UnpinPage(page)))
+    return (rc2);
+  if(rc != 0){
+    pfm.CloseFile(fh);
+  }
 
   // call pf_open file
   
@@ -124,14 +133,17 @@ RC RM_Manager::OpenFile   (const char *fileName, RM_FileHandle &fileHandle){
   // ERROR - invalidFileCredentials
 
   // return file handle
-  return (0); 
+  return (rc); 
 }
 
 RC RM_Manager::CleanUpFH(RM_FileHandle &fileHandle){
-  if(fileHandle.header == NULL || fileHandle.pfh == NULL)
-    return RM_NULLFILEHANDLE;
-  delete fileHandle.header;
-  delete fileHandle.pfh;
+  //if(fileHandle.header == NULL || fileHandle.pfh == NULL)
+  //  return RM_NULLFILEHANDLE;
+  //delete fileHandle.header;
+  //delete fileHandle.pfh;
+  if(fileHandle.openedFH == false)
+    return (RM_INVALIDFILEHANDLE);
+  fileHandle.openedFH = false;
   return (0);
 }
 
@@ -141,21 +153,23 @@ RC RM_Manager::CloseFile  (RM_FileHandle &fileHandle) {
 
   if(fileHandle.header_modified == true){
     PF_PageHandle ph;
-    if((rc = fileHandle.pfh->GetFirstPage(ph)))
+    PageNum page;
+    if((rc = fileHandle.pfh.GetFirstPage(ph)) || ph.GetPageNum(page))
       return (rc);
     char *pData;
-    if((rc = ph.GetData(pData)))
+    if((rc = ph.GetData(pData))){
+      RC rc2;
+      if(rc2 = fileHandle.pfh.UnpinPage(page))
+        return (rc2);
       return (rc);
-    memcpy(pData, fileHandle.header, sizeof(struct RM_FileHeader));
-    PageNum page;
-    if((rc = ph.GetPageNum(page)))
-      return (rc);
-    if((rc = fileHandle.pfh->MarkDirty(page)) || (rc = fileHandle.pfh->UnpinPage(page)))
+    }
+    memcpy(pData, &fileHandle.header, sizeof(struct RM_FileHeader));
+    if((rc = fileHandle.pfh.MarkDirty(page)) || (rc = fileHandle.pfh.UnpinPage(page)))
       return (rc);
 
   }
 
-  if((rc = pfm.CloseFile(*fileHandle.pfh)))
+  if((rc = pfm.CloseFile(fileHandle.pfh)))
     return (rc);
 
   if((rc = CleanUpFH(fileHandle)))
@@ -172,4 +186,3 @@ RC RM_Manager::CloseFile  (RM_FileHandle &fileHandle) {
   // call pf_close file
   return (0);
 }
-

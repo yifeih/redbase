@@ -23,7 +23,6 @@
 
 #include "redbase.h"
 #include "pf.h"
-#include "rm.h"
 #include "rm_rid.h"
 #include "rm_internal.h"
 

@@ -8,12 +8,12 @@
 #define RM_INTERNAL_H
 
 #include <cstring>
-#include "rm.h"
 #include "pf.h"
 
 #define NO_MORE_FREE_PAGES -1
 
 // Define the RM file header
+
 struct RM_FileHeader {
   int recordSize;
   int numRecordsPerPage;
@@ -23,6 +23,7 @@ struct RM_FileHeader {
   int bitmapOffset;
   int bitmapSize;
 };
+
 
 /*
 class RM_RecBitmap {
@@ -49,5 +50,7 @@ struct RM_PageHeader {
   int numRecords;
   int allocPage;
 };
+
+#include "rm.h"
 
 #endif

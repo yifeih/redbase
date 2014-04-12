@@ -23,6 +23,7 @@
 
 #include "redbase.h"
 #include "pf.h"
+#include "rm_internal.h"
 #include "rm.h"
 
 using namespace std;
