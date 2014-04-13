@@ -127,6 +127,7 @@ public:
     RC CloseScan ();                             // Close the scan
 
 private:
+    RC GetNumRecOnPage(PF_PageHandle& ph, int &numRecords);
     RM_FileHandle* fileHandle;
     bool (*comparator) (void * , void *, AttrType, int);
     int attrOffset;
@@ -140,6 +141,8 @@ private:
     SlotNum scanSlot;
     PF_PageHandle currentPH;
     bool scanEnded;
+    int numRecOnPage;
+    int numSeenOnPage;
 };
 
 //

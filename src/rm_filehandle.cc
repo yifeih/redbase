@@ -340,10 +340,11 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
   RC rc = 0;
   char *bitmap;
   struct RM_PageHeader *pageheader;
+  /*
   if(page == 1 && slot == BEGIN_SCAN){
     if((rc = pfh.GetThisPage(page, ph)))
       return (rc);
-  }
+  }*/
 
   if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
       return (rc);

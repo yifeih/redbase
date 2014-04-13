@@ -136,13 +136,37 @@ RC RM_FileScan::OpenScan (const RM_FileHandle &fileHandle,
 
   openScan = true;
   scanEnded = false;
-  scanPage = 1;
+
+  RC rc;
+
+  // Set up the first page, and 
+  if((this->fileHandle)->pfh.GetNextPage(0, currentPH) == PF_EOF)
+    scanEnded = true;
+  currentPH.GetPageNum(scanPage);
+  if((rc = GetNumRecOnPage(currentPH, numRecOnPage)))
+    return (rc);
+  /*if(rc = (this->fileHandle)->pfh.UnpinPage(scanPage)){
+    return (rc);
+  }*/
+
   scanSlot = BEGIN_SCAN;
+  numSeenOnPage = 0;
   return (0);
 } 
 
+RC RM_FileScan::GetNumRecOnPage(PF_PageHandle &ph, int &numRecords){
+  RC rc;
+  char *bitmap;
+  struct RM_PageHeader *pageheader;
+  if((rc = (this->fileHandle)->GetPageDataAndBitmap(ph, bitmap, pageheader)))
+      return (rc);
+  numRecords = pageheader->numRecords;
+  return (0);
+}
 
 RC RM_FileScan::GetNextRec(RM_Record &rec) {
+  if(scanEnded == true)
+    return (RM_EOF);
   RC rc;
   while(true){
     RM_Record temprec;
