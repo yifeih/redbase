@@ -59,12 +59,13 @@ struct TestRec {
 PF_Manager pfm;
 RM_Manager rmm(pfm);
 
-
 //
 // Function declarations
 //
 RC Test1(void);
 RC Test2(void);
+RC EmptyTest(void);
+RC TestBitmap(void);
 RC TestRecord(void);
 
 void PrintError(RC rc);
@@ -86,11 +87,13 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       3               // number of tests
+#define NUM_TESTS       5               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
     Test1,
     Test2,
+    EmptyTest,
+    TestBitmap,
     TestRecord
 };
 
@@ -109,11 +112,8 @@ int main(int argc, char *argv[])
     cout << "Starting RM component test.\n";
     cout.flush();
 
-
     // Delete files from last time
     unlink(FILENAME);
-
-    
 
     // If no argument given, do all tests
     if (argc == 1) {
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 
     // Write ending message and exit
     cout << "Ending RM component test.\n\n";
-    
+
     return (0);
 }
 
@@ -164,8 +164,6 @@ int main(int argc, char *argv[])
 // Desc: Print an error message by calling the proper component-specific
 //       print-error function
 //
-
-
 void PrintError(RC rc)
 {
     if (abs(rc) <= END_PF_WARN)
@@ -513,6 +511,104 @@ RC Test2(void)
     return (0);
 }
 
+RC EmptyTest(void){
+    printf("Beginning and ending Emptytest.\n");
+    return (0);
+}
+
+void printBits(char* bitmap, int size)
+{
+   for(int bit=0;bit<size; bit++)
+   {
+      int chunk = bit / 8;
+      int offset = bit % 8;
+      if((bitmap[chunk] & (1 << offset)) > 0)
+        printf("1");
+      else
+        printf("0");
+      //printf("%i", bitmap[chunk] & (1 << offset));
+   }
+   printf("\n");
+}
+
+RC TestBitmap(void){
+    printf("test4 starting ****************\n");
+    RM_FileHandle fileHandle;
+    Test_Bitmap fh(fileHandle);
+    char *bitmap;
+    int size;
+    bool set;
+    int location;
+
+    // Try bitmap where the size is divisible by 8
+    bitmap = new char[3];
+    size = 23;
+    printf("Reset the bitmap: ");
+    fh.ResetBitmap(bitmap, size);
+    printBits(bitmap, size);
+    printf("Set the first bit: ");
+    fh.SetBit(bitmap, size, 0);
+    printBits(bitmap, size);
+    printf("Set the 10th bit: ");
+    fh.SetBit(bitmap, size, 10);
+    printBits(bitmap, size);
+    printf("Set the last bit: ");
+    fh.SetBit(bitmap, size, 22);
+    printBits(bitmap, size);
+
+    printf("Reset the last bit: ");
+    fh.ResetBit(bitmap, size, 22);
+    printBits(bitmap, size);
+    printf("Reset the second to last bit: ");
+    fh.ResetBit(bitmap, size, 21);
+    printBits(bitmap, size);
+    //printf("bitmap now: %i", bitmap[0]);
+
+    printf("Check 2nd bit is reset: ");
+    fh.CheckBitSet(bitmap, size, 1, set);
+    if(set == false)
+        printf("pass\n");
+    printf("Check last bit is reset: ");
+    fh.CheckBitSet(bitmap, size, 22, set);
+    if(set == false)
+        printf("pass\n");
+    printf("Check 1st bit is set: ");
+    fh.CheckBitSet(bitmap, size, 0, set);
+    if(set == true)
+        printf("pass\n");
+    printf("Check 10th bit is set: ");
+    fh.CheckBitSet(bitmap, size, 0, set);
+    if(set == true)
+        printf("pass\n");
+
+
+    printf("Get first set bit: ");
+    fh.GetNextOneBit(bitmap, size, 0, location);
+    printf("%d \n", location);
+    printf("Get next set bit: ");
+    fh.GetNextOneBit(bitmap, size, 1, location);
+    printf("%d \n", location);
+    printf("Get first reset bit: ");
+    fh.GetFirstZeroBit(bitmap, size, location);
+    printf("%d \n", location);
+
+    printf("Is page full: ");
+    if(fh.IsPageFull(bitmap, size) == false)
+        printf("pass \n");
+
+    printf("\ntest4 done ********************\n");
+    return (0);
+}
+
+RC TestRecord(void){
+    printf("test5 starting ****************\n");
+    printf("testing RM_Record");
+
+
+
+    printf("\ntest5 done ********************\n");
+    return (0);
+}
 
 RC TestRecord(void){
     RC rc;

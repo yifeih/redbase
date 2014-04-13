@@ -2,30 +2,35 @@
 #include <sys/types.h>
 #include "pf.h"
 #include "rm_internal.h"
+#include <cstdio>
 
 
-RM_Manager::RM_Manager(PF_Manager &pfm){
+RM_Manager::RM_Manager(PF_Manager &pfm) : pfm(pfm){
   // store the page manager
-  this->pfm = pfm;
-  
 }
 
-RM_Manager::~RM_Manager(){}
+RM_Manager::~RM_Manager(){
+}
 
 RC RM_Manager::CreateFile (const char *fileName, int recordSize) { 
   RC rc = 0;
   if(recordSize <= 0 || recordSize > PF_PAGE_SIZE)
     return RM_BADRECORDSIZE;
 
-  pfm.CreateFile(fileName);
+  if((rc = pfm.CreateFile(fileName)))
+    return (rc);
 
   struct RM_FileHeader header;
   header.recordSize = recordSize;
-  header.bitmapSize = RM_FileHandle::NumBitsToCharSize(recordSize);
+  header.numRecordsPerPage = RM_FileHandle::CalcNumRecPerPage(recordSize);
+  header.bitmapSize = RM_FileHandle::NumBitsToCharSize(header.numRecordsPerPage);
   header.bitmapOffset = sizeof(struct RM_PageHeader);
 
   header.numPages = 1;
   header.firstFreePage = NO_MORE_FREE_PAGES;
+
+  printf("recSize %d, numRedPerPage: %d, bitmapSize: %d, bitmapOffset: %d\n",
+    header.recordSize, header.numRecordsPerPage, header.bitmapSize, header.bitmapOffset);
 
   int numRecordsPerPage = (PF_PAGE_SIZE - (header.bitmapSize) - (header.bitmapOffset))/recordSize;
   if(numRecordsPerPage <= 0)
@@ -36,6 +41,7 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize) {
   PF_FileHandle fh;
   if((rc = pfm.OpenFile(fileName, fh)))
     return (rc);
+
   PageNum page;
   if((rc = fh.AllocatePage(ph)) || (rc = ph.GetPageNum(page)))
     return (rc);
@@ -71,19 +77,20 @@ RC RM_Manager::DestroyFile(const char *fileName) {
   return (0); 
 }
 
-RC RM_Manager::SetUpFH(RM_FileHandle& fileHandle, PF_FileHandle *fh, struct RM_FileHeader* header){
+RC RM_Manager::SetUpFH(RM_FileHandle& fileHandle, PF_FileHandle &fh, struct RM_FileHeader* header){
   //fileHandle.header = new struct RM_FileHeader();
   memcpy(&fileHandle.header, header, sizeof(struct RM_FileHeader));
   //fileHandle.pfh = new PF_FileHandle();
   //*fileHandle.pfh = *fh;
-  PF_FileHandle ph_fh;
-  fileHandle.pfh = ph_fh;
+  fileHandle.pfh = fh;
   fileHandle.header_modified = false;
-
-  if(! fileHandle.isValidFileHeader())
-    return (RM_INVALIDFILE);
-  // TODO: Check for vulnerabilities
   fileHandle.openedFH = true;
+
+  if(! fileHandle.isValidFileHeader()){
+    printf("Invalid FH here \n");
+    fileHandle.openedFH = false;
+    return (RM_INVALIDFILE);
+  }
   return (0);
 }
 
@@ -110,7 +117,7 @@ RC RM_Manager::OpenFile   (const char *fileName, RM_FileHandle &fileHandle){
 
   struct RM_FileHeader * header = (struct RM_FileHeader *) pData;
 
-  rc = SetUpFH(fileHandle, &fh, header);
+  rc = SetUpFH(fileHandle, fh, header);
 
   RC rc2;
   if((rc2 = fh.UnpinPage(page)))
@@ -152,6 +159,7 @@ RC RM_Manager::CloseFile  (RM_FileHandle &fileHandle) {
   RC rc;
 
   if(fileHandle.header_modified == true){
+    printf("reached modified \n");
     PF_PageHandle ph;
     PageNum page;
     if((rc = fileHandle.pfh.GetFirstPage(ph)) || ph.GetPageNum(page))
@@ -168,6 +176,7 @@ RC RM_Manager::CloseFile  (RM_FileHandle &fileHandle) {
       return (rc);
 
   }
+  printf("Closing file\n");
 
   if((rc = pfm.CloseFile(fileHandle.pfh)))
     return (rc);

@@ -22,11 +22,13 @@
 #include "rm_rid.h"
 #include "pf.h"
 
+
 //
 // RM_Record: RM Record interface
 //
 class RM_Record {
     static const int INVALID_RECORD_SIZE = -1;
+    friend class RM_FileHandle;
 public:
     RM_Record ();
     ~RM_Record();
@@ -39,18 +41,28 @@ public:
     // Return the RID associated with the record
     RC GetRid (RID &rid) const;
     RC SetRecord (RID rec_rid, char *recData, int size);
-private:
+
     RID rid;
     char * data;
     int size;
 };
 
+struct RM_FileHeader {
+  int recordSize;
+  int numRecordsPerPage;
+  int numPages;
+  PageNum firstFreePage;
+
+  int bitmapOffset;
+  int bitmapSize;
+};
 //
 // RM_FileHandle: RM File interface
 //
 class RM_FileHandle {
     static const PageNum NO_FREE_PAGES = -1;
     friend class RM_Manager;
+    friend class RM_FileScan;
 public:
     RM_FileHandle ();
     ~RM_FileHandle();
@@ -67,13 +79,13 @@ public:
     // Forces a page (along with any contents stored in this class)
     // from the buffer pool to disk.  Default value forces all pages.
     RC ForcePages (PageNum pageNum = ALL_PAGES);
+    //RC UnpinPage(PageNum page);
+private:
     static int NumBitsToCharSize(int size);
     static int CalcNumRecPerPage(int recSize);
     bool isValidFileHeader() const;
     int getRecordSize();
     RC GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_PageHandle &ph);
-    //RC UnpinPage(PageNum page);
-private:
     RC AllocateNewPage(PF_PageHandle &ph, PageNum &page);
     bool isValidFH() const;
     RC GetPageDataAndBitmap(PF_PageHandle &ph, char *&bitmap, struct RM_PageHeader *&pageheader) const;
@@ -87,6 +99,7 @@ private:
     RC GetNextOneBit(char *bitmap, int size, int start, int &location);
 
     bool IsPageFull(char *bitmap, int size);
+    void printBits(char * bitmap, int size);
 
     bool openedFH;
     struct RM_FileHeader header;
@@ -97,6 +110,7 @@ private:
 //
 // RM_FileScan: condition-based scan of records in the file
 //
+#define BEGIN_SCAN  -1
 class RM_FileScan {
 public:
     RM_FileScan  ();
@@ -113,7 +127,7 @@ public:
     RC CloseScan ();                             // Close the scan
 
 private:
-    RM_FileHandle fileHandle;
+    RM_FileHandle* fileHandle;
     bool (*comparator) (void * , void *, AttrType, int);
     int attrOffset;
     int attrLength;
@@ -142,9 +156,9 @@ public:
 
     RC CloseFile  (RM_FileHandle &fileHandle);
 private:
-    RC SetUpFH(RM_FileHandle& fileHandle, PF_FileHandle *fh, struct RM_FileHeader* header);
+    RC SetUpFH(RM_FileHandle& fileHandle, PF_FileHandle &fh, struct RM_FileHeader* header);
     RC CleanUpFH(RM_FileHandle &fileHandle);
-    PF_Manager pfm;
+    PF_Manager &pfm;
 };
 
 //

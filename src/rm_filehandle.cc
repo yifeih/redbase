@@ -3,6 +3,7 @@
 #include "pf.h"
 #include "rm_internal.h"
 #include <math.h>
+#include <cstdio>
 
 RM_FileHandle::RM_FileHandle(){
   header_modified = false;
@@ -54,10 +55,11 @@ RC RM_FileHandle::AllocateNewPage(PF_PageHandle &ph, PageNum &page){
 
   // Setup Bitmap right after header
   char bitmap[header.bitmapSize];
-  if((rc = ResetBitmap(bitmap, header.bitmapSize)))
+  if((rc = ResetBitmap(bitmap, header.numRecordsPerPage)))
     return (rc);
 
   memcpy(pageData+header.bitmapOffset, bitmap, header.bitmapSize);
+  header.firstFreePage = page;
 
   return (0);
 
@@ -127,7 +129,7 @@ RC RM_FileHandle::GetRec (const RID &rid, RM_Record &rec) const {
 
   // Check if there really exists a record here according to the header
   bool recordExists;
-  if ((rc = CheckBitSet(bitmap, header.bitmapSize, slot, recordExists)))
+  if ((rc = CheckBitSet(bitmap, header.numRecordsPerPage, slot, recordExists)))
     goto cleanup_and_exit;
 
   if(!recordExists){
@@ -156,11 +158,14 @@ RC RM_FileHandle::InsertRec (const char *pData, RID &rid) {
   
   if(pData == NULL)
     return RM_INVALIDRECORD;
+  //printf("Num rec per page: %d \n", header.numRecordsPerPage);
   
   PF_PageHandle ph;
   PageNum page;
-  if (header.firstFreePage == NO_FREE_PAGES)
+  if (header.firstFreePage == NO_FREE_PAGES){
     AllocateNewPage(ph, page);
+    printf("allocated new page\n");
+  }
   else{
     if((rc = pfh.GetThisPage(header.firstFreePage, ph)))
       return (rc);
@@ -173,9 +178,9 @@ RC RM_FileHandle::InsertRec (const char *pData, RID &rid) {
     goto cleanup_and_exit;
 
   int slot;
-  if((rc = GetFirstZeroBit(bitmap, header.bitmapSize, slot)))
+  if((rc = GetFirstZeroBit(bitmap, header.numRecordsPerPage, slot)))
     goto cleanup_and_exit;
-  if((rc = SetBit(bitmap, (header.bitmapSize), slot)))
+  if((rc = SetBit(bitmap, header.numRecordsPerPage, slot)))
     goto cleanup_and_exit;
 
   memcpy(bitmap + (header.bitmapSize) + slot*(header.recordSize),
@@ -186,6 +191,9 @@ RC RM_FileHandle::InsertRec (const char *pData, RID &rid) {
   if(pageheader->numRecords == header.numRecordsPerPage){
     header.firstFreePage = pageheader->nextFreePage;
   }
+  //printf("page: %d, slot: %d \n", page, slot);
+  rid = RID(page, slot);
+  //printBits(bitmap, header.numRecordsPerPage);
 
   cleanup_and_exit:
   RC rc2;
@@ -222,20 +230,22 @@ RC RM_FileHandle::DeleteRec (const RID &rid) {
 
   // Check if there really exists a record here according to the header
   bool recordExists;
-  if ((rc = CheckBitSet(bitmap, header.bitmapSize, slot, recordExists)))
+  if ((rc = CheckBitSet(bitmap, header.numRecordsPerPage, slot, recordExists)))
     goto cleanup_and_exit;
   if(!recordExists){
     rc = RM_INVALIDRECORD;
     goto cleanup_and_exit;
   }
 
-
-  if((rc = ResetBit(bitmap, (header.bitmapSize), slot)))
+  printf("resetting bit: \n");
+  if((rc = ResetBit(bitmap, header.numRecordsPerPage, slot)))
     goto cleanup_and_exit;
   pageheader->numRecords--;
   if(pageheader->numRecords == 0){
-    if((rc = pfh.UnpinPage(page)) || (rc = pfh.DisposePage(page)))
+    if((rc = pfh.UnpinPage(page)) || (rc = pfh.DisposePage(page))){
+      printf("error here: %d \n", rc);
       return (rc);
+    }
     return (0);
   }
 
@@ -259,7 +269,14 @@ RC RM_FileHandle::UpdateRec (const RM_Record &rec) {
   SlotNum slot;
   if((rc = GetPageNumAndSlot(rid, page, slot)))
     return (rc);
+  //printf("update rec page; %d, slot: %d \n", page, slot);
+  //TestRec *pRecBufAgain;
+  //rec.GetData((char *&)pRecBufAgain);
+  //printf("recordFH: [%s, %d, %f] \n", pRecBufAgain->str, pRecBufAgain->num, pRecBufAgain->r);  
 
+  
+
+  char * buffer;
   // Get this page, 
   PF_PageHandle ph;
   if((rc = pfh.GetThisPage(page, ph)))
@@ -272,7 +289,7 @@ RC RM_FileHandle::UpdateRec (const RM_Record &rec) {
 
   // Check if there really exists a record here according to the header
   bool recordExists;
-  if ((rc = CheckBitSet(bitmap, header.bitmapSize, slot, recordExists)))
+  if ((rc = CheckBitSet(bitmap, header.numRecordsPerPage, slot, recordExists)))
     goto cleanup_and_exit;
   if(!recordExists){
     rc = RM_INVALIDRECORD;
@@ -285,8 +302,14 @@ RC RM_FileHandle::UpdateRec (const RM_Record &rec) {
   memcpy(bitmap + (header.bitmapSize) + slot*(header.recordSize),
     recData, header.recordSize);
 
+  //TestRec *pRecBufAgain;
+  //pRecBufAgain = (TestRec *) (bitmap + (header.bitmapSize) + slot*(header.recordSize));
+  //printf("update rec: [%s, %d, %f] \n", pRecBufAgain->str, pRecBufAgain->num, pRecBufAgain->r);  
+
+
   cleanup_and_exit:
   RC rc2;
+  //printf("reaches cleanup\n");
   if((rc2 = pfh.MarkDirty(page)) || (rc2 = pfh.UnpinPage(page)))
     return (rc2);
   return (0); 
@@ -317,7 +340,7 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
   RC rc = 0;
   char *bitmap;
   struct RM_PageHeader *pageheader;
-  if(page == 1 && slot == 0){
+  if(page == 1 && slot == BEGIN_SCAN){
     if((rc = pfh.GetThisPage(page, ph)))
       return (rc);
   }
@@ -329,7 +352,7 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
   PageNum nextRecPage = page;
   SlotNum nextRecSlot;
   if(slot == (header.numRecordsPerPage - 1) || 
-    GetNextOneBit(bitmap, header.bitmapSize, slot, nextRec) == RM_ENDOFPAGE){
+    GetNextOneBit(bitmap, header.numRecordsPerPage, slot + 1, nextRec) == RM_ENDOFPAGE){
     if((rc = pfh.UnpinPage(page)))
       return (rc);
 
@@ -342,14 +365,21 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
     if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
       return (rc);
 
-    GetNextOneBit(bitmap, header.bitmapSize, 0, nextRec);
+    GetNextOneBit(bitmap, header.numRecordsPerPage, 0, nextRec);
   }
   nextRecSlot = nextRec;
   RID rid(nextRecPage, nextRecSlot);
+  //printf("Nextrec page: %d, slot %d \n", nextRecPage, nextRecSlot);
+  //TestRec *pRecBufAgain;
+  //pRecBufAgain = (TestRec *) (bitmap + (header.bitmapSize) + (nextRecSlot)*(header.recordSize));
+  //printf("Nextrec rec: [%s, %d, %f] \n", pRecBufAgain->str, pRecBufAgain->num, pRecBufAgain->r);  
+
+
   // Set the record and return it
-  if((rc = rec.SetRecord(rid, bitmap + (header.bitmapSize) + slot*(header.recordSize), 
+  if((rc = rec.SetRecord(rid, bitmap + (header.bitmapSize) + (nextRecSlot)*(header.recordSize), 
     header.recordSize)))
     return (rc);
+  //printf("gets to end of FH GNR\n");
   return (0);
   /*
   RC rc;
@@ -408,13 +438,19 @@ bool RM_FileHandle::isValidFH() const{
 }
 
 bool RM_FileHandle::isValidFileHeader() const{
-  if(!isValidFH())
+  if(!isValidFH()){
+    printf("case1 \n");
     return false;
-  if(header.recordSize <= 0 || header.numRecordsPerPage <= 0 || header.numPages <= 0)
+  }
+  if(header.recordSize <= 0 || header.numRecordsPerPage <= 0 || header.numPages <= 0){
+    printf("case 2\n");
     return false;
+  }
   if((header.bitmapOffset + header.bitmapSize + header.recordSize*header.numRecordsPerPage) >
-    PF_PAGE_SIZE)
+    PF_PAGE_SIZE){
+    printf("case 3\n");
     return false;
+  }
   return true;
 }
 
@@ -425,7 +461,8 @@ int RM_FileHandle::getRecordSize(){
 
 //BITMAP Manipulations
 RC RM_FileHandle::ResetBitmap(char *bitmap, int size){
-  for(int i=0; i < size; i++)
+  int char_num = NumBitsToCharSize(size);
+  for(int i=0; i < char_num; i++)
     bitmap[i] = bitmap[i] ^ bitmap[i];
   return (0);
 }
@@ -436,6 +473,7 @@ RC RM_FileHandle::SetBit(char *bitmap, int size, int bitnum){
   int chunk = bitnum /8;
   int offset = bitnum - chunk*8;
   bitmap[chunk] |= 1 << offset;
+  //printf("bitmap now: %i", bitmap[chunk]);
   return (0);
 }
 
@@ -501,6 +539,20 @@ bool RM_FileHandle::IsPageFull(char *bitmap, int size){
 }
 
 int RM_FileHandle::CalcNumRecPerPage(int recSize){
-  return floor((PF_PAGE_SIZE * 1.0) / (1.0 * recSize + 1/8));
+  return floor((PF_PAGE_SIZE * 1.0) / (1.0 * recSize + 1.0/8));
 }
 
+void RM_FileHandle::printBits(char* bitmap, int size)
+{
+   for(int bit=0;bit<size; bit++)
+   {
+      int chunk = bit / 8;
+      int offset = bit % 8;
+      if((bitmap[chunk] & (1 << offset)) > 0)
+        printf("1");
+      else
+        printf("0");
+      //printf("%i", bitmap[chunk] & (1 << offset));
+   }
+   printf("\n");
+}

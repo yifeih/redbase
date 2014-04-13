@@ -14,15 +14,6 @@
 
 // Define the RM file header
 
-struct RM_FileHeader {
-  int recordSize;
-  int numRecordsPerPage;
-  int numPages;
-  PageNum firstFreePage;
-
-  int bitmapOffset;
-  int bitmapSize;
-};
 
 
 /*

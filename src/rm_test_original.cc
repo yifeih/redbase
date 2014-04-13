@@ -23,7 +23,6 @@
 
 #include "redbase.h"
 #include "pf.h"
-#include "rm_internal.h"
 #include "rm.h"
 
 using namespace std;
@@ -59,13 +58,11 @@ struct TestRec {
 PF_Manager pfm;
 RM_Manager rmm(pfm);
 
-
 //
 // Function declarations
 //
 RC Test1(void);
 RC Test2(void);
-RC TestRecord(void);
 
 void PrintError(RC rc);
 void LsFile(char *fileName);
@@ -86,12 +83,11 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       3               // number of tests
+#define NUM_TESTS       2               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
     Test1,
-    Test2,
-    TestRecord
+    Test2
 };
 
 //
@@ -109,11 +105,8 @@ int main(int argc, char *argv[])
     cout << "Starting RM component test.\n";
     cout.flush();
 
-
     // Delete files from last time
     unlink(FILENAME);
-
-    
 
     // If no argument given, do all tests
     if (argc == 1) {
@@ -154,7 +147,7 @@ int main(int argc, char *argv[])
 
     // Write ending message and exit
     cout << "Ending RM component test.\n\n";
-    
+
     return (0);
 }
 
@@ -164,8 +157,6 @@ int main(int argc, char *argv[])
 // Desc: Print an error message by calling the proper component-specific
 //       print-error function
 //
-
-
 void PrintError(RC rc)
 {
     if (abs(rc) <= END_PF_WARN)
@@ -494,14 +485,8 @@ RC Test2(void)
 
     if ((rc = CreateFile(FILENAME, sizeof(TestRec))) ||
         (rc = OpenFile(FILENAME, fh)) ||
-        (rc = AddRecs(fh, FEW_RECS)))
-        return (rc);
-
-
-    if(VerifyFile(fh, FEW_RECS))
-        return (rc);
-
-    if ((rc = CloseFile(FILENAME, fh)))
+        (rc = AddRecs(fh, FEW_RECS)) ||
+        (rc = CloseFile(FILENAME, fh)))
         return (rc);
 
     LsFile(FILENAME);
@@ -512,52 +497,3 @@ RC Test2(void)
     printf("\ntest2 done ********************\n");
     return (0);
 }
-
-
-RC TestRecord(void){
-    RC rc;
-    printf("test5 starting ****************\n");
-    printf("testing RM_Record \n");
-    PageNum page;
-    SlotNum slot;
-
-    RID rid1(1,0);
-    RID rid2(1,1);
-    rid1.GetPageNum(page);
-    rid1.GetSlotNum(slot);
-    printf("RID1: %d %d \n", page, slot);
-    char buffer1[] = "I am rec1";
-    char buffer2[] = "I am rec2";
-    printf("Adding Rec1: %s \n", buffer1);
-    printf("Adding Rec2: %s \n", buffer2);
-
-    RM_Record rec1, rec2;
-    if((rc = rec1.SetRecord(rid1, buffer1, sizeof(buffer1))))
-        return (rc);
-    if((rc = rec2.SetRecord(rid2, buffer2, sizeof(buffer2))))
-        return (rc);
-
-    char * data;
-    rec1.GetData(data);
-    printf("Rec1: %s \n", data);
-    rec2.GetData(data);
-    printf("Rec2: %s \n", data);
-    RID rid4;
-    rid4.GetPageNum(page);
-    rid4.GetSlotNum(slot);
-    printf("RID1: %d %d \n", page, slot);
-
-    printf("Set rec 1 equal to rec 2\n");
-    rec1 = rec2;
-    rec1.GetData(data);
-    printf("Rec1: %s \n", data);
-    RID rid3;
-    rec1.GetRid(rid3);
-    rid3.GetPageNum(page);
-    rid3.GetSlotNum(slot);
-    printf("Rec1 rid: %d %d \n", page, slot);
-
-    printf("\ntest5 done ********************\n");
-    return (0);
-}
-

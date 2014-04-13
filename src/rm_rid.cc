@@ -1,5 +1,6 @@
 
 #include "rm_rid.h"
+#include "rm_internal.h"
 
 RID::RID(){
   page = INVALID_PAGE;
@@ -12,6 +13,14 @@ RID::RID(PageNum pageNum, SlotNum slotNum) {
 }
 
 RID::~RID(){}
+
+RID& RID::operator= (const RID &rid){
+  if (this != &rid){
+    this->page = rid.page;
+    this->slot = rid.slot;
+  }
+  return (*this);
+}
 
 RC RID::GetPageNum(PageNum &pageNum) const {
   if(page == INVALID_PAGE) return RM_INVALIDRID;
@@ -26,7 +35,7 @@ RC RID::GetSlotNum(SlotNum &slotNum) const {
 }
 
 RC RID::isValidRID() const{
-  if(page >= 0 && slot >= 0)
+  if(page > 0 && slot >= 0)
     return 0;
   else
     return RM_INVALIDRID;

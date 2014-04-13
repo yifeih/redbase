@@ -4,6 +4,7 @@
 #include "rm_internal.h"
 #include <string>
 #include <stdlib.h>
+#include <cstdio>
 
 using namespace std;
 
@@ -88,43 +89,47 @@ RC RM_FileScan::OpenScan (const RM_FileHandle &fileHandle,
                   CompOp     compOp,
                   void       *value,
                   ClientHint pinHint) {
+  if (openScan == true)
+    return (RM_INVALIDSCAN);
 
   if(fileHandle.isValidFileHeader())
-    this->fileHandle = fileHandle;
+    this->fileHandle = const_cast<RM_FileHandle*>(&fileHandle);
   else
     return (RM_INVALIDFILE);
-
-  int recSize = this->fileHandle.getRecordSize();
-  if((attrOffset + attrLength) > recSize)
-    return (RM_INVALIDSCAN);
-  this->attrOffset = attrOffset;
-  this->attrLength = attrLength;
-
-  if(attrType == FLOAT || attrType == INT){
-    this->value = (void *) malloc(4);
-    memcpy(this->value, value, 4);
-  }
-  else if(attrType == STRING){
-    this->value = (void *) malloc(attrLength);
-    memcpy(this->value, value, attrLength);
-  }
-  else{
-    return (RM_INVALIDSCAN);
-  }
-
-  this->attrType = attrType;
-
 
   this->value = value;
   this->compOp = compOp;
 
+  if(this->compOp != NO_OP){
+    int recSize = (this->fileHandle)->getRecordSize();
+    if((attrOffset + attrLength) > recSize)
+      return (RM_INVALIDSCAN);
+    this->attrOffset = attrOffset;
+    this->attrLength = attrLength;
+
+    if(attrType == FLOAT || attrType == INT){
+      this->value = (void *) malloc(4);
+      memcpy(this->value, value, 4);
+    }
+    else if(attrType == STRING){
+      this->value = (void *) malloc(attrLength);
+      memcpy(this->value, value, attrLength);
+    }
+    else{
+      return (RM_INVALIDSCAN);
+    }
+
+    this->attrType = attrType;
+  }
+
+
   switch(compOp){
-    case EQ_OP : comparator = equal; break;
-    case LT_OP : comparator = less_than; break;
-    case GT_OP : comparator = greater_than; break;
-    case LE_OP : comparator = less_than_or_eq_to; break;
-    case GE_OP : comparator = greater_than_or_eq_to; break;
-    case NE_OP : comparator = not_equal; break;
+    case EQ_OP : comparator = &equal; break;
+    case LT_OP : comparator = &less_than; break;
+    case GT_OP : comparator = &greater_than; break;
+    case LE_OP : comparator = &less_than_or_eq_to; break;
+    case GE_OP : comparator = &greater_than_or_eq_to; break;
+    case NE_OP : comparator = &not_equal; break;
     case NO_OP : comparator = NULL; break;
     default: return (RM_INVALIDSCAN);
   }
@@ -132,7 +137,7 @@ RC RM_FileScan::OpenScan (const RM_FileHandle &fileHandle,
   openScan = true;
   scanEnded = false;
   scanPage = 1;
-  scanSlot = 0;
+  scanSlot = BEGIN_SCAN;
   return (0);
 } 
 
@@ -141,17 +146,19 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
   RC rc;
   while(true){
     RM_Record temprec;
-    if((rc=fileHandle.GetNextRecord(scanPage, scanSlot, temprec, currentPH))){
+    if((rc=fileHandle->GetNextRecord(scanPage, scanSlot, temprec, currentPH))){
       if(rc == RM_EOF){
         scanEnded = true;
       }
       return (rc);
     }
     RID rid;
+    //printf("rec size in filescan: %d \n", temprec.size);
     temprec.GetRid(rid);
 
     rid.GetPageNum(scanPage);
     rid.GetSlotNum(scanSlot);
+    //printf("Rec retrieved: %d, %d \n", scanPage, scanSlot);
     /*
     if(this->slot == (header.numRecordsPerPage -1)){
       this->page++;
@@ -159,11 +166,17 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
     }
     */
     char *pData;
-    if((rc = rec.GetData(pData))){
+    if((rc = temprec.GetData(pData))){
       return (rc);
     }
-    bool satisfies = (* comparator)(pData + this->attrOffset, this->value, this->attrType, this->attrLength);
-    if(satisfies){
+    if(compOp != NO_OP){
+      bool satisfies = (* comparator)(pData + attrOffset, this->value, attrType, attrLength);
+      if(satisfies){
+        rec = temprec;
+      break;
+      }
+    }
+    else{
       rec = temprec;
       break;
     }
@@ -172,13 +185,15 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
 }
 
 RC RM_FileScan::CloseScan () {
+  RC rc;
   if(openScan == false){
     return (RM_INVALIDSCAN);
   }
   if(scanEnded == false){
-    //fileHandle.UnpinPage(scanPage);
+    if((rc = fileHandle->pfh.UnpinPage(scanPage)))
+      return (rc);
   }
   free(value);
   openScan = false;
-  return true;
+  return (0);
 }
