@@ -1,9 +1,13 @@
-
+//
+// File:        rm_rid.cc
+// Description: rm_rid represents a RID
+// Author:      Yifei Huang (yifei@stanford.edu)
+//
 #include "rm_rid.h"
 #include "rm_internal.h"
 
 RID::RID(){
-  page = INVALID_PAGE;
+  page = INVALID_PAGE; // initially the RID refers to invalid page/slot
   slot = INVALID_SLOT;
 }
 
@@ -14,6 +18,9 @@ RID::RID(PageNum pageNum, SlotNum slotNum) {
 
 RID::~RID(){}
 
+/*
+ * Copies contents of one RID to another
+ */
 RID& RID::operator= (const RID &rid){
   if (this != &rid){
     this->page = rid.page;
@@ -22,18 +29,33 @@ RID& RID::operator= (const RID &rid){
   return (*this);
 }
 
+bool RID::operator== (const RID &rid) const{
+  return (this->page == rid.page && this->slot == rid.slot);
+}
+
+/*
+ * Returns the page number of an RID only if it's a valid
+ * page number, otherwise return error
+ */
 RC RID::GetPageNum(PageNum &pageNum) const {
   if(page == INVALID_PAGE) return RM_INVALIDRID;
   pageNum = page;
   return 0;
 }
 
+/*
+ * Returns the page number of an RID only if it's a valid
+ * slot number, otherwise return error
+ */
 RC RID::GetSlotNum(SlotNum &slotNum) const {
   if(slot == INVALID_SLOT) return RM_INVALIDRID;
   slotNum = slot;
   return 0;
 }
 
+/*
+ * Checks that this is a valid RID
+ */
 RC RID::isValidRID() const{
   if(page > 0 && slot >= 0)
     return 0;

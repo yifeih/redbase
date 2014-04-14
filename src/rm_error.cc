@@ -1,8 +1,9 @@
 //
-// File:        pf_error.cc
-// Description: PF_PrintError function
+// File:        rm_error.cc
+// Description: RM_PrintError functions
 // Authors:     Hugo Rivero (rivero@cs.stanford.edu)
 //              Dallan Quass (quass@cs.stanford.edu)
+//              Yifei Huang (yifei@stanford.edu)
 //
 
 #include <cerrno>
@@ -30,23 +31,14 @@ static char *RM_WarnMsg[] = {
 };
 
 static char *RM_ErrorMsg[] = {
-  (char*)"no memory",
-  (char*)"no buffer space",
-  (char*)"incomplete read of page from file",
-  (char*)"incomplete write of page to file",
-  (char*)"incomplete read of header from file",
-  (char*)"incomplete write of header from file",
-  (char*)"new page to be allocated already in buffer",
-  (char*)"hash table entry not found",
-  (char*)"page already in hash table",
-  (char*)"invalid file name"
+  (char*)"RM error"
 };
 
 //
-// PF_PrintError
+// RM_PrintError
 //
-// Desc: Send a message corresponding to a PF return code to cerr
-//       Assumes PF_UNIX is last valid PF return code
+// Desc: Send a message corresponding to a RM return code to cerr
+//       Assumes PF_UNIX is last valid RM return code
 // In:   rc - return code for which a message is desired
 //
 void RM_PrintError(RC rc)
@@ -59,12 +51,6 @@ void RM_PrintError(RC rc)
   else if (-rc >= -START_RM_ERR && -rc < -RM_LASTERROR)
     // Print error
     cerr << "RM error: " << RM_ErrorMsg[-rc + START_RM_ERR] << "\n";
-  else if (rc == PF_UNIX)
-#ifdef PC
-      cerr << "OS error\n";
-#else
-      cerr << strerror(errno) << "\n";
-#endif
   else if (rc == 0)
     cerr << "RM_PrintError called with return code of 0\n";
   else

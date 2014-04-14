@@ -20,6 +20,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <cstdlib>
+#include <vector>
 
 #include "redbase.h"
 #include "pf.h"
@@ -58,6 +59,7 @@ struct TestRec {
 //
 PF_Manager pfm;
 RM_Manager rmm(pfm);
+vector<int> rids;
 
 
 //
@@ -65,6 +67,7 @@ RM_Manager rmm(pfm);
 //
 RC Test1(void);
 RC Test2(void);
+RC Test3(void);
 
 void PrintError(RC rc);
 void LsFile(char *fileName);
@@ -89,7 +92,8 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec);
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
     Test1,
-    Test2
+    Test2,
+    Test3
 };
 
 //
@@ -231,6 +235,7 @@ RC AddRecs(RM_FileHandle &fh, int numRecs)
             (rc = rid.GetPageNum(pageNum)) ||
             (rc = rid.GetSlotNum(slotNum)))
             return (rc);
+        //rids.push_back(pageNum*fh.header.numRecordsPerPage + slotNum);
 
         if ((i + 1) % PROG_UNIT == 0){
             printf("%d  ", i + 1);
@@ -361,6 +366,15 @@ RC PrintFile(RM_FileScan &fs)
     return (0);
 }
 
+/*
+RC DeleteRandomRecs(RM_FileHandle &fh, int numRecords){
+    for(int i = 0; i < numRecords; i++){
+        srand(time(NULL));
+        int 
+    }
+
+}
+*/
 ////////////////////////////////////////////////////////////////////////
 // The following functions are wrappers for some of the RM component  //
 // methods.  They give you an opportunity to add debugging statements //
@@ -576,5 +590,23 @@ RC Test2(void){
 
     return (0);
 
+}
+
+RC Test3(void){
+    RC rc;
+    RM_FileHandle fh;
+    RM_FileHandle fh2;
+    RM_Record rec;
+    RID rid;
+    printf("\n*** File Creation Test: %s\n", 
+         (CreateFile(FILENAME, sizeof(TestRec))) ? "FAIL\a" : "PASS");
+    printf("\n*** File Open Test: %s\n", 
+         (OpenFile(FILENAME, fh)) ? "FAIL\a" : "PASS");
+    // OK
+    printf("\n*** Add Records Test: %s\n", 
+         (AddRecs(fh, FEW_RECS)) ? "FAIL\a" : "PASS");
+
+
+    return (0);
 }
 
