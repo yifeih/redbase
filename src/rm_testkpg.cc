@@ -621,7 +621,7 @@ RC Test1(void)
    // count them
    int counterbefore = 0;
    for (rc = GetNextRecScan(fs, rec); 
-         rc == 0 && counter < 2000; 
+         rc == 0 && counter < 4000; 
          rc = GetNextRecScan(fs, rec), counter++) {
 
       // Get the record id

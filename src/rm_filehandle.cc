@@ -1,3 +1,9 @@
+//
+// File:        rm_filehandle.cc
+// Description: RM_FileHandle handles record manipulation on the page.
+// Author:      Yifei Huang (yifei@stanford.edu)
+//
+
 #include <unistd.h>
 #include <sys/types.h>
 #include "pf.h"
@@ -250,20 +256,18 @@ RC RM_FileHandle::DeleteRec (const RID &rid) {
   if((rc = ResetBit(bitmap, header.numRecordsPerPage, slot)))
     goto cleanup_and_exit;
   pageheader->numRecords--;
-  if(pageheader->numRecords == 0){
-    if((rc = pfh.UnpinPage(page)) || (rc = pfh.DisposePage(page))){
+  //if(pageheader->numRecords == 0){
+  //  if((rc = pfh.UnpinPage(page)) || (rc = pfh.DisposePage(page))){
       //printf("error here: %d \n", rc);
-      header.numPages--;
-      return (rc);
-    }
-    return (0);
-  }
-  /*
+  //    header.numPages--;
+  //    return (rc);
+  //  }
+  //  return (0);
+  //}
   if(pageheader->numRecords == header.numRecordsPerPage - 1){
     pageheader->nextFreePage = header.firstFreePage;
     header.firstFreePage = page;
-  }
-  */
+ }
   //printBits(bitmap, header.numRecordsPerPage);
 
   cleanup_and_exit:
@@ -362,8 +366,9 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
   SlotNum nextRecSlot;
 
   if(nextPage){
+    while(true){
     //printf("use next page\n");
-    if((PF_EOF == pfh.GetNextPage(page, ph)))
+    if((PF_EOF == pfh.GetNextPage(nextRecPage, ph)))
       return (RM_EOF);
 
     if((rc = ph.GetPageNum(nextRecPage)))
@@ -371,8 +376,13 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
 
     if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
       return (rc);
+    //GetNextOneBit(bitmap, header.numRecordsPerPage, 0, nextRec);
 
-    GetNextOneBit(bitmap, header.numRecordsPerPage, 0, nextRec);
+    if(GetNextOneBit(bitmap, header.numRecordsPerPage, 0, nextRec) != RM_ENDOFPAGE)
+      break;
+    if((rc = pfh.UnpinPage(nextRecPage)))
+      return (rc);
+  }
   }
   else{
     if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
@@ -458,16 +468,13 @@ bool RM_FileHandle::isValidFH() const{
 
 bool RM_FileHandle::isValidFileHeader() const{
   if(!isValidFH()){
-    printf("case1 \n");
     return false;
   }
   if(header.recordSize <= 0 || header.numRecordsPerPage <= 0 || header.numPages <= 0){
-    printf("case 2\n");
     return false;
   }
   if((header.bitmapOffset + header.bitmapSize + header.recordSize*header.numRecordsPerPage) >
     PF_PAGE_SIZE){
-    printf("case 3\n");
     return false;
   }
   return true;

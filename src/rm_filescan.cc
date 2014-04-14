@@ -15,12 +15,7 @@ RM_FileScan::~RM_FileScan(){
   if (this->value != NULL)
     free(value);
 }
-/*
-int compare_string(string &v1, string &v2, void * value1, void * value2, int attrLength){
-  v1.copy( (char * )value1, (size_t)attrLength, 0);
-  v2.copy( (char * )value2, (size_t)attrLength, 0);
-  return v1.compare(v2);
-}*/
+
 
 
 bool equal(void * value1, void * value2, AttrType attrtype, int attrLength){
@@ -153,15 +148,20 @@ RC RM_FileScan::OpenScan (const RM_FileHandle &fileHandle,
   RC rc;
 
   // Set up the first page, and 
+  /*
   if((this->fileHandle)->pfh.GetNextPage(0, currentPH) == PF_EOF)
     scanEnded = true;
   currentPH.GetPageNum(scanPage);
   if((rc = GetNumRecOnPage(currentPH, numRecOnPage)))
     return (rc);
-  /*if(rc = (this->fileHandle)->pfh.UnpinPage(scanPage)){
-    return (rc);
-  }*/
-  useNextPage = false;
+  //if(rc = (this->fileHandle)->pfh.UnpinPage(scanPage)){
+  //  return (rc);
+  //}
+  */
+  numRecOnPage = 0;
+  numSeenOnPage = 0;
+  useNextPage = true;
+  scanPage = 0;
   scanSlot = BEGIN_SCAN;
   numSeenOnPage = 0;
   return (0);
