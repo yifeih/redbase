@@ -35,7 +35,7 @@ using namespace std;
 #define STRLEN      29               // length of string in testrec
 #define PROG_UNIT   50               // how frequently to give progress
                                       //   reports when adding lots of recs
-#define FEW_RECS   20                // number of records added in
+#define FEW_RECS   400                // number of records added in
 
 //
 // Computes the offset of a field in a record (should be in <stddef.h>)
@@ -65,8 +65,6 @@ RM_Manager rmm(pfm);
 //
 RC Test1(void);
 RC Test2(void);
-RC Test3(void);
-RC Test4(void);
 
 void PrintError(RC rc);
 void LsFile(char *fileName);
@@ -87,13 +85,11 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       4               // number of tests
+#define NUM_TESTS       2               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
     Test1,
-    Test2,
-    Test3,
-    Test4
+    Test2
 };
 
 //
@@ -456,67 +452,8 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec)
     return (fs.GetNextRec(rec));
 }
 
-/////////////////////////////////////////////////////////////////////
-// Sample test functions follow.                                   //
-/////////////////////////////////////////////////////////////////////
 
-//
-// Test1 tests simple creation, opening, closing, and deletion of files
-//
-RC Test1(void)
-{
-    RC            rc;
-    RM_FileHandle fh;
-
-    printf("test1 starting ****************\n");
-
-    if ((rc = CreateFile(FILENAME, sizeof(TestRec))) ||
-        (rc = OpenFile(FILENAME, fh)) ||
-        (rc = CloseFile(FILENAME, fh)))
-        return (rc);
-
-    LsFile(FILENAME);
-
-    if ((rc = DestroyFile(FILENAME)))
-        return (rc);
-
-    printf("\ntest1 done ********************\n");
-    return (0);
-}
-
-//
-// Test2 tests adding a few records to a file.
-//
-RC Test2(void)
-{
-    RC            rc;
-    RM_FileHandle fh;
-
-    printf("test2 starting ****************\n");
-
-    if ((rc = CreateFile(FILENAME, sizeof(TestRec))) ||
-        (rc = OpenFile(FILENAME, fh)) ||
-        (rc = AddRecs(fh, FEW_RECS)))
-        return (rc);
-
-
-    if(VerifyFile(fh, FEW_RECS))
-        return (rc);
-
-    if ((rc = CloseFile(FILENAME, fh)))
-        return (rc);
-
-    LsFile(FILENAME);
-
-    if ((rc = DestroyFile(FILENAME)))
-        return (rc);
-
-    printf("\ntest2 done ********************\n");
-    return (0);
-}
-
-
-RC Test3(void){
+RC Test1(void){
    RC rc;
    RM_FileHandle fh1;
    RM_FileHandle fh2;
@@ -572,7 +509,7 @@ RC Test3(void){
    return (0);
 }
 
-RC Test4(void){
+RC Test2(void){
     RC rc;
     RM_FileHandle fh;
     RM_FileHandle fh2;

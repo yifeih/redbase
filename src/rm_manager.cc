@@ -17,8 +17,6 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize) {
   if(recordSize <= 0 || recordSize > PF_PAGE_SIZE)
     return RM_BADRECORDSIZE;
 
-  if((rc = pfm.CreateFile(fileName)))
-    return (rc);
 
   struct RM_FileHeader header;
   header.recordSize = recordSize;
@@ -36,6 +34,8 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize) {
   if(numRecordsPerPage <= 0)
     return RM_BADRECORDSIZE;
   header.numRecordsPerPage = numRecordsPerPage;
+  if((rc = pfm.CreateFile(fileName)))
+    return (rc);
 
   PF_PageHandle ph;
   PF_FileHandle fh;

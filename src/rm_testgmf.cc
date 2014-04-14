@@ -24,7 +24,7 @@ using namespace std;
 #define STRLEN      29               // length of string in testrec
 #define PROG_UNIT   50               // how frequently to give progress
                                      //   reports when adding lots of recs
-#define FEW_RECS    4000             // number of records added in
+#define FEW_RECS    1000             // number of records added in
 
 //
 // Computes the offset of a field in a record (should be in <stddef.h>)
@@ -579,7 +579,7 @@ RC Test1(void)
    if ((rc = CreateFile(FILENAME, sizeof(TestRec))) ||
          (rc = OpenFile(FILENAME, fh)) ||
          (rc = AddRecs(fh, FEW_RECS)) ||
-         (rc = CloseFile(FILENAME, fh)))
+         (rc = CloseFile(FILENAME, fh))) 
       return (rc);
 
    printf("\ntest1 done ********************\n");

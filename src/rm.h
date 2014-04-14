@@ -22,6 +22,13 @@
 #include "rm_rid.h"
 #include "pf.h"
 
+//TO REMOVE
+struct TestRec1 {
+    char  str[29];
+    int   num;
+    float r;
+};
+
 
 //
 // RM_Record: RM Record interface
@@ -85,7 +92,7 @@ private:
     static int CalcNumRecPerPage(int recSize);
     bool isValidFileHeader() const;
     int getRecordSize();
-    RC GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_PageHandle &ph);
+    RC GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_PageHandle &ph, bool nextPage);
     RC AllocateNewPage(PF_PageHandle &ph, PageNum &page);
     bool isValidFH() const;
     RC GetPageDataAndBitmap(PF_PageHandle &ph, char *&bitmap, struct RM_PageHeader *&pageheader) const;
@@ -141,8 +148,10 @@ private:
     SlotNum scanSlot;
     PF_PageHandle currentPH;
     bool scanEnded;
+
     int numRecOnPage;
     int numSeenOnPage;
+    bool useNextPage;
 };
 
 //

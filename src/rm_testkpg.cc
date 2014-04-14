@@ -66,6 +66,7 @@ RM_Manager rmm(pfm);
 RC Test1(void);
 RC Test2(void);
 RC Test3(void);
+RC Test4(void);
 
 
 void PrintError(RC rc);
@@ -87,12 +88,13 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec);
 // 
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       3               // number of tests
+#define NUM_TESTS       4               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
   Test1, 
   Test2,
-  Test3
+  Test3,
+  Test4
 };
 
 //
@@ -631,7 +633,7 @@ RC Test1(void)
    if ((rc = fs.CloseScan()))
       return(rc);
    
-
+   
    if ((rc=fs.OpenScan(fh,INT,sizeof(int),offsetof(TestRec, num), 
          NO_OP, NULL)))
       return (rc);
@@ -672,6 +674,7 @@ RC Test1(void)
       if ((rc = rec.GetRid(rid)))
          return (rc);
    }
+
    printf("counter %d \n", counter);
 
    printf("%s\n",((rc == RM_EOF)&&(counter==2000)) ? "PASS" : "FAIL\a");
@@ -682,8 +685,11 @@ RC Test1(void)
    printf("\n*** Reuse Space (Should fill up old pages) Test: %s\n", 
          (AddRecs(fh, LESS_RECS)) ? "FAIL\a" : "PASS");
 
+   
    printf("\n*** File Close Test: %s\n", 
-         (CloseFile(FILENAME, fh)) ? "FAIL\a" : "PASS");     
+         (CloseFile(FILENAME, fh)) ? "FAIL\a" : "PASS");
+   //if((rc = CloseFile(FILENAME, fh)))
+   //   return (rc);     
 
    printf("\n*** File Destroy Test: %s\n", 
          (DestroyFile(FILENAME)) ? "FAIL\a" : "PASS");     
@@ -720,6 +726,7 @@ RC Test2(void)
    // OK
    printf("\n*** File Open Test: %s\n", 
          (OpenFile(FILENAME, fh)) ? "FAIL\a" : "PASS");
+
    // fh already has open file
    printf("\n*** Illegal File Open Test: %s\n", 
          (OpenFile(FILENAME, fh)) ? "PASS" :"FAIL\a");  
@@ -903,6 +910,7 @@ bp9:
    numSel = 0;
    printf("\n*** File Scan STRING LE_OP Test: ");
    char compStr[] = "a92                           ";
+   printf("RAWR: %s \n", compStr);
    fileScan.CloseScan();
    fileScan.OpenScan(fh, STRING, STRLEN, offsetof(TestRec, str), 
          LE_OP, &compStr);
@@ -910,6 +918,11 @@ bp9:
       if ((rc = fileScan.GetNextRec(rec)) && (rc != RM_EOF)) goto err10;
       if (rc == RM_EOF) break;
       if ((rc = rec.GetData((char *&) data))) goto err10;
+      /*
+      TestRec *buf;
+      rec.GetData((char *&)buf);
+      printf("record: [%s, %d, %f] \n", buf->str, buf->num, buf->r);  
+      */
       numSel++;
    }
    printf("%s\n",  (numSel == 3913) ? "PASS" : "FAIL\a");
@@ -1189,4 +1202,18 @@ bp33:
 
    return (0);
 
+}
+
+RC Test4(void){
+  char buf1[] = "a92          ";
+  char buf2[] = "a91";
+  char buf3[] = "a94";
+
+  printf("comparing 'a92      ' with 'a94'\n");
+  if(strncmp(buf1, buf2, 29) < 0)
+   printf("first is smaller \n");
+  else
+   printf("second is smaller\n");
+
+  return (0);
 }

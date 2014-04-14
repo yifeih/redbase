@@ -39,7 +39,6 @@ private:
 struct RM_PageHeader {
   PageNum nextFreePage;
   int numRecords;
-  int allocPage;
 };
 
 #include "rm.h"

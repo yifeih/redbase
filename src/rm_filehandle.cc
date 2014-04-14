@@ -34,7 +34,7 @@ RM_FileHandle& RM_FileHandle::operator= (const RM_FileHandle &fileHandle){
 // RETURNS PINNED PAGE
 RC RM_FileHandle::AllocateNewPage(PF_PageHandle &ph, PageNum &page){
   RC rc;
-
+  //PageNum page;
   if((rc = pfh.AllocatePage(ph))){
     return (rc);
   }
@@ -42,16 +42,19 @@ RC RM_FileHandle::AllocateNewPage(PF_PageHandle &ph, PageNum &page){
   ph.GetPageNum(page);
  
   // Setup Header
-  RM_PageHeader pageHeader;
-  pageHeader.nextFreePage = header.firstFreePage;
-  pageHeader.numRecords = 0;
+  //struct RM_PageHeader pageHeader;
+  //pageHeader.nextFreePage = header.firstFreePage;
+  //pageHeader.numRecords = 0;
 
   // Copy header
   char *pageData;
   if((rc = ph.GetData(pageData))){
     return (rc);
   }
-  memcpy(pageData, &pageHeader, sizeof(pageHeader));
+  struct RM_PageHeader *pageHeader = (struct RM_PageHeader *) pageData;
+  pageHeader->nextFreePage = header.firstFreePage;
+  pageHeader->numRecords = 0;
+  //memcpy(pageData, &pageHeader, sizeof(pageHeader));
 
   // Setup Bitmap right after header
   char bitmap[header.bitmapSize];
@@ -60,6 +63,10 @@ RC RM_FileHandle::AllocateNewPage(PF_PageHandle &ph, PageNum &page){
 
   memcpy(pageData+header.bitmapOffset, bitmap, header.bitmapSize);
   header.firstFreePage = page;
+
+  // TODO: write gotos
+  //if((rc = pfh.UnpinPage(page)))
+  //  return (rc);
 
   return (0);
 
@@ -164,7 +171,9 @@ RC RM_FileHandle::InsertRec (const char *pData, RID &rid) {
   PageNum page;
   if (header.firstFreePage == NO_FREE_PAGES){
     AllocateNewPage(ph, page);
-    printf("allocated new page\n");
+    //printf("allocated new page\n");
+    //ph.GetPageNum(page);
+    //pfh.GetThisPage(page, ph);
   }
   else{
     if((rc = pfh.GetThisPage(header.firstFreePage, ph)))
@@ -174,10 +183,10 @@ RC RM_FileHandle::InsertRec (const char *pData, RID &rid) {
 
   char *bitmap;
   struct RM_PageHeader *pageheader;
+  int slot;
   if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
     goto cleanup_and_exit;
 
-  int slot;
   if((rc = GetFirstZeroBit(bitmap, header.numRecordsPerPage, slot)))
     goto cleanup_and_exit;
   if((rc = SetBit(bitmap, header.numRecordsPerPage, slot)))
@@ -237,17 +246,25 @@ RC RM_FileHandle::DeleteRec (const RID &rid) {
     goto cleanup_and_exit;
   }
 
-  printf("resetting bit: \n");
+  //printf("resetting bit: \n");
   if((rc = ResetBit(bitmap, header.numRecordsPerPage, slot)))
     goto cleanup_and_exit;
   pageheader->numRecords--;
   if(pageheader->numRecords == 0){
     if((rc = pfh.UnpinPage(page)) || (rc = pfh.DisposePage(page))){
-      printf("error here: %d \n", rc);
+      //printf("error here: %d \n", rc);
+      header.numPages--;
       return (rc);
     }
     return (0);
   }
+  /*
+  if(pageheader->numRecords == header.numRecordsPerPage - 1){
+    pageheader->nextFreePage = header.firstFreePage;
+    header.firstFreePage = page;
+  }
+  */
+  //printBits(bitmap, header.numRecordsPerPage);
 
   cleanup_and_exit:
   RC rc2;
@@ -336,15 +353,61 @@ RC RM_FileHandle::UnpinPage(PageNum page){
   return (0);
 }*/
 
+RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_PageHandle &ph, bool nextPage){
+  RC rc = 0;
+  char *bitmap;
+  struct RM_PageHeader *pageheader;
+  int nextRec;
+  PageNum nextRecPage = page;
+  SlotNum nextRecSlot;
+
+  if(nextPage){
+    //printf("use next page\n");
+    if((PF_EOF == pfh.GetNextPage(page, ph)))
+      return (RM_EOF);
+
+    if((rc = ph.GetPageNum(nextRecPage)))
+      return (rc);
+
+    if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
+      return (rc);
+
+    GetNextOneBit(bitmap, header.numRecordsPerPage, 0, nextRec);
+  }
+  else{
+    if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
+      return (rc);
+    if(GetNextOneBit(bitmap, header.numRecordsPerPage, slot + 1, nextRec) == RM_ENDOFPAGE)
+      return (RM_EOF);
+  }
+
+  nextRecSlot = nextRec;
+  RID rid(nextRecPage, nextRecSlot);
+  //printf("next record page: %d, slot: %d \n", nextRecPage, nextRecSlot);
+  //printf("Nextrec page: %d, slot %d \n", nextRecPage, nextRecSlot);
+  //TestRec *pRecBufAgain;
+  //pRecBufAgain = (TestRec *) (bitmap + (header.bitmapSize) + (nextRecSlot)*(header.recordSize));
+  //printf("Nextrec rec: [%s, %d, %f] \n", pRecBufAgain->str, pRecBufAgain->num, pRecBufAgain->r);  
+
+
+  // Set the record and return it
+  if((rc = rec.SetRecord(rid, bitmap + (header.bitmapSize) + (nextRecSlot)*(header.recordSize), 
+    header.recordSize)))
+    return (rc);
+  //printf("gets to end of FH GNR\n");
+  return (0);
+}
+
+/*
 RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_PageHandle &ph){
   RC rc = 0;
   char *bitmap;
   struct RM_PageHeader *pageheader;
-  /*
-  if(page == 1 && slot == BEGIN_SCAN){
-    if((rc = pfh.GetThisPage(page, ph)))
-      return (rc);
-  }*/
+  
+  //if(page == 1 && slot == BEGIN_SCAN){
+  //  if((rc = pfh.GetThisPage(page, ph)))
+  //    return (rc);
+  //}
 
   if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
       return (rc);
@@ -382,54 +445,9 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
     return (rc);
   //printf("gets to end of FH GNR\n");
   return (0);
-  /*
-  RC rc;
-  PF_PageHandle ph;
-  char *bitmap;
-  struct RM_PageHeader *pageheader;
-  // retrieve the 
-  if(slot != (header.numRecordsPerPage - 1)){
-    if((rc = pfh.GetThisPage(page, ph)))
-      return (rc);
-    char *pData;
-    if((rc = ph.GetData(pData)) || (rc = GetPageDataAndBitmap(ph, bitmap, pageheader))){
-      RC rc2;
-      if((rc2 =pfh.UnpinPage(page)))
-        return (rc2);
-      return (rc);
-    }
-  }
-
-  int nextRec;
-  PageNum nextRecPage;
-  SlotNum nextRecSlot;
-  if(slot == (header.numRecordsPerPage-1) || 
-    GetNextOneBit(bitmap, header.bitmapSize, slot, nextRec) == RM_ENDOFPAGE){
-    PF_PageHandle ph2;
-    if((PF_EOF == pfh.GetNextPage(page, ph2))){
-      return (RM_EOF);
-    }
-    if((rc = ph2.GetPageNum(nextRecPage)) || (rc = pfh.UnpinPage(nextRecPage)))
-      return rc;
-
-    if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
-      return (rc);
-    GetNextOneBit(bitmap, header.bitmapSize, 0, nextRec);
-    nextRecSlot = nextRec;
-  }
-  else{
-    nextRecPage = page;
-    nextRecSlot = nextRec;
-  }
-
-  RID rid(nextRecPage, nextRecSlot);
-  // Set the record and return it
-  if((rc = rec.SetRecord(rid, bitmap + (header.bitmapSize) + slot*(header.recordSize), 
-    header.recordSize)))
-    return (rc);
-  */
+  
   return (0);
-}
+}*/
 
 
 bool RM_FileHandle::isValidFH() const{
