@@ -58,18 +58,14 @@ RC RM_FileHandle::AllocateNewPage(PF_PageHandle &ph, PageNum &page){
     return (rc);
  
   // create the page header
-  char *pageData;
-  if((rc = ph.GetData(pageData)))
+  char *bitmap;
+  struct RM_PageHeader *pageheader;
+  if((rc = GetPageDataAndBitmap(ph, bitmap, pageheader)))
     return (rc);
-  struct RM_PageHeader *pageHeader = (struct RM_PageHeader *) pageData;
-  pageHeader->nextFreePage = header.firstFreePage;
-  pageHeader->numRecords = 0;
-
-  // Setup Bitmap right after header
-  char bitmap[header.bitmapSize];
+  pageheader->nextFreePage = header.firstFreePage;
+  pageheader->numRecords = 0;
   if((rc = ResetBitmap(bitmap, header.numRecordsPerPage)))
     return (rc);
-  memcpy(pageData+header.bitmapOffset, bitmap, header.bitmapSize);
 
   header.numPages++; // update the file header to reflect addition of one
                      // more page
@@ -324,7 +320,7 @@ RC RM_FileHandle::UpdateRec (const RM_Record &rec) {
   RC rc2;
   if((rc2 = pfh.MarkDirty(page)) || (rc2 = pfh.UnpinPage(page)))
     return (rc2);
-  return (0); 
+  return (rc); 
 }
 
 

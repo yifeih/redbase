@@ -36,7 +36,6 @@ public:
     RID& operator= (const RID &rid);               // Copies RID
     bool operator== (const RID &rid) const;
 
-    // GetPageNum and GetSlotNum throw errors if the RID is not valid
     RC GetPageNum(PageNum &pageNum) const;         // Return page number
     RC GetSlotNum(SlotNum &slotNum) const;         // Return slot number
 

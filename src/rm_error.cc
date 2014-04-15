@@ -51,6 +51,12 @@ void RM_PrintError(RC rc)
   else if (-rc >= -START_RM_ERR && -rc < -RM_LASTERROR)
     // Print error
     cerr << "RM error: " << RM_ErrorMsg[-rc + START_RM_ERR] << "\n";
+  else if (rc == PF_UNIX)
+#ifdef PC
+      cerr << "OS error\n";
+#else
+      cerr << strerror(errno) << "\n";
+#endif
   else if (rc == 0)
     cerr << "RM_PrintError called with return code of 0\n";
   else

@@ -21,7 +21,6 @@
 
 #include "redbase.h"
 #include "pf.h"
-#include "rm_internal.h"
 #include "rm.h"
 #include <ctime>
 
@@ -281,12 +280,8 @@ RC AddRandRecs(RM_FileHandle &fh, int numRecs)
     PageNum pageNum;
     SlotNum slotNum;
     
-    // We set all of the TestRec to be 0 initially.  This heads off
-    // warnings that Purify will give regarding UMR since sizeof(TestRec)
-    // is 40, whereas actual size is 37.
     memset((void *)&recBuf, 0, sizeof(recBuf));
 
-    //printf("\nadding %d records\n", numRecs);
     for (i = 0; i < numRecs; i++) {
         memset(recBuf.str, ' ', STRLEN);
         sprintf(recBuf.str, "a%d", i);
@@ -308,19 +303,7 @@ RC AddRandRecs(RM_FileHandle &fh, int numRecs)
         recsInFile++;
         if(index > maxIndex)
             maxIndex = index;
-        /*
-        if ((i + 1) % PROG_UNIT == 0){
-            printf("%d  ", i + 1);
-            fflush(stdout);
-        }
-        */
     }
-    /*
-    if (i % PROG_UNIT != 0)
-        printf("%d\n", i);
-    else
-        putchar('\n');
-        */
 
     // Return ok
     return (0);
@@ -364,7 +347,6 @@ RC VerifyRandFile(RM_FileHandle &fh){
     RM_Record rec;
     // Count that there are recsInFile number of records:
     int counter = 0;
-    //printf("num records: %d\n", recsInFile);
 
    if ((rc=fs.OpenScan(fh,INT,sizeof(int),offsetof(TestRec, num), 
          NO_OP, NULL)))
@@ -373,17 +355,10 @@ RC VerifyRandFile(RM_FileHandle &fh){
    for (rc = GetNextRecScan(fs, rec); 
          rc != (RM_EOF); 
          rc = GetNextRecScan(fs, rec), counter++) {
-
-      // Get the record id
-      //if ((rc = rec.GetRid(rid)))
-      //   return (rc);
    }
-   //printf("counterbefore: %d \n", counter);
-   //printf("counter %d \n", counter);
    if ((rc = fs.CloseScan()))
       return(rc);
    if(counter != recsInFile)
-   //printf("counter: %d \n", counter);
       return (RM_EOF);
 
 
@@ -544,15 +519,7 @@ RC PrintFile(RM_FileScan &fs)
     return (0);
 }
 
-/*
-RC DeleteRandomRecs(RM_FileHandle &fh, int numRecords){
-    for(int i = 0; i < numRecords; i++){
-        srand(time(NULL));
-        int 
-    }
 
-}
-*/
 ////////////////////////////////////////////////////////////////////////
 // The following functions are wrappers for some of the RM component  //
 // methods.  They give you an opportunity to add debugging statements //

@@ -34,21 +34,19 @@ bool RID::operator== (const RID &rid) const{
 }
 
 /*
- * Returns the page number of an RID only if it's a valid
- * page number, otherwise return error
+ * Returns the page number of an RID 
  */
 RC RID::GetPageNum(PageNum &pageNum) const {
-  if(page == INVALID_PAGE) return RM_INVALIDRID;
+  //if(page == INVALID_PAGE) return RM_INVALIDRID;
   pageNum = page;
   return 0;
 }
 
 /*
- * Returns the page number of an RID only if it's a valid
- * slot number, otherwise return error
+ * Returns the page number of an RID o
  */
 RC RID::GetSlotNum(SlotNum &slotNum) const {
-  if(slot == INVALID_SLOT) return RM_INVALIDRID;
+  //if(slot == INVALID_SLOT) return RM_INVALIDRID;
   slotNum = slot;
   return 0;
 }

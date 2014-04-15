@@ -259,14 +259,14 @@ RC VerifyFile(RM_FileHandle &fh, int numRecs)
       if (pRecBuf->num < 0 || pRecBuf->num >= numRecs ||
             strcmp(pRecBuf->str, stringBuf) || 
             pRecBuf->r != (float)pRecBuf->num) {
-         printf("VerifyFile: invalid record = [%s, %d, %f]\n",
-               pRecBuf->str, pRecBuf->num, pRecBuf->r);
+         //printf("VerifyFile: invalid record = [%s, %d, %f]\n",
+         //      pRecBuf->str, pRecBuf->num, pRecBuf->r);
          exit(1);
       }
 
       if (found[pRecBuf->num]) {
-         printf("VerifyFile: duplicate record = [%s, %d, %f]\n",
-               pRecBuf->str, pRecBuf->num, pRecBuf->r);
+         //printf("VerifyFile: duplicate record = [%s, %d, %f]\n",
+         //      pRecBuf->str, pRecBuf->num, pRecBuf->r);
          exit(1);
       }
 
@@ -445,7 +445,7 @@ RC UpdateFile(RM_FileHandle & fh)
 	  pRecBuf->r   = (float)(pRecBuf->num);
       memset(pRecBuf->str, ' ', STRLEN);
       sprintf(pRecBuf->str, "a%d", pRecBuf->num);	
-      printf("RMTEST update to: [%s, %d, %f] \n", pRecBuf->str, pRecBuf->num, pRecBuf->r);  
+      //printf("RMTEST update to: [%s, %d, %f] \n", pRecBuf->str, pRecBuf->num, pRecBuf->r);  
     
     //TestRec *pRecBufAgain;
     //rec.GetData((char *&)pRecBufAgain);

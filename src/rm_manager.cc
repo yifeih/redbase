@@ -9,7 +9,6 @@
 #include "rm_internal.h"
 
 
-
 RM_Manager::RM_Manager(PF_Manager &pfm) : pfm(pfm){
 }
 
@@ -161,15 +160,15 @@ RC RM_Manager::CleanUpFH(RM_FileHandle &fileHandle){
  */
 RC RM_Manager::CloseFile  (RM_FileHandle &fileHandle) {
   RC rc;
+  PF_PageHandle ph;
+  PageNum page;
+  char *pData;
 
   // If header was modified, put the first page into buffer again,
   // and update its contents, marking the page as dirty
   if(fileHandle.header_modified == true){
-    PF_PageHandle ph;
-    PageNum page;
     if((rc = fileHandle.pfh.GetFirstPage(ph)) || ph.GetPageNum(page))
       return (rc);
-    char *pData;
     if((rc = ph.GetData(pData))){
       RC rc2;
       if((rc2 = fileHandle.pfh.UnpinPage(page)))

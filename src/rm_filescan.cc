@@ -117,12 +117,12 @@ RC RM_FileScan::OpenScan (const RM_FileHandle &fileHandle,
     case NO_OP : comparator = NULL; break;
     default: return (RM_INVALIDSCAN);
   }
-  
+
+  int recSize = (this->fileHandle)->getRecordSize();
   // If there is a comparison, update the comparison parameters.
   if(this->compOp != NO_OP){
     // Check that the attribute offset and sizes are compatible with given
     // FileHandle
-    int recSize = (this->fileHandle)->getRecordSize();
     if((attrOffset + attrLength) > recSize || attrOffset < 0 || attrOffset > MAXSTRINGLEN)
       return (RM_INVALIDSCAN);
     this->attrOffset = attrOffset;
@@ -182,7 +182,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
     return (RM_EOF);
   if(openScan == false)
     return (RM_INVALIDSCAN);
-
+  
   RC rc;
   while(true){
     // Retrieve next record
@@ -199,6 +199,8 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
       GetNumRecOnPage(currentPH, numRecOnPage);
       useNextPage = false;
       numSeenOnPage = 0;
+      if(numRecOnPage == 1)
+        currentPH.GetPageNum(scanPage);
     }
     numSeenOnPage++; // update # of records seen on this page
 
@@ -207,8 +209,9 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
     // and set the indicator (useNextPage)
     if(numRecOnPage == numSeenOnPage){
       useNextPage = true;
-      if(rc = fileHandle->pfh.UnpinPage(scanPage))
+      if(rc = fileHandle->pfh.UnpinPage(scanPage)){
         return (rc);
+      }
     }
    
     // Retrieves the RID of the scan to update the progress of the scan
@@ -235,7 +238,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
       break;
     }
   }
-  return 0;
+  return (0);
 }
 
 
