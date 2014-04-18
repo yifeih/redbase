@@ -1,14 +1,18 @@
 Name: Yifei Huang
 Documentation for RM Layer
+
 Overall Design:
 In my design, each file consists of a header page, and each page consists of a page header. The header page has information relevant to the entire file. Each page header consists of information relevant to each page. 
 Because each file needs a header page, in RM_Manager’s CreateFile, I open up the file and allocate a new page for this header. The file is then closed before the end of CreateFile. Also, when I open up a file, I store its header contents as a private variable in RM_FileHandle and unpin the first page. This opens up a page slot in the buffer for other pages. When the file is closed, I check whether the header has been modified (with a header_modified flag), and if so, I rewrite it to the first page of the file.
+
 Free list:
 The file header consists of a field (firstFreePage), which is the page number of the first free page in the file. Each page contains a field in its header (nextFreePage), creating a linked list of free pages.  Whenever we add to a file, we always add to the first free page available in this linked list. Therefore, the first page is the only one that can be full. When page A is full, (firstFreePage) in the file header will be set to the page A’s header’s (nextFreePage). Whenever we delete a record, we check whether a page has gone from full to not full. If so, we add this page to the beginning of the free list. When there are no free pages, we allocate a page and add it to the beginning of the free list.
+
 Free records:
 I use a bitmap to keep track of the free records in the page, where each bit refers to a record slot in the page. Bitmap manipulation methods are declared as part of RM_FileHandle. The number of records that can fit in the page are calculated through the equation 
 X = floor((PF_PAGE_SIZE * 1.0) / (1.0 * recSize + 1.0/8))
 to maximize the number of records that can fit on a page. We can retrieve the location of the bitmap by the bitmap offset by storing the size of the page header and its size in the file header. 
+
 FileScan:
 In Filescan, I keep track of the current page open so I don’t have to make multiple calls to pin and unpin a page. This maximizes efficiency in code execution. The filescan code makes a call to GetNextRecord in its RM_FileHandle object to retrieve the next record. If the scan closes early, it makes sure to unpin any current page in CloseScan, or its destructor, before exiting.
 
@@ -20,7 +24,7 @@ Filescan also finds the next records by calling GetNextRec in RM_FileHandle. Bec
 RM_Record needs to be able to store variable size records, so we create a new char array whose length depends on the size of the record. SetRecord is not part of the public interface, so I can make it private, and my program will still work, but it needed to be public in order to run some of the tests. Because SetRecord is usually private, I made RM_FileHandle a friend of RM_Record so it can go and call SetRecord and manipulate record objects. 
 
 Testing:
-I first tested on the supplied rm_test.cc. I also ran this with rm_testkpg and rm_testgmf provided in the class repo for tests. I then wrote a few of my own tests, which I added to the class repo as rm_testyh. I ran valgrind on all tests. 
+I first tested on the supplied rm_test.cc. I also ran this with rm_testkpg, rm_testgmf, and rm_testrecsizes provided in the class repo for tests. I then wrote a few of my own tests, which I added to the class repo as rm_testyh_random. I ran valgrind on all tests. 
 
 Known Bugs:
 Not yet?
