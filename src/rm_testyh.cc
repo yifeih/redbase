@@ -31,6 +31,7 @@ using namespace std;
 // Defines
 //
 #define FILENAME   "testrel"         // test file name
+#define FILENAME   "testrel2"
 #define STRLEN      29               // length of string in testrec
 #define PROG_UNIT   50               // how frequently to give progress
                                       //   reports when adding lots of recs
@@ -92,12 +93,13 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       3               // number of tests
+#define NUM_TESTS       4               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
     Test1,
     Test2,
-    Test3
+    Test3,
+    Test4
 };
 
 //
@@ -861,3 +863,34 @@ RC Test3(void){
     return (0);
 }
 
+
+RC Test4(void){
+
+    RC            rc;
+    RM_FileHandle fh;
+
+    printf("test1 starting ****************\n");
+
+    if ((rc = CreateFile(FILENAME, sizeof(TestRec))) ||
+        (rc = OpenFile(FILENAME, fh)) ||
+        (rc = CloseFile(FILENAME, fh)))
+        return (rc);
+
+
+    if ((rc = CreateFile(FILENAME2, sizeof(TestRec))) ||
+        (rc = OpenFile(FILENAME2, fh)) ||
+        (rc = CloseFile(FILENAME2, fh)))
+        return (rc);
+
+    LsFile(FILENAME);
+
+    if ((rc = DestroyFile(FILENAME)) || (rc = DestroyFile(FILENAME2)))
+        return (rc);
+
+    printf("\ntest1 done ********************\n");
+    return (0);
+
+
+    return (0);
+
+}
