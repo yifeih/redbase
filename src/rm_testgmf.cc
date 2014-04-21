@@ -24,7 +24,7 @@ using namespace std;
 #define STRLEN      29               // length of string in testrec
 #define PROG_UNIT   50               // how frequently to give progress
                                      //   reports when adding lots of recs
-#define FEW_RECS    1000             // number of records added in
+#define FEW_RECS    4000             // number of records added in
 
 //
 // Computes the offset of a field in a record (should be in <stddef.h>)
@@ -470,6 +470,47 @@ RC UpdateFile(RM_FileHandle & fh)
    return (0);
 }
 
+RC UpdateFileSame(RM_FileHandle & fh, int numRecs)
+{
+   RC rc;
+   int i;
+   RM_Record rec1, rec2;
+   RID rid1, rid2;
+   char *pData1, *pData2;
+   TestRec recBuf;
+   RM_FileScan rfs;
+   
+   if ((rc = rfs.OpenScan(fh, INT, sizeof(int), 0, NO_OP, NULL)))
+      return rc;
+
+   printf("\nUpdating %d records\n", numRecs);
+   if ((rc = rfs.GetNextRec(rec1)) || (rc = rec1.GetData(pData1)) ||
+         (rc = rec1.GetRid(rid1)))
+      return(rc);
+
+   for (i = 1; i < numRecs; i++) {
+      if ((rc = rfs.GetNextRec(rec2)) || 
+            (rc = rec2.GetData(pData2)) ||
+            (rc = rec2.GetRid(rid2)))
+         return(rc);
+      memcpy((char *) &recBuf, pData2, sizeof(recBuf));
+      memcpy(pData2, pData1, sizeof(recBuf));
+      if ((rc = fh.UpdateRec(rec2)))
+         return(rc);
+      memcpy(pData1, (char *) &recBuf, sizeof(recBuf));
+
+      // If you have dynamically allocated data, be careful about next line.
+      rid1 = rid2;
+   }
+   if ((rc = fh.UpdateRec(rec1)))
+      return(rc);
+   
+   if ((rc = rfs.CloseScan()))
+      return(rc);
+
+   // Return ok
+   return (0);
+}
 
 ////////////////////////////////////////////////////////////////////////
 // The following functions are wrappers for some of the RM component  //
@@ -597,7 +638,7 @@ RC Test2(void)
    printf("test2 starting ****************\n");
 
    if ((rc = OpenFile(FILENAME, fh)) ||
-       (rc = UpdateFile(fh)) ||
+       (rc = UpdateFileSame(fh, FEW_RECS)) ||
        (rc = CloseFile(FILENAME, fh)))
       return (rc);
 
@@ -620,7 +661,7 @@ RC Test3(void)
       return (rc);
 
    // verify file contents
-   if ((rc = VerifyFile2(fh, FEW_RECS)))
+   if ((rc = VerifyFile(fh, FEW_RECS)))
 	 return (rc);
 
 

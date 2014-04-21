@@ -180,6 +180,8 @@ private:
     int numRecOnPage;
     int numSeenOnPage;
     bool useNextPage;
+    bool hasPagePinned;
+    bool initializedValue;
 };
 
 //
@@ -221,7 +223,8 @@ void RM_PrintError(RC rc);
 #define RM_INVALIDSCAN          (START_RM_WARN + 7) // scan is improperly set up
 #define RM_ENDOFPAGE            (START_RM_WARN + 8) // end of a page
 #define RM_EOF                  (START_RM_WARN + 9) // end of file 
-#define RM_LASTWARN             RM_EOF
+#define RM_BADFILENAME          (START_RM_WARN + 10)
+#define RM_LASTWARN             RM_BADFILENAME
 
 #define RM_ERROR                (START_RM_ERR - 0) // error
 #define RM_LASTERROR            RM_ERROR

@@ -84,7 +84,6 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   PageNum rootpage;
   if((rc = fh.AllocatePage(ph_header)) || (rc = ph_header.GetPageNum(headerpage))
     || (rc = fh.AllocatePage(ph_root)) || (rc = ph_root.GetPageNum(rootpage))){
-    printf("allocating pages \n");
     return (rc);
   }
   struct IX_IndexHeader *header;
@@ -93,12 +92,13 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
     goto cleanup_and_exit;
   }
 
-  printf("passed allocating pages \n");
   // setup header page
   header->attr_type = attrType;
   header->attr_length = attrLength;
-  header->maxKeys_i = numKeys_i;
-  header->maxKeys_l = numKeys_l;
+  header->maxKeys_I = numKeys_i;
+  header->maxKeys_L = numKeys_l;
+  printf("max i: %d, max l: %d \n", numKeys_i, numKeys_l);
+  /*
   header->slotIndexOffset_i = sizeof(struct IX_InternalHeader);
   header->slotIndexOffset_l = sizeof(struct IX_LeafHeader);
   header->validOffset_i = header->slotIndexOffset_i + sizeof(int)*numKeys_i;
@@ -108,6 +108,13 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   header->pagesOffset_i = header->keysOffset_i + attrLength * numKeys_i;
   header->RIDsOffset_l = header->RIDsOffset_l + attrLength * numKeys_l;
   header->rootPage = rootpage;
+  */
+  header->keyHeadersOffset_I = sizeof(struct IX_InternalHeader);
+  header->keyHeadersOffset_L = sizeof(struct IX_LeafHeader);
+  //printf("keyheaders: %d , %d \n", header->keyHeadersOffset_I, header->keyHeadersOffset_L);
+  header->keysOffset_I = header->keyHeadersOffset_I + numKeys_i*sizeof(struct KeyHeader);
+  header->keysOffset_L = header->keyHeadersOffset_L + numKeys_l*sizeof(struct KeyHeader);
+  //printf("offsets: %d, %d \n", header->keysOffset_I, header->keysOffset_L);
 
   // setup root page
   if((rc = ph_root.GetData((char *&) rootheader)))
@@ -117,7 +124,8 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   rootheader->hasFirstKey = false;
   rootheader->num_keys = 0;
   rootheader->nextPage = NO_MORE_PAGES;
-  rootheader->prevPage = NO_MORE_PAGES;
+  rootheader->overflowPage = NO_MORE_PAGES;
+  rootheader->firstKeyIndex = NO_MORE_SLOTS;
 
   // Opens the file, creates a new page and copies the header into it
   //PF_FileHandle fh;
@@ -150,8 +158,9 @@ RC IX_Manager::SetUpIH(IX_IndexHandle &ih, PF_FileHandle &fh, struct IX_IndexHea
   if(! IsValidIndex(ih.header.attr_type, ih.header.attr_length))
     return (IX_INVALIDINDEXFILE);
 
-  if(! ih.isValidIndexHeader())
+  if(! ih.isValidIndexHeader()){
     return (rc);
+  }
 
   if((rc = fh.GetThisPage(header->rootPage, ih.rootPage)))
     return (rc);
@@ -216,16 +225,19 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle){
   PF_PageHandle ph;
   PageNum page;
   char *pData;
+  printf("reached closeIndex \n");
 
-  if(indexHandle.isOpenHandle == false)
+  if(indexHandle.isOpenHandle == false){
+    printf("what \n");
     return (IX_INVALIDINDEXHANDLE);
+  }
 
   // rewrite the root page and unpin it
   PageNum root = indexHandle.header.rootPage;
   if((rc = indexHandle.pfh.MarkDirty(root)) || (rc = indexHandle.pfh.UnpinPage(root)))
     return (rc);
 
-
+  printf("passed marked page \n");
   if(indexHandle.header_modified == true){
     if((rc = indexHandle.pfh.GetFirstPage(ph)) || ph.GetPageNum(page))
       return (rc);

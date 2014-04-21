@@ -498,20 +498,21 @@ RC Test1(void)
    IX_IndexHandle ih;
 
    printf("Test 1: create, open, close, delete an index... \n");
+   /*
    if((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int)))){
       printf("error in creation \n");
       IX_PrintError(rc);
       return (rc);
-   }
+   }*/
 
-   /*
+   
    if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
          (rc = ixm.CloseIndex(ih))){
       printf("error here\n");
       return (rc);
    }
-   */
+   
 
    LsFiles(FILENAME);
 

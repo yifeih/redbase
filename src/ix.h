@@ -19,6 +19,16 @@
 struct IX_IndexHeader{
     AttrType attr_type;
     int attr_length;
+
+    int keyHeadersOffset_I;
+    int keyHeadersOffset_L;
+
+    int keysOffset_I;
+    int keysOffset_L;
+
+    int maxKeys_I;
+    int maxKeys_L;
+    /*
     int slotIndexOffset_i; // int values
     int slotIndexOffset_l;
 
@@ -33,6 +43,7 @@ struct IX_IndexHeader{
 
     int maxKeys_i; // doesn't include first page
     int maxKeys_l;
+    */
 
     PageNum rootPage;
 };
@@ -65,11 +76,12 @@ private:
     RC InsertIntoNonFull(PF_PageHandle &ph, void *pData, const RID &rid);
     RC SplitInternal(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
     RC SplitLeaf(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
-    RC GetFirstNewValue(PF_PageHandle &ph, char *&value);
+    //RC GetFirstNewValue(PF_PageHandle &ph, char *&value);
 
     RC FindHalfwayIndex(char * nextSlotIndex, int size);
-    RC FindNextFreeSlot(char * validArray, int& slot, int size);
-    RC FindIndexOfInsertion(int& index, PF_PageHandle &ph);
+    RC FindNextFreeSlot(struct KeyHeader *headerArr, int& slot, int maxNumSlots);
+    RC FindIndexOfInsertion(struct KeyHeader *headerArr, char* keyArray, 
+             int maxNumSlots, void* pData, int& index, bool& isDup);
     RC UpdateNextSlotIndex(int* slotindex, int* firstPage, int before, int insert);
 
     bool isValidIndexHeader();

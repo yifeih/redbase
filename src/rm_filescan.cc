@@ -14,11 +14,19 @@
 RM_FileScan::RM_FileScan(){
   openScan = false; // initially a filescan is not valid
   value = NULL;
+  initializedValue = false;
+  hasPagePinned = false;
+  scanEnded = true;
 }
 
 RM_FileScan::~RM_FileScan(){
-  if (this->value != NULL) // free any memory not freed
+  if(scanEnded == false && hasPagePinned == true && openScan == true){
+    fileHandle->pfh.UnpinPage(scanPage);
+  }
+  if (initializedValue == true){ // free any memory not freed
     free(value);
+    initializedValue = false;
+  }
 }
 
 /*
@@ -134,10 +142,12 @@ RC RM_FileScan::OpenScan (const RM_FileHandle &fileHandle,
         return (RM_INVALIDSCAN);
       this->value = (void *) malloc(4);
       memcpy(this->value, value, 4);
+      initializedValue = true;
     }
     else if(attrType == STRING){
       this->value = (void *) malloc(attrLength);
       memcpy(this->value, value, attrLength);
+      initializedValue = true;
     }
     else{
       return (RM_INVALIDSCAN);
@@ -156,6 +166,7 @@ RC RM_FileScan::OpenScan (const RM_FileHandle &fileHandle,
   scanPage = 0;
   scanSlot = BEGIN_SCAN;
   numSeenOnPage = 0;
+  hasPagePinned = false;
   return (0);
 } 
 
@@ -182,6 +193,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
     return (RM_EOF);
   if(openScan == false)
     return (RM_INVALIDSCAN);
+  hasPagePinned = true;
   
   RC rc;
   while(true){
@@ -189,6 +201,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
     RM_Record temprec;
     if((rc=fileHandle->GetNextRecord(scanPage, scanSlot, temprec, currentPH, useNextPage))){
       if(rc == RM_EOF){
+        hasPagePinned = false;
         scanEnded = true;
       }
       return (rc);
@@ -212,6 +225,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
       if(rc = fileHandle->pfh.UnpinPage(scanPage)){
         return (rc);
       }
+      hasPagePinned = false;
     }
    
     // Retrieves the RID of the scan to update the progress of the scan
@@ -252,12 +266,14 @@ RC RM_FileScan::CloseScan () {
   if(openScan == false){
     return (RM_INVALIDSCAN);
   }
-  if(scanEnded == false){
+  if(scanEnded == false && hasPagePinned == true){
     if((rc = fileHandle->pfh.UnpinPage(scanPage)))
       return (rc);
   }
-  if(this->value != NULL)
+  if(initializedValue == true){
     free(this->value);
+    initializedValue = false;
+  }
   openScan = false;
   return (0);
 }

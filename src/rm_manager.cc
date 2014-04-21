@@ -23,6 +23,8 @@ RM_Manager::~RM_Manager(){
  */
 RC RM_Manager::CreateFile (const char *fileName, int recordSize) { 
   RC rc = 0;
+  if(fileName == NULL)
+    return (RM_BADFILENAME);
   // basic checks on record size
   if(recordSize <= 0 || recordSize > PF_PAGE_SIZE)
     return RM_BADRECORDSIZE;
@@ -89,6 +91,8 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize) {
  * Destroys a file
  */
 RC RM_Manager::DestroyFile(const char *fileName) {
+  if(fileName == NULL)
+    return (RM_BADFILENAME);
   RC rc;
   if((rc = pfm.DestroyFile(fileName)))
     return (rc);
@@ -120,6 +124,8 @@ RC RM_Manager::SetUpFH(RM_FileHandle& fileHandle, PF_FileHandle &fh, struct RM_F
  * given FileHandle must not already be associated with another open file
  */
 RC RM_Manager::OpenFile   (const char *fileName, RM_FileHandle &fileHandle){
+  if(fileName == NULL)
+    return (RM_BADFILENAME);
   // if the filehandle is associated with another open file. exit immediately
   if(fileHandle.openedFH == true)
     return (RM_INVALIDFILEHANDLE);

@@ -11,6 +11,7 @@
 #include <cstring>
 
 #define NO_MORE_PAGES -1
+#define NO_MORE_SLOTS -1
 
 struct IX_Header{
   bool isLeafNode;
@@ -23,6 +24,7 @@ struct IX_InternalHeader {
 
   PageNum firstLeafPage; // first leaf page under this internal node
   PageNum firstPage;
+  int firstKeyIndex;
 };
 
 struct IX_LeafHeader{
@@ -31,9 +33,16 @@ struct IX_LeafHeader{
   int num_keys;
 
   PageNum nextPage; // next page
-  PageNum prevPage;
+  PageNum overflowPage;
+  int firstKeyIndex;
 };
 
+struct KeyHeader{
+  char isValid;
+  int nextSlot;
+  PageNum pageNum;
+  SlotNum slot;
+};
 
 
 
