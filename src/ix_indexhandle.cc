@@ -24,7 +24,7 @@ IX_IndexHandle::~IX_IndexHandle(){
 
 RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
   RC rc = 0;
-  
+
   return (rc);
 }
 
@@ -48,8 +48,68 @@ RC IX_IndexHandle::CreateNewLeafNode(PF_PageHandle &ph){
   return (rc);
 }
 
-RC IX_IndexHandle::InsertIntoNonFull(PF_PageHandle &ph, void *pData, const RID &rid){
+// ONLY FOR NODES
+RC IX_IndexHandle::InsertIntoNonFull(struct IX_NodeHeader *nodeHeader, void *pData, const RID &rid){
   RC rc = 0;
+  if(nodeHeader->isLeafNode){
+    int freeslot, index;
+    bool isDup;
+    if((rc = FindNextFreeSlot((char *)nodeHeader, freeslot, false) ) ||
+      (rc = FindIndexOfInsertion((char *)nodeHeader, false, pData, index, isDup)))
+      return (rc);
+    // if it is not a duplicate, insert a value for it in the leaf node
+    /*
+    if(!isDup){
+      struct Node_Entry *entries = (struct Node_Entry *) (nodeHeader + header.entryOffset_N);
+      entries[freeslot].nextSlot = entries[index].nextSlot;
+      entries[index].nextSlot = freeslot;
+      entries[loc].isValid = OCCUPIED_NEW;
+    }*/
+    struct Node_Entry entries = (struct Node_Entry *)(nodeHeader + header.entriesOffset_N);
+    PageNum page = entries[index].pageNum;
+    if((rc = InsertIntoBucket(nodeHeader, index, pData, rid, isDup, page)))
+      return (rc);
+  }
+  else{
+
+  }
+
+  return (rc);
+}
+
+RC IX_IndexHandle::CreateNewBucket(PF_PageHandle &ph, PageNum &page){
+  RC rc;
+  // allocate the page
+  if((rc = pfh.AllocatePage(ph)) || (rc = ph.GetPageNum(page))){
+    return (rc);
+  }
+
+  struct IX_BucketHeader *header;
+  if((rc = ph.GetData((char &*)header)))
+    return (rc);
+
+  header->num_keys = 0;
+  header->firstSlotIndex = NO_MORE_SLOTS;
+  header->nextPage = 
+
+}
+
+RC IX_IndexHandle::InsertIntoBucket(struct IX_NodeHeader *nodeHeader, int index, void *pData, 
+  const RID &rid, bool isDup, PageNum &page){
+  RC rc = 0;
+  PF_PageHandle ph;
+  char *bData;
+  if((rc = pfh.GetThisPage(page, ph)) || (rc = ph.GetData(bData))){
+    return (rc);
+  }
+  int bucketindex, freeslot;
+  if(IX_NODEFULL == FindFreeSlot(bData, freeslot, true)){
+    // create new page
+    // move the last slot over to the next page
+  }
+
+  if (isDup)
+
   return (rc);
 }
 
@@ -75,44 +135,91 @@ RC IX_IndexHandle::FindHalfwayIndex(char * nextSlotIndex, int size){
   return (rc);
 }
 
+// WORKS FOR BOTH NODE AND BUCKET ENTRIES
 // Returns the index to headerArr that is free
 // ignores the fact that the first value is full
-RC IX_IndexHandle::FindNextFreeSlot(struct KeyHeader *headerArr, int& slot, int maxNumSlots){
+RC IX_IndexHandle::FindNextFreeSlot(char * nodeHeader, int& slot, bool isBucket){
+  int entrySize, maxEntries;
+  char * entryOffset;
+  if(isBucket){
+    entrySize = sizeof(struct Bucket_Entry);
+    entryOffset = nodeHeader + header.entryOffset_B;
+    maxEntries = header.maxKeys_B;
+  }
+  else{
+    entrySize = sizeof(struct Node_Entry);
+    entryOffset = nodeHeader + header.entryOffset_N;
+    maxEntries = header.maxKeys_N;
+  }
+
   slot = BEGINNING_OF_SLOTS;
-  for(int i=0; i < maxNumSlots; i++){
-    if(headerArr[i].isValid == UNOCCUPIED){
+  for(int i=0; i < maxEntries; i++){
+    struct Entry *entry = (struct Entry *)(entryOffset + entrySize*i);
+    if(entry->isValid == UNOCCUPIED){
       slot = i;
       return (0);
     }
   }
 
-  //if(slot == BEGINNING_OF_SLOTS)
-  //  return (IX_NODEFULL);
   return (IX_NODEFULL);
 }
 
 // In parent function:
 // If leaf, and returns duplicate, set the isValid value
 // Put it in the overflow.
-RC IX_IndexHandle::FindIndexOfInsertion(struct KeyHeader *headerArr, char* keyArray, 
-  int maxNumSlots, void* pData, int& index, bool& isDup){
+// Returns the index offset of the term of the previous one
+// that it needs to go in.
+RC IX_IndexHandle::FindIndexOfInsertion(char *nodeHeader, 
+  bool isBucket, void* pData, int& index, bool& isDup){
+
+  int entrySize;
+  char *entryOffset;
+  char *keyOffset;
+  if(isBucket){
+    entrySize = sizeof(struct Bucket_Entry);
+    entryOffset = nodeHeader + header.entryOffset_B;
+    keyOffset = nodeHeader + header.keysOffset_B;
+  }
+  else{
+    entrySize = sizeof(struct Node_Entry);
+    entryOffset = nodeHeader + header.entryOffset_N;
+    keyOffset = nodeHeader + header.keysOffset_N;
+  }
+
   index = BEGINNING_OF_SLOTS;
   int prev_idx = BEGINNING_OF_SLOTS;
-  int curr_idx = 0;
+  int curr_idx = ;
   isDup = false;
   while(curr_idx != END_OF_SLOTS){
-    char* value = keyArray + header.attr_length*curr_idx;
-    int compared = comparator(pData, (void*)value, header.attr_length);
-    if(compared == 0)
+    char *value = keyOffset + header.attr_length * curr_idx;
+    int compared = comparator(pData, (void*) value, header.attr_length);
+    if (compared == 0)
       isDup = true;
-    if (compared > 0){
+    if(compared > 0)
       break;
-    }
     prev_idx = curr_idx;
-    curr_idx = headerArr[prev_idx].nextSlot;
+    struct Entry * entry = (struct Entry *)(entryOffset + entrySize * prev_idx);
+    curr_idx = entry->nextSlot;
   }
   index = prev_idx;
   return (0);
+
+}
+
+// Find second to last entry:
+RC IX_IndexHandle::FindSecondLastBucketEntry(struct IX_BucketHeader *bucketHeader, int &index){
+  struct Bucket_Entry *entries = (struct Bucket_Entry *) (bucketHeader + header.entriesOffset_B);
+  int prev_idx = BEGINNING_OF_SLOTS;
+  int curr_idx = bucketHeader->firstSlotIndex;
+  while(curr_idx != NO_MORE_SLOTS){
+    if(entries[curr_idx].nextSlot = NO_MORE_SLOTS)
+      break;
+    prev_idx = curr_idx;
+    curr_idx = entries[curr_idx].nextSlot;
+  }
+  index = prev_idx;
+  return (0);
+  //return (IX_INVALIDBUCKET);
 }
 
 RC IX_IndexHandle::UpdateNextSlotIndex(int* slotindex, int* firstPage, int before, int insert){
@@ -129,56 +236,35 @@ RC IX_IndexHandle::UpdateNextSlotIndex(int* slotindex, int* firstPage, int befor
 
 bool IX_IndexHandle::isValidIndexHeader(){
   //printf("maxkeys: %d, %d \n", header.maxKeys_I, header.maxKeys_L);
-  if(header.maxKeys_I <= 0 || header.maxKeys_L <= 0)
+  if(header.maxKeys_N <= 0 || header.maxKeys_B <= 0)
     return false;
-  if(header.keyHeadersOffset_I != sizeof(struct IX_InternalHeader) || 
-    header.keyHeadersOffset_L != sizeof(struct IX_LeafHeader)){
+  if(header.entryOffset_N != sizeof(struct IX_NodeHeader_L) || 
+    header.entryOffset_B != sizeof(struct IX_BucketHeader)){
     //printf("keyheaders: %d , %d \n", header.keyHeadersOffset_I, header.keyHeadersOffset_L);
     //printf("part 2 not true \n");
     return false;
   }
 
   //printf("size of keyHeader_L : %d \n", sizeof(struct KeyHeader_L));
-  int attrLength1 = (header.keysOffset_I - header.keyHeadersOffset_I)/(header.maxKeys_I);
-  int attrLength2 = (header.keysOffset_L - header.keyHeadersOffset_L)/(header.maxKeys_L);
+  int attrLength1 = (header.keysOffset_B - header.entryOffset_B)/(header.maxKeys_B);
+  int attrLength2 = (header.keysOffset_N - header.entryOffset_N)/(header.maxKeys_N);
   //printf("attribute length: %d, %d \n", attrLength1, attrLength2);
-  if(attrLength1 == sizeof(struct KeyHeader) && attrLength2 == sizeof(struct KeyHeader))
-    return true;
-  return false;
-  /*
-  if(header.maxKeys_i <= 0 || header.maxKeys_l <= 0)
+  if(attrLength1 != sizeof(struct Bucket_Entry) || attrLength2 != sizeof(struct Node_Entry))
     return false;
-  if(header.slotIndexOffset_i != sizeof(struct IX_InternalHeader) || 
-    header.slotIndexOffset_l != sizeof(struct IX_LeafHeader))
-    return false;
-  if((header.validOffset_i != (header.slotIndexOffset_i + sizeof(int)*header.maxKeys_i))
-    || (header.validOffset_l != (header.slotIndexOffset_l + sizeof(int)*header.maxKeys_l)))
-    return false;
-  if((header.keysOffset_i != (header.validOffset_i + header.maxKeys_i)) ||
-    (header.keysOffset_l != (header.validOffset_l + header.maxKeys_l)))
-    return false;
-
-  int attrLength1 = (header.pagesOffset_i - header.keysOffset_i)/header.maxKeys_i;
-  int attrLength2 = (header.RIDsOffset_l - header.keysOffset_l)/header.maxKeys_l;
-  if(attrLength1 != attrLength2)
+  if((header.entryOffset_B + header.maxKeys_B * header.attr_length > PF_PAGE_SIZE) ||
+    header.entryOffset_N + header.maxKeys_N * header.attr_length > PF_PAGE_SIZE)
     return false;
   return true;
-  */
 }
 
-int IX_IndexHandle::CalcNumKeysInternal(int attrLength){
-  int body_size = PF_PAGE_SIZE - sizeof(struct IX_InternalHeader);
-  return floor(1.0*body_size / ((sizeof(struct KeyHeader) + attrLength)));
-  /*
-  int body_size = PF_PAGE_SIZE - sizeof(struct IX_InternalHeader);
-  return floor(body_size/(sizeof(char) + sizeof(int) + sizeof(PageNum) + attrLength));
-  */
+int IX_IndexHandle::CalcNumKeysNode(int attrLength){
+  int body_size = PF_PAGE_SIZE - sizeof(struct IX_NodeHeader_I);
+  return floor(1.0*body_size / (sizeof(struct Node_Entry) + attrLength));
 }
 
-int IX_IndexHandle::CalcNumKeysLeaf(int attrLength){
-  int body_size = PF_PAGE_SIZE - sizeof(struct IX_LeafHeader);
-  return floor(1.0*body_size / ((sizeof(struct KeyHeader) + attrLength)));
-  //return floor(body_size/(sizeof(char) + sizeof(int) + sizeof(RID) + attrLength));
+int IX_IndexHandle::CalcNumKeysBucket(int attrLength){
+  int body_size = PF_PAGE_SIZE - sizeof(struct IX_BucketHeader);
+  return floor(1.0*body_size / (sizeof(Bucket_Entry) + attrLength));
 }
 
 

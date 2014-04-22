@@ -50,6 +50,8 @@ RC IX_Manager::GetIndexFileName(const char *fileName, int indexNo, std::string &
 
 RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
                    AttrType attrType, int attrLength){
+  if(fileName == NULL)
+    return (IX_BADFILENAME);
   RC rc = 0;
   if(! IsValidIndex(attrType, attrLength))
     return (IX_BADINDEXSPEC);
@@ -77,8 +79,8 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   if((rc = pfm.OpenFile(indexname.c_str(), fh)))
     return (rc);
 
-  int numKeys_i = IX_IndexHandle::CalcNumKeysInternal(attrLength);
-  int numKeys_l = IX_IndexHandle::CalcNumKeysLeaf(attrLength);
+  int numKeys_N = IX_IndexHandle::CalcNumKeysNode(attrLength);
+  int numKeys_B = IX_IndexHandle::CalcNumKeysBucket(attrLength);
 
   PageNum headerpage;
   PageNum rootpage;
@@ -87,7 +89,7 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
     return (rc);
   }
   struct IX_IndexHeader *header;
-  struct IX_LeafHeader *rootheader;
+  struct IX_NodeHeader_L *rootheader;
   if((rc = ph_header.GetData((char *&) header))){
     goto cleanup_and_exit;
   }
@@ -95,37 +97,27 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   // setup header page
   header->attr_type = attrType;
   header->attr_length = attrLength;
-  header->maxKeys_I = numKeys_i;
-  header->maxKeys_L = numKeys_l;
-  printf("max i: %d, max l: %d \n", numKeys_i, numKeys_l);
-  /*
-  header->slotIndexOffset_i = sizeof(struct IX_InternalHeader);
-  header->slotIndexOffset_l = sizeof(struct IX_LeafHeader);
-  header->validOffset_i = header->slotIndexOffset_i + sizeof(int)*numKeys_i;
-  header->validOffset_l = header->slotIndexOffset_l + sizeof(int)*numKeys_l;
-  header->keysOffset_i = header->validOffset_i + numKeys_i;
-  header->keysOffset_l = header->validOffset_l + numKeys_l;
-  header->pagesOffset_i = header->keysOffset_i + attrLength * numKeys_i;
-  header->RIDsOffset_l = header->RIDsOffset_l + attrLength * numKeys_l;
-  header->rootPage = rootpage;
-  */
-  header->keyHeadersOffset_I = sizeof(struct IX_InternalHeader);
-  header->keyHeadersOffset_L = sizeof(struct IX_LeafHeader);
+  header->maxKeys_N= numKeys_N;
+  header->maxKeys_B = numKeys_B;
+  printf("max i: %d, max l: %d \n", numKeys_N, numKeys_B);
+
+  header->entryOffset_N = sizeof(struct IX_NodeHeader_I);
+  header->entryOffset_B = sizeof(struct IX_BucketHeader);
   //printf("keyheaders: %d , %d \n", header->keyHeadersOffset_I, header->keyHeadersOffset_L);
-  header->keysOffset_I = header->keyHeadersOffset_I + numKeys_i*sizeof(struct KeyHeader);
-  header->keysOffset_L = header->keyHeadersOffset_L + numKeys_l*sizeof(struct KeyHeader);
+  header->keysOffset_N = header->entryOffset_N + numKeys_N*sizeof(struct Node_Entry);
+  header->keysOffset_B = header->entryOffset_B + numKeys_B*sizeof(struct Bucket_Entry);
   //printf("offsets: %d, %d \n", header->keysOffset_I, header->keysOffset_L);
+  header->rootPage = rootpage;
 
   // setup root page
   if((rc = ph_root.GetData((char *&) rootheader)))
     goto cleanup_and_exit;
 
   rootheader->isLeafNode = true;
-  rootheader->hasFirstKey = false;
+  rootheader->isEmpty = true;
   rootheader->num_keys = 0;
   rootheader->nextPage = NO_MORE_PAGES;
-  rootheader->overflowPage = NO_MORE_PAGES;
-  rootheader->firstKeyIndex = NO_MORE_SLOTS;
+  rootheader->firstSlotIndex = NO_MORE_SLOTS;
 
   // Opens the file, creates a new page and copies the header into it
   //PF_FileHandle fh;

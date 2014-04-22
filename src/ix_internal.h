@@ -13,35 +13,61 @@
 #define NO_MORE_PAGES -1
 #define NO_MORE_SLOTS -1
 
-struct IX_Header{
+// HEADERS FOR NODES
+struct IX_NodeHeader{
   bool isLeafNode;
-};
-
-struct IX_InternalHeader {
-  bool isLeafNode;
-  bool hasFirstKey; // has at least one entry (firstPage is filled)
+  bool isEmpty;
   int num_keys;
 
-  PageNum firstLeafPage; // first leaf page under this internal node
-  PageNum firstPage;
-  int firstKeyIndex;
+  PageNum invalid;
+  int firstSlotIndex;
 };
 
-struct IX_LeafHeader{
+struct IX_NodeHeader_I{
   bool isLeafNode;
-  bool hasFirstKey; // has at least one entry (nextPage is valid)
+  bool isEmpty; // has at least one entry (firstPage is filled)
+  int num_keys;
+
+  PageNum firstPage; // first leaf page under this internal node
+  int firstSlotIndex; // first index into slot list
+  int freeSlotIndex;
+};
+
+struct IX_NodeHeader_L{
+  bool isLeafNode;
+  bool isEmpty; // has at least one entry (nextPage is valid)
   int num_keys;
 
   PageNum nextPage; // next page
-  PageNum overflowPage;
-  int firstKeyIndex;
+  int firstSlotIndex;
+  int freeSlotIndex;
 };
 
-struct KeyHeader{
+// HEADERS FOR ENTRIES 
+struct Entry{
+  char isValid;
+  int nextSlot;
+};
+
+struct Node_Entry{
   char isValid;
   int nextSlot;
   PageNum pageNum;
+};
+struct Bucket_Entry{
+  char isValid;
+  int nextSlot;
+  PageNum page;
   SlotNum slot;
+};
+
+// HEADER FOR CONTENT PAGES
+struct IX_BucketHeader{
+  int num_keys;
+  int firstSlotIndex;
+  PageNum nextPage;
+
+  int maxValue;
 };
 
 

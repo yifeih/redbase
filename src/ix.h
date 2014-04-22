@@ -20,30 +20,14 @@ struct IX_IndexHeader{
     AttrType attr_type;
     int attr_length;
 
-    int keyHeadersOffset_I;
-    int keyHeadersOffset_L;
+    int entryOffset_N;
+    int entryOffset_B;
 
-    int keysOffset_I;
-    int keysOffset_L;
+    int keysOffset_N;
+    int keysOffset_B;
 
-    int maxKeys_I;
-    int maxKeys_L;
-    /*
-    int slotIndexOffset_i; // int values
-    int slotIndexOffset_l;
-
-    int validOffset_i; // chars
-    int validOffset_l;
-
-    int keysOffset_i; // size of values
-    int keysOffset_l;
-
-    int pagesOffset_i; //page nums
-    int RIDsOffset_l; // RIDs
-
-    int maxKeys_i; // doesn't include first page
-    int maxKeys_l;
-    */
+    int maxKeys_N;
+    int maxKeys_B;
 
     PageNum rootPage;
 };
@@ -79,14 +63,14 @@ private:
     //RC GetFirstNewValue(PF_PageHandle &ph, char *&value);
 
     RC FindHalfwayIndex(char * nextSlotIndex, int size);
-    RC FindNextFreeSlot(struct KeyHeader *headerArr, int& slot, int maxNumSlots);
-    RC FindIndexOfInsertion(struct KeyHeader *headerArr, char* keyArray, 
-             int maxNumSlots, void* pData, int& index, bool& isDup);
+    RC FindNextFreeSlot(char * header, int& slot, bool isBucket);
+    RC FindIndexOfInsertion(char *nodeHeader, 
+        bool isBucket, void* pData, int& index, bool& isDup);
     RC UpdateNextSlotIndex(int* slotindex, int* firstPage, int before, int insert);
 
     bool isValidIndexHeader();
-    static int CalcNumKeysInternal(int attrLength);
-    static int CalcNumKeysLeaf(int attrLength);
+    static int CalcNumKeysNode(int attrLength);
+    static int CalcNumKeysBucket(int attrLength);
 
     // Private variables
     bool isOpenHandle;
@@ -160,7 +144,9 @@ void IX_PrintError(RC rc);
 #define IX_INVALIDINDEXHANDLE   (START_IX_WARN + 2)
 #define IX_INVALIDINDEXFILE     (START_IX_WARN + 3)
 #define IX_NODEFULL             (START_IX_WARN + 4)
-#define IX_EOF                  (START_IX_WARN + 5)
+#define IX_BADFILENAME          (START_IX_WARN + 5)
+#define IX_INVALIDBUCKET        (START_IX_WARN + 6)
+#define IX_EOF                  (START_IX_WARN + 7)
 #define IX_LASTWARN             IX_EOF
 
 #define IX_ERROR                (START_IX_ERR - 0) // error
