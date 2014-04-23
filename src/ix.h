@@ -59,15 +59,16 @@ public:
     RC PrintBucketEntries();
     RC PrintRootNode();
 private:
-    RC CreateNewNode(PF_PageHandle &ph, PageNum &page, char *& nData);
+    RC CreateNewNode(PF_PageHandle &ph, PageNum &page, char *& nData, bool isLeaf);
     RC CreateNewBucket(PageNum &page);
-    RC CreateNewInternalNode(PF_PageHandle &ph);
-    RC CreateNewLeafNode(PF_PageHandle &ph);
+    //RC CreateNewNode(PF_PageHandle &ph, PageNum &page, bool isLeaf);
+    //RC CreateNewLeafNode(PF_PageHandle &ph);
     RC InsertIntoNonFullNode(char *&nData, void *pData, const RID &rid);
     RC InsertIntoBucket(struct IX_NodeHeader *nHeader, PageNum &page, 
         void *pData, const RID &rid, bool isDup);
-    RC SplitInternal(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
+    //RC SplitInternal(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
     RC SplitLeaf(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
+    RC SplitNode(char *pHeader, PF_PageHandle &oldPH, int index);
     RC SplitBucket(struct IX_NodeHeader *nHeader, struct IX_BucketHeader *oldBHeader,
   struct IX_BucketHeader *newBHeader, PageNum oldPage, PageNum newPage, int splitIndex);
     //RC GetFirstNewValue(PF_PageHandle &ph, char *&value);
@@ -77,7 +78,8 @@ private:
     RC FindNodeInsertIndex(struct IX_NodeHeader *nHeader, 
         void* pData, int& index, bool& isDup);
     RC FindBucketInsertIndex(struct IX_BucketHeader *bHeader,
-        void *pData, int &index, const RID &rid);
+        void *pData, int &index, bool& searchNext, const RID &rid,
+        int &iterloc);
     RC UpdateNextSlotIndex(int* slotindex, int* firstPage, int before, int insert);
 
     bool isValidIndexHeader();
