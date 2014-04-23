@@ -30,6 +30,8 @@ struct IX_IndexHeader{
     int maxKeys_B;
 
     PageNum rootPage;
+    PageNum firstBucket;
+    bool firstBucketCreated;
 };
 
 //
@@ -37,11 +39,11 @@ struct IX_IndexHeader{
 //
 class IX_IndexHandle {
     friend class IX_Manager;
-    static const int BEGINNING_OF_SLOTS = -1;
-    static const int END_OF_SLOTS = -2;
+    static const int BEGINNING_OF_SLOTS = -2;
+    static const int END_OF_SLOTS = -3;
     static const char UNOCCUPIED = 'u';
     static const char OCCUPIED_NEW = 'n';
-    static const char OCCUPIED_REPEAT = 'r';
+    static const char OCCUPIED_DUP = 'r';
 public:
     IX_IndexHandle();
     ~IX_IndexHandle();
@@ -54,18 +56,28 @@ public:
 
     // Force index files to disk
     RC ForcePages();
+    RC PrintBucketEntries();
+    RC PrintRootNode();
 private:
+    RC CreateNewNode(PF_PageHandle &ph, PageNum &page, char *& nData);
+    RC CreateNewBucket(PageNum &page);
     RC CreateNewInternalNode(PF_PageHandle &ph);
     RC CreateNewLeafNode(PF_PageHandle &ph);
-    RC InsertIntoNonFull(PF_PageHandle &ph, void *pData, const RID &rid);
+    RC InsertIntoNonFullNode(char *&nData, void *pData, const RID &rid);
+    RC InsertIntoBucket(struct IX_NodeHeader *nHeader, PageNum &page, 
+        void *pData, const RID &rid, bool isDup);
     RC SplitInternal(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
     RC SplitLeaf(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
+    RC SplitBucket(struct IX_NodeHeader *nHeader, struct IX_BucketHeader *oldBHeader,
+  struct IX_BucketHeader *newBHeader, PageNum oldPage, PageNum newPage, int splitIndex);
     //RC GetFirstNewValue(PF_PageHandle &ph, char *&value);
 
     RC FindHalfwayIndex(char * nextSlotIndex, int size);
     RC FindNextFreeSlot(char * header, int& slot, bool isBucket);
-    RC FindIndexOfInsertion(char *nodeHeader, 
-        bool isBucket, void* pData, int& index, bool& isDup);
+    RC FindNodeInsertIndex(struct IX_NodeHeader *nHeader, 
+        void* pData, int& index, bool& isDup);
+    RC FindBucketInsertIndex(struct IX_BucketHeader *bHeader,
+        void *pData, int &index, const RID &rid);
     RC UpdateNextSlotIndex(int* slotindex, int* firstPage, int before, int insert);
 
     bool isValidIndexHeader();
@@ -76,7 +88,7 @@ private:
     bool isOpenHandle;
     PF_FileHandle pfh;
     bool header_modified;
-    PF_PageHandle rootPage;
+    PF_PageHandle rootPH;
     struct IX_IndexHeader header;
     int (*comparator) (void * , void *, int);
 
@@ -108,6 +120,7 @@ public:
 // IX_Manager: provides IX index file management
 //
 class IX_Manager {
+    static const char UNOCCUPIED = 'u';
 public:
     IX_Manager(PF_Manager &pfm);
     ~IX_Manager();
@@ -146,7 +159,8 @@ void IX_PrintError(RC rc);
 #define IX_NODEFULL             (START_IX_WARN + 4)
 #define IX_BADFILENAME          (START_IX_WARN + 5)
 #define IX_INVALIDBUCKET        (START_IX_WARN + 6)
-#define IX_EOF                  (START_IX_WARN + 7)
+#define IX_DUPLICATEENTRY       (START_IX_WARN + 7)
+#define IX_EOF                  (START_IX_WARN + 8)
 #define IX_LASTWARN             IX_EOF
 
 #define IX_ERROR                (START_IX_ERR - 0) // error

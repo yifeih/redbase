@@ -76,13 +76,14 @@ RC PrintIndex(IX_IndexHandle &ih);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       4               // number of tests
+#define NUM_TESTS       5               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
    Test1,
    Test2,
    Test3,
-   Test4
+   Test4,
+   Test5
 };
 
 //
@@ -222,6 +223,35 @@ RC InsertIntEntries(IX_IndexHandle &ih, int nEntries)
    for(i = 0; i < nEntries; i++) {
       value = values[i] + 1;
       RID rid(value, value*2);
+      printf("INSERTINTENTRIES: Adding %d \n", value);
+      if ((rc = ih.InsertEntry((void *)&value, rid)))
+         return (rc);
+
+      if((i + 1) % PROG_UNIT == 0){
+         // cast to long for PC's
+         printf("\r\t%d%%    ", (int)((i+1)*100L/nEntries));
+         fflush(stdout);
+      }
+   }
+   printf("\r\t%d%%      \n", (int)(i*100L/nEntries));
+
+   // Return ok
+   return (0);
+}
+
+//
+// InsertIntEntries
+//
+// Desc: Add a number of integer entries to the index
+//
+RC InsertIntRepeatEntries(IX_IndexHandle &ih, int value, int nEntries, int pageNum)
+{
+   RC  rc;
+   int i;
+
+   printf("             Adding %d int entries of value %d \n", nEntries, value);
+   for(i = 0; i < nEntries; i++) {
+      RID rid(value+i, pageNum);
       printf("INSERTINTENTRIES: Adding %d \n", value);
       if ((rc = ih.InsertEntry((void *)&value, rid)))
          return (rc);
@@ -686,5 +716,42 @@ RC Test4(void)
       return (rc);
 
    printf("Passed Test 4\n\n");
+   return (0);
+}
+
+RC Test5(void){
+   RC rc;
+   IX_IndexHandle ih;
+   int index=0;
+
+   printf("Test2: Insert a few integer entries into an index... \n");
+
+   if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
+         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
+         (rc = InsertIntRepeatEntries(ih, 1, 101, 1)) ||
+         (rc = InsertIntRepeatEntries(ih, 4, 101, 3)) ||
+         (rc = InsertIntRepeatEntries(ih, 3, 1, 2)) ||
+         (rc = InsertIntRepeatEntries(ih, 4, 200, 4)) ||
+         (rc = InsertIntRepeatEntries(ih, 1, 200, 4)) ||
+         (rc = InsertIntRepeatEntries(ih, 2, 10, 4)) ||
+         (rc = ixm.CloseIndex(ih)) ||
+         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
+
+         // ensure inserted entries are all there
+         //(rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
+
+         // ensure an entry not inserted is not there
+         //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
+         (rc = ih.PrintBucketEntries()) ||
+         (rc = ih.PrintRootNode()) ||
+         (rc = ixm.CloseIndex(ih)))
+      return (rc);
+
+   LsFiles(FILENAME);
+
+   if ((rc = ixm.DestroyIndex(FILENAME, index)))
+      return (rc);
+
+   printf("Passed Test 2\n\n");
    return (0);
 }

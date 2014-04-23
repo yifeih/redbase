@@ -56,12 +56,6 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   if(! IsValidIndex(attrType, attrLength))
     return (IX_BADINDEXSPEC);
 
-  // Check the file exists by opening and closing it
-  // SHOULD I DO THIS?
-  //PF_FileHandle fh;
-  //if((rc = pfm.OpenFile(fileName, fh)) || (rc = pfm.CloseFile(fh)))
-  //  return (rc);
-
   // Create index file:
   std::string indexname;
   if((rc = GetIndexFileName(fileName, indexNo, indexname)))
@@ -69,8 +63,6 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   if((rc = pfm.CreateFile(indexname.c_str()))){
     return (rc);
   }
-  //if ((rc = CreateIndexFile(fileName, indexNo)))
-  //  return (rc);
 
   // Make the header page
   PF_FileHandle fh;
@@ -90,7 +82,8 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   }
   struct IX_IndexHeader *header;
   struct IX_NodeHeader_L *rootheader;
-  if((rc = ph_header.GetData((char *&) header))){
+  struct Node_Entry *entries;
+  if((rc = ph_header.GetData((char *&) header)) || (rc = ph_root.GetData((char *&) rootheader))){
     goto cleanup_and_exit;
   }
 
@@ -103,21 +96,28 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 
   header->entryOffset_N = sizeof(struct IX_NodeHeader_I);
   header->entryOffset_B = sizeof(struct IX_BucketHeader);
-  //printf("keyheaders: %d , %d \n", header->keyHeadersOffset_I, header->keyHeadersOffset_L);
   header->keysOffset_N = header->entryOffset_N + numKeys_N*sizeof(struct Node_Entry);
   header->keysOffset_B = header->entryOffset_B + numKeys_B*sizeof(struct Bucket_Entry);
-  //printf("offsets: %d, %d \n", header->keysOffset_I, header->keysOffset_L);
   header->rootPage = rootpage;
-
-  // setup root page
-  if((rc = ph_root.GetData((char *&) rootheader)))
-    goto cleanup_and_exit;
+  header->firstBucketCreated = false;
+  header->firstBucket = NO_MORE_PAGES;
 
   rootheader->isLeafNode = true;
   rootheader->isEmpty = true;
   rootheader->num_keys = 0;
   rootheader->nextPage = NO_MORE_PAGES;
   rootheader->firstSlotIndex = NO_MORE_SLOTS;
+  rootheader->freeSlotIndex = 0;
+  entries = (struct Node_Entry *) ((char *)rootheader + header->entryOffset_N);
+  for(int i=0; i < header->maxKeys_N; i++){
+    entries[i].isValid = UNOCCUPIED;
+    entries[i].pageNum = NO_MORE_PAGES;
+    if(i == (header->maxKeys_N -1))
+      entries[i].nextSlot = NO_MORE_SLOTS;
+    else
+      entries[i].nextSlot = i+1;
+  }
+  printf("NODE CREATION: entries[0].nextSlot: %d \n", entries[0].nextSlot);
 
   // Opens the file, creates a new page and copies the header into it
   //PF_FileHandle fh;
@@ -154,7 +154,7 @@ RC IX_Manager::SetUpIH(IX_IndexHandle &ih, PF_FileHandle &fh, struct IX_IndexHea
     return (rc);
   }
 
-  if((rc = fh.GetThisPage(header->rootPage, ih.rootPage)))
+  if((rc = fh.GetThisPage(header->rootPage, ih.rootPH)))
     return (rc);
 
   if(ih.header.attr_type == INT)

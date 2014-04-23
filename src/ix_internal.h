@@ -19,8 +19,9 @@ struct IX_NodeHeader{
   bool isEmpty;
   int num_keys;
 
-  PageNum invalid;
   int firstSlotIndex;
+  int freeSlotIndex;
+  PageNum invalid1;
 };
 
 struct IX_NodeHeader_I{
@@ -28,9 +29,9 @@ struct IX_NodeHeader_I{
   bool isEmpty; // has at least one entry (firstPage is filled)
   int num_keys;
 
-  PageNum firstPage; // first leaf page under this internal node
   int firstSlotIndex; // first index into slot list
   int freeSlotIndex;
+  PageNum firstPage; // first leaf page under this internal node
 };
 
 struct IX_NodeHeader_L{
@@ -38,9 +39,9 @@ struct IX_NodeHeader_L{
   bool isEmpty; // has at least one entry (nextPage is valid)
   int num_keys;
 
-  PageNum nextPage; // next page
   int firstSlotIndex;
   int freeSlotIndex;
+  PageNum nextPage; // next page
 };
 
 // HEADERS FOR ENTRIES 
@@ -65,9 +66,9 @@ struct Bucket_Entry{
 struct IX_BucketHeader{
   int num_keys;
   int firstSlotIndex;
-  PageNum nextPage;
-
-  int maxValue;
+  int freeSlotIndex;
+  PageNum nextBucket;
+  PageNum prevBucket;
 };
 
 
