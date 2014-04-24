@@ -60,6 +60,9 @@ public:
     RC PrintLeafNodes(PageNum curr_page);
     RC PrintAllEntries();
     RC PrintRootPage();
+    RC PrintAllEntriesString();
+    RC PrintLeafNodesString(PageNum curr_page);
+    RC CheckAllValuesInt(PageNum curr_page);
 private:
     RC CreateNewNode(PF_PageHandle &ph, PageNum &page, char *& nData, bool isLeaf);
     RC CreateNewBucket(PageNum &page);
@@ -120,6 +123,7 @@ public:
 
     // Close index scan
     RC CloseScan();
+
 };
 
 //

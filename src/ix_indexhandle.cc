@@ -46,6 +46,104 @@ RC IX_IndexHandle::PrintRootPage(){
 }
 
 
+RC IX_IndexHandle::PrintLeafNodesString(PageNum curr_page){
+  RC rc = 0;
+  PF_PageHandle ph;
+  struct IX_NodeHeader_L *LHeader;
+  PageNum thispage = curr_page;
+  char *prevKey = (char *)malloc(header.attr_length);
+  bool isfirstcomp = true;
+  while(thispage != NO_MORE_PAGES){
+    //printf("*****printing leafnode %d \n", thispage);
+    if((rc = pfh.GetThisPage(thispage, ph)) || ph.GetData((char *&)LHeader)){
+      return (rc);
+    }
+    struct Node_Entry *entries = (struct Node_Entry *)((char *)LHeader + header.entryOffset_N);
+    char *keys = (char *)LHeader + header.keysOffset_N;
+    int prev_idx = BEGINNING_OF_SLOTS;
+    int curr_idx = LHeader->firstSlotIndex;
+    //int prevkey = *(int *)(keys + header.attr_length*curr_idx);
+    //printf("first slot index: %d \n", curr_idx);
+    while(curr_idx != NO_MORE_SLOTS){
+      if(entries[curr_idx].isValid == OCCUPIED_NEW){
+        //printf("\nNew Entry: %d, page: %d, slot: %d , index: %d \n", *(int*)(keys + curr_idx*header.attr_length), 
+        //  entries[curr_idx].page, entries[curr_idx].slot, curr_idx);
+        //int curr_key = *(int *)(keys + curr_idx*header.attr_length);
+        char * curr_key = keys + curr_idx * header.attr_length;
+        //printf("compare");
+        if(strncmp(curr_key, prevKey, header.attr_length) < 0){
+          printf("------------------------------------------------------ERROR \n");
+          if(splittwice)
+            printf("----------------------------------------------------split twice!!!\n");
+          //PrintRootPage();
+          return (IX_EOF);
+        }
+        memcpy(prevKey, curr_key, header.attr_length);
+      }
+      else if(entries[curr_idx].isValid == OCCUPIED_DUP){
+        //printf("\nDup Entry: %d \n", *(int *)(keys + curr_idx * header.attr_length));
+        //printf("bucket location: %d \n", entries[curr_idx].page);
+        PrintBuckets(entries[curr_idx].page);
+      }
+      else{
+        free(prevKey);
+        return (IX_EOF);
+      }
+      prev_idx = curr_idx;
+      curr_idx = entries[prev_idx].nextSlot;
+      //printf("next index: %d \n", curr_idx);
+      //printf("curr_slot: %d \n", curr_idx);
+    }
+    //printf("prev page: %d \n", prevpage);
+    PageNum prevpage = thispage;
+    thispage = LHeader->nextPage;
+    //printf("next page: %d \n", thispage);
+    if((rc = pfh.UnpinPage(prevpage)))
+      return (rc);
+    //if(splittwice)
+    //  printf("THERE is a page 4\n");
+  }
+  free(prevKey);
+  return (0);
+}
+
+RC IX_IndexHandle::PrintAllEntriesString(){
+  //printf("PRINTING ALL ENTRIES\n");
+  RC rc = 0;
+  struct IX_NodeHeader *rHeader;
+  if((rc = rootPH.GetData((char *&)rHeader)))
+    return (rc);
+
+  if(! rHeader->isLeafNode){
+    PageNum rootNodeNum;
+    rootPH.GetPageNum(rootNodeNum);
+    //printf("root node %d \n", rootNodeNum);
+    PageNum curr_page = rHeader->invalid1;
+    PF_PageHandle ph;
+    struct IX_NodeHeader *header;
+    if((pfh.GetThisPage(curr_page, ph)) || (rc = ph.GetData((char *&)header)))
+      return (rc);
+    while(! header->isLeafNode){
+      PageNum prev_page = curr_page;
+      curr_page = header->invalid1;
+      if((rc = pfh.UnpinPage(prev_page)))
+        return (rc);
+      if((pfh.GetThisPage(curr_page, ph)) || (rc = ph.GetData((char *&)header)))
+        return (rc);
+    }
+    if(pfh.UnpinPage(curr_page))
+      return (rc);
+    //printf("rawr\n");
+    PrintLeafNodesString(curr_page);
+  }
+  else{
+    if((rc = PrintLeafNodesString(header.rootPage)))
+      return (rc);
+  }
+  return (0);
+}
+
+
 RC IX_IndexHandle::PrintAllEntries(){
   //printf("PRINTING ALL ENTRIES\n");
   RC rc = 0;
@@ -82,6 +180,65 @@ RC IX_IndexHandle::PrintAllEntries(){
   return (0);
 }
 
+RC IX_IndexHandle::CheckAllValuesInt(PageNum curr_page){
+  printf("checking all values");
+  RC rc = 0;
+  PF_PageHandle ph;
+  struct IX_NodeHeader_L *LHeader;
+  PageNum thispage = curr_page;
+  int prevkey = 0;
+  while(thispage != NO_MORE_PAGES){
+    //printf("*****printing leafnode %d \n", thispage);
+    if((rc = pfh.GetThisPage(thispage, ph)) || ph.GetData((char *&)LHeader)){
+      return (rc);
+    }
+    struct Node_Entry *entries = (struct Node_Entry *)((char *)LHeader + header.entryOffset_N);
+    char *keys = (char *)LHeader + header.keysOffset_N;
+    int prev_idx = BEGINNING_OF_SLOTS;
+    int curr_idx = LHeader->firstSlotIndex;
+    //int prevkey = *(int *)(keys + header.attr_length*curr_idx);
+    //printf("first slot index: %d \n", curr_idx);
+    while(curr_idx != NO_MORE_SLOTS){
+      if(entries[curr_idx].isValid == OCCUPIED_NEW){
+        printf("checking\n");
+        //printf("\nNew Entry: %d, page: %d, slot: %d , index: %d \n", *(int*)(keys + curr_idx*header.attr_length), 
+        //  entries[curr_idx].page, entries[curr_idx].slot, curr_idx);
+        //printf("compare");
+        int curr_key = *(int *)(keys + curr_idx*header.attr_length);
+        printf("currkey: %d \n", curr_key);
+        if(curr_key != (prevkey +1)){
+          printf("------------------------------------------------------ERROR \n");
+          //if(splittwice)
+          //  printf("----------------------------------------------------split twice!!!\n");
+          //PrintRootPage();
+          return (IX_EOF);
+        }
+        prevkey = curr_key;
+      }
+      else if(entries[curr_idx].isValid == OCCUPIED_DUP){
+        //printf("\nDup Entry: %d \n", *(int *)(keys + curr_idx * header.attr_length));
+        //printf("bucket location: %d \n", entries[curr_idx].page);
+        PrintBuckets(entries[curr_idx].page);
+      }
+      else
+        return (IX_EOF);
+      prev_idx = curr_idx;
+      curr_idx = entries[prev_idx].nextSlot;
+      //printf("next index: %d \n", curr_idx);
+      //printf("curr_slot: %d \n", curr_idx);
+    }
+    //printf("prev page: %d \n", prevpage);
+    PageNum prevpage = thispage;
+    thispage = LHeader->nextPage;
+    //printf("next page: %d \n", thispage);
+    if((rc = pfh.UnpinPage(prevpage)))
+      return (rc);
+    //if(splittwice)
+    //  printf("THERE is a page 4\n");
+  }
+  return (0);
+}
+
 RC IX_IndexHandle::PrintLeafNodes(PageNum curr_page){
   RC rc = 0;
   PF_PageHandle ph;
@@ -103,11 +260,12 @@ RC IX_IndexHandle::PrintLeafNodes(PageNum curr_page){
       if(entries[curr_idx].isValid == OCCUPIED_NEW){
         //printf("\nNew Entry: %d, page: %d, slot: %d , index: %d \n", *(int*)(keys + curr_idx*header.attr_length), 
         //  entries[curr_idx].page, entries[curr_idx].slot, curr_idx);
+        //printf("compare");
         int curr_key = *(int *)(keys + curr_idx*header.attr_length);
         if(curr_key < (prevkey )){
           printf("------------------------------------------------------ERROR \n");
-          if(splittwice)
-            printf("----------------------------------------------------split twice!!!\n");
+          //if(splittwice)
+          //  printf("----------------------------------------------------split twice!!!\n");
           //PrintRootPage();
           return (IX_EOF);
         }
@@ -168,11 +326,12 @@ RC IX_IndexHandle::PrintBuckets(PageNum page){
 RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
   RC rc = 0;
   struct IX_NodeHeader *rHeader;
-  if((rc = rootPH.GetData((char *&)rHeader)))
+  if((rc = rootPH.GetData((char *&)rHeader))){
+    printf("failing here\n");
     return (rc);
+  }
 
   if(rHeader->num_keys == header.maxKeys_N){
-    //splittwice = true;
     PageNum newRootPage;
     char *newRootData;
     PF_PageHandle newRootPH;
@@ -199,7 +358,7 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
       return (rc);
   }
   else{
-    //printf("reached here\n");
+    printf("reached here\n");
     if((rc = InsertIntoNonFullNode(rHeader, header.rootPage, pData, rid)))
       return (rc);
     //printf("reached insert entry\n");
@@ -210,7 +369,7 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
   if((rc = pfh.MarkDirty(header.rootPage)))
     return (rc);
 
-  PrintAllEntries();
+  //PrintAllEntriesString();
   return (rc);
 }
 
@@ -248,13 +407,21 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
 
   oldEntries[prev_idx1].nextSlot = NO_MORE_SLOTS;
   char *parentKey = oldKeys + curr_idx1*header.attr_length;
-  printf("split key: %d \n", *(int *)(parentKey));
+  
+  char * tempchar = (char *)malloc(header.attr_length);
+  memcpy(tempchar, parentKey, header.attr_length);
+  printf("split key: %s \n", tempchar);
+  free(tempchar);
+
   if(!isLeaf){ // update the keys
     struct IX_NodeHeader_I *newIHeader = (struct IX_NodeHeader_I *)newHeader;
     newIHeader->firstPage = oldEntries[curr_idx1].page;
     newIHeader->isEmpty = false;
     prev_idx1 = curr_idx1;
     curr_idx1 = oldEntries[prev_idx1].nextSlot;
+    oldEntries[prev_idx1].nextSlot = oldHeader->freeSlotIndex;
+    oldHeader->freeSlotIndex = prev_idx1;
+    oldHeader->num_keys--;
   }
   //prev_idx1 = curr_idx1;
 
@@ -310,6 +477,7 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
     pEntries[loc].nextSlot = pEntries[index].nextSlot;
     pEntries[index].nextSlot = loc;
   }
+  pHeader->num_keys++;
 
   // if is leaf node, update the page pointers
   if(isLeaf){
@@ -334,7 +502,7 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
     return (rc);
   }
   //PrintLeafNodes(newPage);
-
+  printf("****finishsplit***\n");
   return (rc);
 }
 
@@ -420,9 +588,12 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
     bool isDup = false;
     if((rc = FindNodeInsertIndex(nHeader, pData, prevInsertIndex, isDup)))
       return (rc);
-    //printf("found index: %d \n", prevInsertIndex);
-    printf("inserting after value: %d \n", *(int *)(keys + prevInsertIndex*header.attr_length));
-
+    printf("found index: %d \n", prevInsertIndex);
+    //printf("inserting after value: %d \n", *(int *)(keys + prevInsertIndex*header.attr_length));
+    char * tempchar = (char *)malloc(header.attr_length);
+    memcpy(tempchar, keys + prevInsertIndex * header.attr_length, header.attr_length);
+    printf("inserting after value: %s \n", tempchar);
+    free(tempchar);
     // if it's not a duplicate, insert
     int thisSlot = entries[prevInsertIndex].nextSlot;
     if(!isDup){
@@ -469,7 +640,7 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
 
   }
   else{
-    PrintRootPage();
+    //PrintRootPage();
     struct IX_NodeHeader_I *nIHeader = (struct IX_NodeHeader_I *)nHeader;
     PageNum nextNodePage;
     int prevInsertIndex = BEGINNING_OF_SLOTS;
@@ -640,12 +811,15 @@ RC IX_IndexHandle::ForcePages(){
 
 bool IX_IndexHandle::isValidIndexHeader(){
   //printf("maxkeys: %d, %d \n", header.maxKeys_I, header.maxKeys_L);
-  if(header.maxKeys_N <= 0 || header.maxKeys_B <= 0)
+  if(header.maxKeys_N <= 0 || header.maxKeys_B <= 0){
+    printf("fail 1\n");
     return false;
+  }
   if(header.entryOffset_N != sizeof(struct IX_NodeHeader) || 
     header.entryOffset_B != sizeof(struct IX_BucketHeader)){
     //printf("keyheaders: %d , %d \n", header.keyHeadersOffset_I, header.keyHeadersOffset_L);
     //printf("part 2 not true \n");
+    printf("fail 2\n");
     return false;
   }
 
@@ -654,10 +828,12 @@ bool IX_IndexHandle::isValidIndexHeader(){
   int attrLength2 = (header.keysOffset_N - header.entryOffset_N)/(header.maxKeys_N);
   //printf("attribute length: %d, %d \n", attrLength1, attrLength2);
   //if(attrLength1 != sizeof(struct Bucket_Entry) || attrLength2 != sizeof(struct Node_Entry))
-  if(attrLength2 != sizeof(struct Node_Entry))
+  if(attrLength2 != sizeof(struct Node_Entry)){
+    printf("fail 3\n");
     return false;
-  if((header.entryOffset_B + header.maxKeys_B * header.attr_length > PF_PAGE_SIZE) ||
-    header.entryOffset_N + header.maxKeys_N * header.attr_length > PF_PAGE_SIZE)
+  }
+  if((header.entryOffset_B + header.maxKeys_B * sizeof(Bucket_Entry) > PF_PAGE_SIZE) ||
+    header.keysOffset_N + header.maxKeys_N * header.attr_length > PF_PAGE_SIZE)
     return false;
   return true;
 }

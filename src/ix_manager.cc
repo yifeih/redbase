@@ -152,11 +152,14 @@ RC IX_Manager::SetUpIH(IX_IndexHandle &ih, PF_FileHandle &fh, struct IX_IndexHea
     return (IX_INVALIDINDEXFILE);
 
   if(! ih.isValidIndexHeader()){
+    printf("is not valid header\n");
     return (rc);
   }
 
-  if((rc = fh.GetThisPage(header->rootPage, ih.rootPH)))
+  if((rc = fh.GetThisPage(header->rootPage, ih.rootPH))){
+    printf("HI\n");
     return (rc);
+  }
 
   if(ih.header.attr_type == INT)
     ih.comparator = compare_int;
@@ -196,6 +199,7 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
   struct IX_IndexHeader * header = (struct IX_IndexHeader *) pData;
 
   rc = SetUpIH(indexHandle, fh, header);
+  printf("finish setup\n");
   RC rc2;
   if((rc2 = fh.UnpinPage(firstpage)))
     return (rc2);
