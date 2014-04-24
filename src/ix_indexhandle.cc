@@ -324,6 +324,8 @@ RC IX_IndexHandle::PrintBuckets(PageNum page){
 }
 
 RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
+  if(! isValidIndexHeader() || isOpenHandle == false)
+    return (IX_INVALIDINDEXHANDLE);
   RC rc = 0;
   struct IX_NodeHeader *rHeader;
   if((rc = rootPH.GetData((char *&)rHeader))){
@@ -590,10 +592,12 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
       return (rc);
     printf("found index: %d \n", prevInsertIndex);
     //printf("inserting after value: %d \n", *(int *)(keys + prevInsertIndex*header.attr_length));
+    /*
     char * tempchar = (char *)malloc(header.attr_length);
     memcpy(tempchar, keys + prevInsertIndex * header.attr_length, header.attr_length);
     printf("inserting after value: %s \n", tempchar);
     free(tempchar);
+    */
     // if it's not a duplicate, insert
     int thisSlot = entries[prevInsertIndex].nextSlot;
     if(!isDup){
@@ -667,7 +671,7 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
       if((rc = SplitNode(nHeader, nextNodeHeader, nextNodePage, prevInsertIndex, newKeyIndex, newPageNum)))
         return (rc);
       char *value = keys + newKeyIndex*header.attr_length;
-      printf("SPLIT AT NODE: %d \n", *(int *)value);
+      //printf("SPLIT AT NODE: %d \n", *(int *)value);
       int compared = comparator(pData, (void *)value, header.attr_length);
       if(compared >= 0){
         PageNum nextPage = newPageNum;
@@ -731,6 +735,8 @@ RC IX_IndexHandle::FindNodeInsertIndex(struct IX_NodeHeader *nHeader,
 
 RC IX_IndexHandle::DeleteEntry(void *pata, const RID &rid){
   RC rc = 0;
+  if(! isValidIndexHeader() || isOpenHandle == false)
+    return (IX_INVALIDINDEXHANDLE);
   return (rc);
 }
 
