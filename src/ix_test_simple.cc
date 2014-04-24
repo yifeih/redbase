@@ -32,8 +32,8 @@ using namespace std;
 //
 #define FILENAME     "testrel"        // test file name
 #define BADFILE      "/abc/def/xyz"   // bad file name
-#define STRLEN       39               // length of strings to index
-//#define STRLEN       255
+//#define STRLEN       39               // length of strings to index
+#define STRLEN       255
 #define FEW_ENTRIES  250
 #define MANY_ENTRIES 1000
 #define NENTRIES     10000             // Size of values array
@@ -733,6 +733,7 @@ RC Test5(void){
    if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
          ((rc = InsertIntEntries(ih, 5000))) || 
+         (rc = InsertIntRepeatEntries(ih, 1, 10, 1)) || 
          /*
          (rc = InsertIntRepeatEntries(ih, 1, 400, 1)) || 
          (rc = InsertIntRepeatEntries(ih, 2, 2, 1)) ||
@@ -756,7 +757,7 @@ RC Test5(void){
          //(rc = InsertIntEntries(ih, MANY_ENTRIES)) ||
          //(rc = ih.CheckAllValuesInt(1)) ||
          //(rc = ih.PrintRootPage()) ||
-         //(rc = ih.PrintAllEntries()) ||
+         (rc = ih.PrintAllEntries()) ||
 
          (rc = ixm.CloseIndex(ih)) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||

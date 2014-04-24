@@ -26,7 +26,7 @@ bool IX_Manager::IsValidIndex(AttrType attrType, int attrLength){
     return true;
   else if(attrType == FLOAT && attrLength == 4)
     return true;
-  else if(attrType == STRING && attrLength > 0 && attrLength < MAXSTRINGLEN)
+  else if(attrType == STRING && attrLength > 0 && attrLength <= MAXSTRINGLEN)
     return true;
   else
     return false;

@@ -24,3 +24,4 @@ static int compare_float(void *value1, void* value2, int attrLength){
   else
     return 0;
 }
+

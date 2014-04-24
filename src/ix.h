@@ -39,6 +39,7 @@ struct IX_IndexHeader{
 //
 class IX_IndexHandle {
     friend class IX_Manager;
+    friend class IX_IndexScan;
     static const int BEGINNING_OF_SLOTS = -2;
     static const int END_OF_SLOTS = -3;
     static const char UNOCCUPIED = 'u';
@@ -87,9 +88,11 @@ private:
         int &iterloc);
     RC UpdateNextSlotIndex(int* slotindex, int* firstPage, int before, int insert);
 
-    bool isValidIndexHeader();
+    bool isValidIndexHeader() const;
     static int CalcNumKeysNode(int attrLength);
     static int CalcNumKeysBucket(int attrLength);
+
+    RC GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage);
 
     // Private variables
     bool isOpenHandle;
@@ -123,7 +126,25 @@ public:
 
     // Close index scan
     RC CloseScan();
+private:
+    bool openScan;
+    IX_IndexHandle *indexHandle;
+    bool (*comparator) (void *, void*, AttrType, int);
+    int attrLength;
+    void *value;
+    AttrType attrType;
+    CompOp compOp;
 
+    bool scanEnded;
+
+    PF_PageHandle currLeafPH;
+    PF_PageHandle currBucketPH;
+    PageNum currLeafNum;
+    PageNum currBucketNum;
+
+    bool hasBucketPinned;
+    bool hasLeafPinned;
+    bool initializedValue;
 };
 
 //
@@ -170,7 +191,8 @@ void IX_PrintError(RC rc);
 #define IX_BADFILENAME          (START_IX_WARN + 5)
 #define IX_INVALIDBUCKET        (START_IX_WARN + 6)
 #define IX_DUPLICATEENTRY       (START_IX_WARN + 7)
-#define IX_EOF                  (START_IX_WARN + 8)
+#define IX_INVALIDSCAN          (START_IX_WARN + 8)
+#define IX_EOF                  (START_IX_WARN + 9)
 #define IX_LASTWARN             IX_EOF
 
 #define IX_ERROR                (START_IX_ERR - 0) // error

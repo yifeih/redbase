@@ -52,16 +52,18 @@ RC IX_IndexHandle::PrintLeafNodesString(PageNum curr_page){
   struct IX_NodeHeader_L *LHeader;
   PageNum thispage = curr_page;
   char *prevKey = (char *)malloc(header.attr_length);
-  bool isfirstcomp = true;
+  int numcompared = 0;
   while(thispage != NO_MORE_PAGES){
-    //printf("*****printing leafnode %d \n", thispage);
+    printf("*****printing leafnode %d \n", thispage);
     if((rc = pfh.GetThisPage(thispage, ph)) || ph.GetData((char *&)LHeader)){
+      printf("return here\n");
       return (rc);
     }
     struct Node_Entry *entries = (struct Node_Entry *)((char *)LHeader + header.entryOffset_N);
     char *keys = (char *)LHeader + header.keysOffset_N;
     int prev_idx = BEGINNING_OF_SLOTS;
     int curr_idx = LHeader->firstSlotIndex;
+    bool isfirstcomp = true;
     //int prevkey = *(int *)(keys + header.attr_length*curr_idx);
     //printf("first slot index: %d \n", curr_idx);
     while(curr_idx != NO_MORE_SLOTS){
@@ -70,14 +72,16 @@ RC IX_IndexHandle::PrintLeafNodesString(PageNum curr_page){
         //  entries[curr_idx].page, entries[curr_idx].slot, curr_idx);
         //int curr_key = *(int *)(keys + curr_idx*header.attr_length);
         char * curr_key = keys + curr_idx * header.attr_length;
+        numcompared++;
         //printf("compare");
-        if(strncmp(curr_key, prevKey, header.attr_length) < 0){
+        if(strncmp(curr_key, prevKey, header.attr_length) < 0 && isfirstcomp == false){
           printf("------------------------------------------------------ERROR \n");
           if(splittwice)
             printf("----------------------------------------------------split twice!!!\n");
           //PrintRootPage();
           return (IX_EOF);
         }
+        isfirstcomp == false;
         memcpy(prevKey, curr_key, header.attr_length);
       }
       else if(entries[curr_idx].isValid == OCCUPIED_DUP){
@@ -87,6 +91,7 @@ RC IX_IndexHandle::PrintLeafNodesString(PageNum curr_page){
       }
       else{
         free(prevKey);
+        printf("invalid spot\n");
         return (IX_EOF);
       }
       prev_idx = curr_idx;
@@ -104,6 +109,7 @@ RC IX_IndexHandle::PrintLeafNodesString(PageNum curr_page){
     //  printf("THERE is a page 4\n");
   }
   free(prevKey);
+  printf("numcompared %d \n", numcompared);
   return (0);
 }
 
@@ -135,6 +141,8 @@ RC IX_IndexHandle::PrintAllEntriesString(){
       return (rc);
     //printf("rawr\n");
     PrintLeafNodesString(curr_page);
+    //PrintLeafNodes(curr_page);
+
   }
   else{
     if((rc = PrintLeafNodesString(header.rootPage)))
@@ -220,8 +228,10 @@ RC IX_IndexHandle::CheckAllValuesInt(PageNum curr_page){
         //printf("bucket location: %d \n", entries[curr_idx].page);
         PrintBuckets(entries[curr_idx].page);
       }
-      else
+      else{
+        printf("error here\n");
         return (IX_EOF);
+      }
       prev_idx = curr_idx;
       curr_idx = entries[prev_idx].nextSlot;
       //printf("next index: %d \n", curr_idx);
@@ -371,7 +381,7 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
   if((rc = pfh.MarkDirty(header.rootPage)))
     return (rc);
 
-  //PrintAllEntriesString();
+  PrintAllEntriesString();
   return (rc);
 }
 
@@ -810,12 +820,38 @@ RC IX_IndexHandle::CreateNewBucket(PageNum &page){
 
 RC IX_IndexHandle::ForcePages(){
   RC rc = 0;
+  if (isOpenHandle == false)
+    return (IX_INVALIDINDEXHANDLE);
+  pfh.ForcePages();
+  return (rc);
+}
+
+RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
+  RC rc = 0;
+  struct IX_NodeHeader *rHeader;
+  if((rc = rootPH.GetData((char *&)rHeader))){
+    //printf("failing here\n");
+    return (rc);
+  }
+
+  // if root node is a leaf:
+  if(rHeader->isLeafNode == true){
+    leafPH = rootPH;
+    leafPage = header.rootPage;
+  }
+
+  struct IX_NodeHeader *nHeader = rHeader;
+  while(nHeader->isLeafNode == false){
+
+  }
+
+
   return (rc);
 }
 
 
 
-bool IX_IndexHandle::isValidIndexHeader(){
+bool IX_IndexHandle::isValidIndexHeader() const{
   //printf("maxkeys: %d, %d \n", header.maxKeys_I, header.maxKeys_L);
   if(header.maxKeys_N <= 0 || header.maxKeys_B <= 0){
     printf("fail 1\n");
@@ -853,5 +889,3 @@ int IX_IndexHandle::CalcNumKeysBucket(int attrLength){
   int body_size = PF_PAGE_SIZE - sizeof(struct IX_BucketHeader);
   return floor(1.0*body_size / (sizeof(Bucket_Entry)));
 }
-
-
