@@ -55,6 +55,9 @@ public:
     // Delete a new index entry
     RC DeleteEntry(void *pData, const RID &rid);
 
+    // Search for an entry
+    RC SearchEntry(void *pData, const RID &rid);
+
     // Force index files to disk
     RC ForcePages();
     RC PrintBuckets(PageNum page);
@@ -110,6 +113,9 @@ private:
 // IX_IndexScan: condition-based scan of index entries
 //
 class IX_IndexScan {
+    static const char UNOCCUPIED = 'u';
+    static const char OCCUPIED_NEW = 'n';
+    static const char OCCUPIED_DUP = 'r';
 public:
     IX_IndexScan();
     ~IX_IndexScan();
@@ -127,6 +133,9 @@ public:
     // Close index scan
     RC CloseScan();
 private:
+    RC GetFirstEntryInLeaf(PF_PageHandle &leafPH);
+    RC GetFirstBucketEntry(PF_PageHandle &bucketPH);
+    RC FindNextValue();
     bool openScan;
     IX_IndexHandle *indexHandle;
     bool (*comparator) (void *, void*, AttrType, int);
@@ -136,9 +145,19 @@ private:
     CompOp compOp;
 
     bool scanEnded;
+    bool scanStarted;
 
     PF_PageHandle currLeafPH;
     PF_PageHandle currBucketPH;
+    //char *currEntry;
+    char *currKey;
+    struct IX_NodeHeader_L *leafHeader;
+    struct IX_BucketHeader *bucketHeader;
+    struct Node_Entry *leafEntries;
+    struct Bucket_Entry *bucketEntries;
+    char * leafKeys;
+    int leafSlot;
+    int bucketSlot;
     PageNum currLeafNum;
     PageNum currBucketNum;
 

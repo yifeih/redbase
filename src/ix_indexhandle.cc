@@ -370,7 +370,7 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
       return (rc);
   }
   else{
-    printf("reached here\n");
+    //printf("reached here\n");
     if((rc = InsertIntoNonFullNode(rHeader, header.rootPage, pData, rid)))
       return (rc);
     //printf("reached insert entry\n");
@@ -381,7 +381,7 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
   if((rc = pfh.MarkDirty(header.rootPage)))
     return (rc);
 
-  PrintAllEntriesString();
+  //PrintAllEntriesString();
   return (rc);
 }
 
@@ -600,7 +600,7 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
     bool isDup = false;
     if((rc = FindNodeInsertIndex(nHeader, pData, prevInsertIndex, isDup)))
       return (rc);
-    printf("found index: %d \n", prevInsertIndex);
+    //printf("found index: %d \n", prevInsertIndex);
     //printf("inserting after value: %d \n", *(int *)(keys + prevInsertIndex*header.attr_length));
     /*
     char * tempchar = (char *)malloc(header.attr_length);
@@ -826,6 +826,7 @@ RC IX_IndexHandle::ForcePages(){
   return (rc);
 }
 
+// returns pinned first leaf page
 RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
   RC rc = 0;
   struct IX_NodeHeader *rHeader;
@@ -838,13 +839,26 @@ RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
   if(rHeader->isLeafNode == true){
     leafPH = rootPH;
     leafPage = header.rootPage;
+    return (0);
   }
 
-  struct IX_NodeHeader *nHeader = rHeader;
+  struct IX_NodeHeader_I *nHeader = (struct IX_NodeHeader_I *)rHeader;
+  PageNum nextPageNum = nHeader->firstPage;
+  PF_PageHandle nextPH;
+  if(nextPageNum == NO_MORE_PAGES)
+    return (IX_EOF);
+  if((rc = pfh.GetThisPage(nextPageNum, nextPH)) || (rc = nextPH.GetData((char *&)nHeader)))
+    return (rc);
   while(nHeader->isLeafNode == false){
-
+    PageNum prevPage = nextPageNum;
+    nextPageNum = nHeader->firstPage;
+    if((rc = pfh.UnpinPage(prevPage)))
+      return (rc);
+    if((rc = pfh.GetThisPage(nextPageNum, nextPH)) || (rc = nextPH.GetData((char *&)nHeader)))
+      return (rc);
   }
-
+  leafPage = nextPageNum;
+  leafPH = nextPH;
 
   return (rc);
 }

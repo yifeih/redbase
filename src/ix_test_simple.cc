@@ -34,7 +34,7 @@ using namespace std;
 #define BADFILE      "/abc/def/xyz"   // bad file name
 //#define STRLEN       39               // length of strings to index
 #define STRLEN       255
-#define FEW_ENTRIES  250
+#define FEW_ENTRIES  10
 #define MANY_ENTRIES 1000
 #define NENTRIES     10000             // Size of values array
 #define PROG_UNIT    200              // how frequently to give progress
@@ -469,6 +469,7 @@ RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
 
    for (i = nStart; i < nStart + nEntries; i++) {
       int value = values[i] + 1;
+      printf("TRYING TO FIND VALUE %d \n", value);
 
       if ((rc = scan.OpenScan(ih, EQ_OP, &value))) {
          printf("Verify error: opening scan\n");
@@ -575,10 +576,10 @@ RC Test2(void)
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
 
          // ensure inserted entries are all there
-         //(rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
+         (rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
 
          // ensure an entry not inserted is not there
-         //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
+         (rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
          //(rc = ih.PrintBucketEntries()) ||
          //(rc = ih.PrintRootNode()) ||
          (rc = ixm.CloseIndex(ih)))
