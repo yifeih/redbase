@@ -33,7 +33,7 @@ using namespace std;
 #define FILENAME     "testrel"        // test file name
 #define BADFILE      "/abc/def/xyz"   // bad file name
 #define STRLEN       39               // length of strings to index
-#define FEW_ENTRIES  250
+#define FEW_ENTRIES  20
 #define MANY_ENTRIES 1000
 #define NENTRIES     5000             // Size of values array
 #define PROG_UNIT    200              // how frequently to give progress
@@ -76,13 +76,14 @@ RC PrintIndex(IX_IndexHandle &ih);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       4               // number of tests
+#define NUM_TESTS       5               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
    Test1,
    Test2,
    Test3,
-   Test4
+   Test4,
+   Test5
 };
 
 //
@@ -222,7 +223,6 @@ RC InsertIntEntries(IX_IndexHandle &ih, int nEntries)
    for(i = 0; i < nEntries; i++) {
       value = values[i] + 1;
       RID rid(value, value*2);
-      printf("INSERTINTENTRIES: Adding %d \n", value);
       if ((rc = ih.InsertEntry((void *)&value, rid)))
          return (rc);
 
@@ -545,8 +545,7 @@ RC Test2(void)
 
          // ensure an entry not inserted is not there
          //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
-         (rc = ih.PrintBucketEntries()) ||
-         (rc = ih.PrintRootNode()) ||
+         //(rc = ih.PrintRootEntries()) ||
          (rc = ixm.CloseIndex(ih)))
       return (rc);
 
@@ -686,5 +685,13 @@ RC Test4(void)
       return (rc);
 
    printf("Passed Test 4\n\n");
+   return (0);
+}
+
+RC Test5(void){
+   int index=0;
+   printf("hello \n");
+   ixm.CreateIndex(FILENAME, index, INT, sizeof(int));
+   //ixm.DestroyIndex(FILENAME, index);
    return (0);
 }

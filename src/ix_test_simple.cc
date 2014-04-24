@@ -32,10 +32,11 @@ using namespace std;
 //
 #define FILENAME     "testrel"        // test file name
 #define BADFILE      "/abc/def/xyz"   // bad file name
-#define STRLEN       39               // length of strings to index
+//#define STRLEN       39               // length of strings to index
+#define STRLEN       255
 #define FEW_ENTRIES  250
 #define MANY_ENTRIES 1000
-#define NENTRIES     5000             // Size of values array
+#define NENTRIES     10000             // Size of values array
 #define PROG_UNIT    200              // how frequently to give progress
 // reports when adding lots of entries
 
@@ -575,8 +576,8 @@ RC Test2(void)
 
          // ensure an entry not inserted is not there
          //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
-         (rc = ih.PrintBucketEntries()) ||
-         (rc = ih.PrintRootNode()) ||
+         //(rc = ih.PrintBucketEntries()) ||
+         //(rc = ih.PrintRootNode()) ||
          (rc = ixm.CloseIndex(ih)))
       return (rc);
 
@@ -728,9 +729,18 @@ RC Test5(void){
 
    if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         
-         //(rc = InsertIntRepeatEntries(ih, 1, 204, 1)) || 
-         
+         ((rc = InsertIntEntries(ih, 5000))) || 
+         /*
+         (rc = InsertIntRepeatEntries(ih, 1, 400, 1)) || 
+         (rc = InsertIntRepeatEntries(ih, 2, 2, 1)) ||
+         (rc = InsertIntRepeatEntries(ih, 1, 400, 2)) ||
+         (rc = InsertIntRepeatEntries(ih, 3, 1, 3)) || 
+         (rc = InsertIntRepeatEntries(ih, 4, 1, 3)) ||
+         (rc = InsertIntRepeatEntries(ih, 5, 1, 3)) ||
+         (rc = InsertIntRepeatEntries(ih, 3, 1, 4)) ||
+         */
+
+         /*
          (rc = InsertIntRepeatEntries(ih, 1, 100, 1)) ||
          (rc = InsertIntRepeatEntries(ih, 4, 101, 3)) ||
          (rc = InsertIntRepeatEntries(ih, 3, 1, 2)) ||
@@ -738,8 +748,11 @@ RC Test5(void){
          (rc = InsertIntRepeatEntries(ih, 1, 102, 4)) ||
          (rc = InsertIntRepeatEntries(ih, 2, 10, 4)) ||
          (rc = InsertIntRepeatEntries(ih, 1, 1, 8)) ||
+         */
          
          //(rc = InsertIntEntries(ih, MANY_ENTRIES)) ||
+         (rc = ih.PrintRootPage()) ||
+         (rc = ih.PrintAllEntries()) ||
          (rc = ixm.CloseIndex(ih)) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
 
@@ -748,8 +761,8 @@ RC Test5(void){
 
          // ensure an entry not inserted is not there
          //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
-         (rc = ih.PrintBucketEntries()) ||
-         (rc = ih.PrintRootNode()) ||
+         //(rc = ih.PrintBucketEntries()) ||
+         //(rc = ih.PrintRootNode()) ||
          (rc = ixm.CloseIndex(ih)))
       return (rc);
 

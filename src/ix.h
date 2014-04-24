@@ -24,14 +24,14 @@ struct IX_IndexHeader{
     int entryOffset_B;
 
     int keysOffset_N;
-    int keysOffset_B;
+    //int keysOffset_B;
 
     int maxKeys_N;
     int maxKeys_B;
 
     PageNum rootPage;
     PageNum firstBucket;
-    bool firstBucketCreated;
+    //bool firstBucketCreated;
 };
 
 //
@@ -56,19 +56,21 @@ public:
 
     // Force index files to disk
     RC ForcePages();
-    RC PrintBucketEntries();
-    RC PrintRootNode();
+    RC PrintBuckets(PageNum page);
+    RC PrintLeafNodes(PageNum curr_page);
+    RC PrintAllEntries();
+    RC PrintRootPage();
 private:
     RC CreateNewNode(PF_PageHandle &ph, PageNum &page, char *& nData, bool isLeaf);
     RC CreateNewBucket(PageNum &page);
     //RC CreateNewNode(PF_PageHandle &ph, PageNum &page, bool isLeaf);
     //RC CreateNewLeafNode(PF_PageHandle &ph);
-    RC InsertIntoNonFullNode(char *&nData, void *pData, const RID &rid);
-    RC InsertIntoBucket(struct IX_NodeHeader *nHeader, PageNum &page, 
-        void *pData, const RID &rid, bool isDup);
+    RC InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum thisNodeNum, void *pData, const RID &rid);
+    RC InsertIntoBucket(PageNum page, const RID &rid);
     //RC SplitInternal(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
     RC SplitLeaf(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
-    RC SplitNode(char *pHeader, PF_PageHandle &oldPH, int index);
+    RC SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader *oldHeader, PageNum oldPage, int index, 
+        int &newKeyIndex, PageNum &newPageNum);
     RC SplitBucket(struct IX_NodeHeader *nHeader, struct IX_BucketHeader *oldBHeader,
   struct IX_BucketHeader *newBHeader, PageNum oldPage, PageNum newPage, int splitIndex);
     //RC GetFirstNewValue(PF_PageHandle &ph, char *&value);
@@ -93,6 +95,8 @@ private:
     PF_PageHandle rootPH;
     struct IX_IndexHeader header;
     int (*comparator) (void * , void *, int);
+
+    bool splittwice;
 
 };
 

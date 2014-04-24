@@ -97,22 +97,21 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   header->entryOffset_N = sizeof(struct IX_NodeHeader_I);
   header->entryOffset_B = sizeof(struct IX_BucketHeader);
   header->keysOffset_N = header->entryOffset_N + numKeys_N*sizeof(struct Node_Entry);
-  //header->keysOffset_B = header->entryOffset_B + numKeys_B*sizeof(struct Bucket_Entry);
+  header->keysOffset_B = header->entryOffset_B + numKeys_B*sizeof(struct Bucket_Entry);
   header->rootPage = rootpage;
-  //header->firstBucketCreated = false;
+  header->firstBucketCreated = false;
   header->firstBucket = NO_MORE_PAGES;
 
   rootheader->isLeafNode = true;
   rootheader->isEmpty = true;
   rootheader->num_keys = 0;
   rootheader->nextPage = NO_MORE_PAGES;
-  rootheader->prevPage = NO_MORE_PAGES;
   rootheader->firstSlotIndex = NO_MORE_SLOTS;
   rootheader->freeSlotIndex = 0;
   entries = (struct Node_Entry *) ((char *)rootheader + header->entryOffset_N);
   for(int i=0; i < header->maxKeys_N; i++){
     entries[i].isValid = UNOCCUPIED;
-    entries[i].page = NO_MORE_PAGES;
+    entries[i].pageNum = NO_MORE_PAGES;
     if(i == (header->maxKeys_N -1))
       entries[i].nextSlot = NO_MORE_SLOTS;
     else
@@ -218,10 +217,10 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle){
   PF_PageHandle ph;
   PageNum page;
   char *pData;
-  //printf("reached closeIndex \n");
+  printf("reached closeIndex \n");
 
   if(indexHandle.isOpenHandle == false){
-    //printf("what \n");
+    printf("what \n");
     return (IX_INVALIDINDEXHANDLE);
   }
 
@@ -230,7 +229,7 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle){
   if((rc = indexHandle.pfh.MarkDirty(root)) || (rc = indexHandle.pfh.UnpinPage(root)))
     return (rc);
 
-  //printf("passed marked page \n");
+  printf("passed marked page \n");
   if(indexHandle.header_modified == true){
     if((rc = indexHandle.pfh.GetFirstPage(ph)) || ph.GetPageNum(page))
       return (rc);

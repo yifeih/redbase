@@ -22,6 +22,7 @@ struct IX_NodeHeader{
   int firstSlotIndex;
   int freeSlotIndex;
   PageNum invalid1;
+  PageNum invalid2;
 };
 
 struct IX_NodeHeader_I{
@@ -32,6 +33,7 @@ struct IX_NodeHeader_I{
   int firstSlotIndex; // first index into slot list
   int freeSlotIndex;
   PageNum firstPage; // first leaf page under this internal node
+  PageNum invalid2;
 };
 
 struct IX_NodeHeader_L{
@@ -42,6 +44,7 @@ struct IX_NodeHeader_L{
   int firstSlotIndex;
   int freeSlotIndex;
   PageNum nextPage; // next page
+  PageNum prevPage;
 };
 
 // HEADERS FOR ENTRIES 
@@ -53,10 +56,11 @@ struct Entry{
 struct Node_Entry{
   char isValid;
   int nextSlot;
-  PageNum pageNum;
+  PageNum page;
+  SlotNum slot;
 };
+
 struct Bucket_Entry{
-  char isValid;
   int nextSlot;
   PageNum page;
   SlotNum slot;
@@ -68,7 +72,6 @@ struct IX_BucketHeader{
   int firstSlotIndex;
   int freeSlotIndex;
   PageNum nextBucket;
-  PageNum prevBucket;
 };
 
 
