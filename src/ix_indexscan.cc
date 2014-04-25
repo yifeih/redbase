@@ -86,7 +86,7 @@ IX_IndexScan::IX_IndexScan(){
 IX_IndexScan::~IX_IndexScan(){
   if(scanEnded == false && hasBucketPinned == true)
     indexHandle->pfh.UnpinPage(currBucketNum);
-  if(scanEnded == false && hasLeafPinned == true)
+  if(scanEnded == false && hasLeafPinned == true &&(currLeafNum != (indexHandle->header).rootPage))
     indexHandle->pfh.UnpinPage(currLeafNum);
   if(initializedValue == true){
     free(value);
@@ -121,10 +121,12 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
     default: return (IX_INVALIDSCAN);
   }
 
+  if(compOp != NO_OP){
   attrLength = ((this->indexHandle)->header).attr_length;
   this->value = (void *) malloc(attrLength);
   memcpy(this->value, value, attrLength);
   initializedValue = true;
+  }
 
   openScan = true;
   scanEnded = false;
@@ -155,8 +157,8 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
   }*/
 
   // compare
-  //while(true){
-  for(int i= 0; i < 11; i++){
+  while(true){
+  //for(int i= 0; i < 11; i++){
     //printf("while loop \n");
     if(scanEnded == false && openScan == true && scanStarted == false){
       if((rc = indexHandle->GetFirstLeafPage(currLeafPH, currLeafNum)))
@@ -168,6 +170,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
     else{
       if((IX_EOF == FindNextValue())){
         scanEnded = true;
+        printf("scan ended \n");
         return (IX_EOF);
       }
     }
@@ -176,21 +179,23 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
     if(hasBucketPinned){
       RID rid1(bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
       rid = rid1;
+      //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
     }
-    if(hasLeafPinned){
+    else if(hasLeafPinned){
       RID rid1(leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
       rid = rid1;
+      //printf("rid: %d %d \n", leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
     }
-
 
     if(compOp == NO_OP)
       break;
     if((comparator((void *)currKey, value, attrType, attrLength))){
       //printf("finished comaring, and they equal\n");
+      //printf("returned: %d \n", *(int*)currKey);
       break;
     }
   }
-
+  //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
 
   return (rc);
 }
@@ -198,9 +203,11 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
 RC IX_IndexScan::FindNextValue(){
   RC rc = 0;
   if(hasBucketPinned){
+    //printf("bucket is pinned \n");
     int prevSlot = bucketSlot;
     bucketSlot = bucketEntries[prevSlot].nextSlot;
     if(bucketSlot != NO_MORE_SLOTS){
+      //printf("no more buckets\n");
       return (0); // found next bucket slot
     }
     // otherwise, go to next bucket
@@ -211,17 +218,24 @@ RC IX_IndexScan::FindNextValue(){
     hasBucketPinned = false;
 
     if(nextBucket != NO_MORE_PAGES){
+      if((rc = (indexHandle->pfh).GetThisPage(nextBucket, currBucketPH)))
+        return (rc);
       if((rc = GetFirstBucketEntry(currBucketPH) ))
         return (rc);
+      currBucketNum = nextBucket;
       return (0);
     }
   }
   // otherwise, deal with node level
+  //printf("go to leaf level\n");
   int prevLeafSlot = leafSlot;
   leafSlot = leafEntries[prevLeafSlot].nextSlot;
 
   if(leafSlot != NO_MORE_SLOTS && leafEntries[leafSlot].isValid == OCCUPIED_DUP){
     currKey = leafKeys + leafSlot * attrLength;
+    currBucketNum = leafEntries[leafSlot].page;
+    if((rc = (indexHandle->pfh).GetThisPage(currBucketNum, currBucketPH)))
+      return (rc);
     if((rc = GetFirstBucketEntry(currBucketPH) ))
       return (rc);
     return (0);
@@ -258,10 +272,14 @@ RC IX_IndexScan::FindNextValue(){
 }
 
 RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
+  printf("finding first entry\n");
   RC rc = 0;
   hasLeafPinned = true;
   if((rc = leafPH.GetData((char *&) leafHeader)))
     return (rc);
+
+  if(leafHeader->num_keys == 0)
+    return (IX_EOF);
 
   leafEntries = (struct Node_Entry *)((char *)leafHeader + (indexHandle->header).entryOffset_N);
   leafKeys = (char *)leafHeader + (indexHandle->header).keysOffset_N;
@@ -270,18 +288,22 @@ RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
   if((leafSlot != NO_MORE_SLOTS)){
     //printf("update key %d \n", *(int*)currKey);
     currKey = leafKeys + attrLength*leafSlot;
-    printf("attribute length: %d \n", attrLength);
-    printf("current slot: %d, current value: %d \n", leafSlot, *(int*)currKey);
+    //printf("attribute length: %d \n", attrLength);
+    //printf("current slot: %d, current value: %d \n", leafSlot, *(int*)currKey);
   }
   else
     return (IX_INVALIDSCAN);
+  printf("reached here\n");
   if(leafEntries[leafSlot].isValid == OCCUPIED_DUP){
     //isBucketPinned = true;
     currBucketNum = leafEntries[leafSlot].page;
     if((rc = (indexHandle->pfh).GetThisPage(currBucketNum, currBucketPH)))
       return (rc);
-    printf("shouldnt be here\n");
+    if((rc = GetFirstBucketEntry(currBucketPH)))
+      return (rc);
+    //printf("shouldnt be here\n");
   }
+  printf("hi\n");
   return (0);
 }
 
@@ -291,7 +313,7 @@ RC IX_IndexScan::GetFirstBucketEntry(PF_PageHandle &bucketPH){
   if((rc = bucketPH.GetData((char *&) bucketHeader)))
     return (rc);
 
-  bucketEntries = (struct Bucket_Entry *) ((char *)bucketEntries + (indexHandle->header).entryOffset_B);
+  bucketEntries = (struct Bucket_Entry *) ((char *)bucketHeader + (indexHandle->header).entryOffset_B);
   bucketSlot = bucketHeader->firstSlotIndex;
 
   return (0);
@@ -304,7 +326,7 @@ RC IX_IndexScan::CloseScan(){
     return (IX_INVALIDSCAN);
   if(scanEnded == false && hasBucketPinned == true)
     indexHandle->pfh.UnpinPage(currBucketNum);
-  if(scanEnded == false && hasLeafPinned == true)
+  if(scanEnded == false && hasLeafPinned == true && (currLeafNum != (indexHandle->header).rootPage))
     indexHandle->pfh.UnpinPage(currLeafNum);
   if(initializedValue == true){
     free(value);

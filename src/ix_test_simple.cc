@@ -61,6 +61,7 @@ RC Test3(void);
 RC Test4(void);
 RC Test5(void);
 RC Test6(void);
+RC Test7(void);
 
 void PrintError(RC rc);
 void LsFiles(char *fileName);
@@ -78,7 +79,7 @@ RC PrintIndex(IX_IndexHandle &ih);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       6               // number of tests
+#define NUM_TESTS       7               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
    Test1,
@@ -86,7 +87,8 @@ int (*tests[])() =                      // RC doesn't work on some compilers
    Test3,
    Test4,
    Test5,
-   Test6
+   Test6,
+   Test7
 };
 
 //
@@ -806,7 +808,7 @@ RC Test6(void){
          (rc = InsertIntRepeatEntries(ih, 1, 100, 1)) ||
          (rc = InsertIntRepeatEntries(ih, 4, 101, 3)) ||
          (rc = InsertIntRepeatEntries(ih, 3, 1, 2)) ||
-         (rc = InsertIntRepeatEntries(ih, 4, 105, 4)) ||
+         (rc = InsertIntRepeatEnt       bbries(ih, 4, 105, 4)) ||
          (rc = InsertIntRepeatEntries(ih, 1, 102, 4)) ||
          (rc = InsertIntRepeatEntries(ih, 2, 10, 4)) ||
          (rc = InsertIntRepeatEntries(ih, 1, 1, 8)) ||
@@ -835,4 +837,110 @@ RC Test6(void){
 
    printf("Passed Test 2\n\n");
    return (0);
+}
+
+
+RC AddTestRecordsWithRepeats(IX_IndexHandle &ih, int nEntries){
+
+   RC   rc;
+   int  i;
+   //char value[STRLEN];
+   int value;
+
+   int maxRepeats = 400;
+
+   //int* addedEntries = (int *)malloc(sizeof(int)*nEntries);
+   //int* foundEntries = (int *)malloc(sizeof(int)*nEntries);
+   int addedEntries[nEntries];
+   int foundEntries[nEntries];
+
+   int totalNumEntries = 0;
+   for(int k = 0; k < nEntries; k++){
+      int numRepeat = (rand() & maxRepeats);
+      addedEntries[k] = numRepeat;
+      foundEntries[k] = 0;
+   }
+
+
+   printf("             Adding %d int entries\n", nEntries);
+   ran(nEntries);
+   for(i = 0; i < nEntries; i++) {
+      value = values[i] + 1;
+      printf("adding this many times: %d \n", addedEntries[value-1]);
+      for(int j = 0; j < addedEntries[value-1]; j++){
+         RID rid(value, value*2 + j);
+         printf("INSERTINTENTRIES: Adding %d %d %d \n", value, value, value*2+j);
+         if ((rc = ih.InsertEntry((void *)&value, rid)))
+            return (rc);
+
+         if((i + 1) % PROG_UNIT == 0){
+         // cast to long for PC's
+            printf("\r\t%d%%    ", (int)((i+1)*100L/nEntries));
+            fflush(stdout);
+         }
+      }
+   }
+   printf("\r\t%d%%      \n", (int)(i*100L/nEntries));
+
+   printf("Check added values\n");
+
+   IX_IndexScan scan;
+   if ((rc = scan.OpenScan(ih, NO_OP, &value))) {
+      return (rc);
+   }
+   RID rid;
+   while((0 == scan.GetNextEntry(rid))){
+      PageNum page;
+      if((rc = rid.GetPageNum(page)))
+         return (rc);
+      
+      foundEntries[page - 1] += 1;
+   }
+
+   printf("ended scan\n");
+
+   for(int j = 0; j < nEntries; j++){
+      if(foundEntries[j] != addedEntries[j])
+         printf("ERROR in verification\n");
+      //printf("found entries: %d \n", foundEntries[j]);
+   }
+
+   scan.CloseScan();
+   //free(foundEntries);
+   //free(addedEntries);
+
+   // Return ok
+   return (0);
+}
+
+RC Test7(void){
+   srand (time(NULL));
+   RC rc;
+   IX_IndexHandle ih;
+   int index=0;
+
+   printf("Test7: Insert a few integer entries into an index... \n");
+
+   if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
+         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
+         ((rc = AddTestRecordsWithRepeats(ih, 1000))) ||
+
+         // ensure inserted entries are all there
+         //(rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
+
+         // ensure an entry not inserted is not there
+         //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
+         //(rc = ih.PrintBucketEntries()) ||
+         //(rc = ih.PrintRootNode()) ||
+         (rc = ixm.CloseIndex(ih)))
+      return (rc);
+
+   LsFiles(FILENAME);
+
+   if ((rc = ixm.DestroyIndex(FILENAME, index)))
+      return (rc);
+
+   printf("Passed Test 7\n\n");
+   return (0);
+
 }

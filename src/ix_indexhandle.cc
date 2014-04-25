@@ -588,6 +588,34 @@ RC IX_IndexHandle::InsertIntoBucket(PageNum page, const RID &rid){
   return (0);
 }
 
+/*
+RC IX_IndexHandle::SearchEntry(void *pData, const RID &rid){
+  if(! isValidIndexHeader() || isOpenHandle == false)
+    return (IX_INVALIDINDEXHANDLE);
+  RC rc = 0;
+  struct IX_NodeHeader *rHeader;
+  if((rc = rootPH.GetData((char *&)rHeader))){
+    printf("failing here\n");
+    return (rc);
+  }
+
+  struct IX_NodeHeader *nHeader = rHeader;
+  while(! nHeader->isLeafNode){
+    int searchIndex;
+    bool isDup;
+    if((rc = FindNodeInsertIndex(nHeader, pData, index, isDup)))
+      return (rc);
+
+    PageNum nextNodeNum;
+    if(index == BEGINNING_OF_SLOTS){
+
+    }
+
+  }
+
+}
+*/
+
 RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum thisNodeNum, void *pData, 
   const RID &rid){
   RC rc = 0;
