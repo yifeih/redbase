@@ -18,7 +18,8 @@
  * They must take in an attribute type and attribute length, which 
  * determines the basis to compare the values on.
  */
-bool equal(void * value1, void * value2, AttrType attrtype, int attrLength){
+ 
+bool iequal(void * value1, void * value2, AttrType attrtype, int attrLength){
   switch(attrtype){
     case FLOAT: return (*(float *)value1 == *(float*)value2);
     case INT: return (*(int *)value1 == *(int *)value2) ;
@@ -27,7 +28,7 @@ bool equal(void * value1, void * value2, AttrType attrtype, int attrLength){
   }
 }
 
-bool less_than(void * value1, void * value2, AttrType attrtype, int attrLength){
+bool iless_than(void * value1, void * value2, AttrType attrtype, int attrLength){
   switch(attrtype){
     case FLOAT: return (*(float *)value1 < *(float*)value2);
     case INT: return (*(int *)value1 < *(int *)value2) ;
@@ -36,7 +37,7 @@ bool less_than(void * value1, void * value2, AttrType attrtype, int attrLength){
   }
 }
 
-bool greater_than(void * value1, void * value2, AttrType attrtype, int attrLength){
+bool igreater_than(void * value1, void * value2, AttrType attrtype, int attrLength){
   switch(attrtype){
     case FLOAT: return (*(float *)value1 > *(float*)value2);
     case INT: return (*(int *)value1 > *(int *)value2) ;
@@ -45,7 +46,7 @@ bool greater_than(void * value1, void * value2, AttrType attrtype, int attrLengt
   }
 }
 
-bool less_than_or_eq_to(void * value1, void * value2, AttrType attrtype, int attrLength){
+bool iless_than_or_eq_to(void * value1, void * value2, AttrType attrtype, int attrLength){
   switch(attrtype){
     case FLOAT: return (*(float *)value1 <= *(float*)value2);
     case INT: return (*(int *)value1 <= *(int *)value2) ;
@@ -54,7 +55,7 @@ bool less_than_or_eq_to(void * value1, void * value2, AttrType attrtype, int att
   }
 }
 
-bool greater_than_or_eq_to(void * value1, void * value2, AttrType attrtype, int attrLength){
+bool igreater_than_or_eq_to(void * value1, void * value2, AttrType attrtype, int attrLength){
   switch(attrtype){
     case FLOAT: return (*(float *)value1 >= *(float*)value2);
     case INT: return (*(int *)value1 >= *(int *)value2) ;
@@ -63,7 +64,7 @@ bool greater_than_or_eq_to(void * value1, void * value2, AttrType attrtype, int 
   }
 }
 
-bool not_equal(void * value1, void * value2, AttrType attrtype, int attrLength){
+bool inot_equal(void * value1, void * value2, AttrType attrtype, int attrLength){
   switch(attrtype){
     case FLOAT: return (*(float *)value1 != *(float*)value2);
     case INT: return (*(int *)value1 != *(int *)value2) ;
@@ -95,6 +96,7 @@ IX_IndexScan::~IX_IndexScan(){
 
 }
 
+
 RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
                 CompOp compOp,
                 void *value,
@@ -112,11 +114,11 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
   this->value = NULL;
   this->compOp = compOp;
   switch(compOp){
-    case EQ_OP : comparator = &equal; break;
-    case LT_OP : comparator = &less_than; break;
-    case GT_OP : comparator = &greater_than; break;
-    case LE_OP : comparator = &less_than_or_eq_to; break;
-    case GE_OP : comparator = &greater_than_or_eq_to; break;
+    case EQ_OP : comparator = &iequal; break;
+    case LT_OP : comparator = &iless_than; break;
+    case GT_OP : comparator = &igreater_than; break;
+    case LE_OP : comparator = &iless_than_or_eq_to; break;
+    case GE_OP : comparator = &igreater_than_or_eq_to; break;
     case NO_OP : comparator = NULL; break;
     default: return (IX_INVALIDSCAN);
   }
@@ -140,63 +142,73 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 RC IX_IndexScan::GetNextEntry(RID &rid){
   RC rc = 0;
   //printf("entered get next entry\n");
+  if(scanEnded == true && openScan == true)
+    return (IX_EOF);
+
   if(scanEnded == true || openScan == false)
     return (IX_INVALIDSCAN);
-  /*
-    if(hasBucketPinned){
-      RID rid1(bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
-      rid = rid1;
-    }
-    if(hasLeafPinned){
-      RID rid1(leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
-      rid = rid1;
-    }
 
-    printf("got first page: %d \n", currLeafNum);
-    return (0);
-  }*/
-
+  bool notFound = true;
   // compare
-  while(true){
+  while(notFound){
   //for(int i= 0; i < 11; i++){
     //printf("while loop \n");
     if(scanEnded == false && openScan == true && scanStarted == false){
       if((rc = indexHandle->GetFirstLeafPage(currLeafPH, currLeafNum)))
         return (rc);
-      if((rc = GetFirstEntryInLeaf(currLeafPH)))
+      if((rc = GetFirstEntryInLeaf(currLeafPH))){
+        if(rc == IX_EOF){
+          scanEnded = true;
+        }
+        //printf("returning end of file from scan\n");
         return (rc);
-      scanStarted = true;
-    }
-    else{
-      if((IX_EOF == FindNextValue())){
-        scanEnded = true;
-        printf("scan ended \n");
-        return (IX_EOF);
       }
+      scanStarted = true;
     }
     //printf("leaf slot found: %d \n", leafSlot);
 
     if(hasBucketPinned){
       RID rid1(bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
-      rid = rid1;
+      currRID = rid1;
       //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
     }
     else if(hasLeafPinned){
       RID rid1(leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
-      rid = rid1;
+      currRID = rid1;
       //printf("rid: %d %d \n", leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
     }
 
-    if(compOp == NO_OP)
-      break;
-    if((comparator((void *)currKey, value, attrType, attrLength))){
+
+    if(compOp == NO_OP){
+      rid = currRID;
+      //break;
+      notFound = false;
+    }
+    else if((comparator((void *)currKey, value, attrType, attrLength))){
       //printf("finished comaring, and they equal\n");
       //printf("returned: %d \n", *(int*)currKey);
-      break;
+      rid = currRID;
+      //break;
+      notFound = false;
     }
+
+    printf("updating scan\n");
+    if((IX_EOF == FindNextValue())){
+      scanEnded = true;
+
+      if(notFound == true){
+        //printf("ending scan with error code\n");
+        rc = IX_EOF;
+      }
+      notFound = false;
+      //printf("scan ended \n");
+      //return (IX_EOF);
+    }
+
+
   }
   //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
-
+  //printf("returning from scan\n");
   return (rc);
 }
 
@@ -212,12 +224,14 @@ RC IX_IndexScan::FindNextValue(){
     }
     // otherwise, go to next bucket
     PageNum nextBucket = bucketHeader->nextBucket;
+    printf("*** unpinning bucket number %d \n", currBucketNum);
     if((rc = (indexHandle->pfh).UnpinPage(currBucketNum) ))
       return (rc);
     
     hasBucketPinned = false;
 
     if(nextBucket != NO_MORE_PAGES){
+      printf("*** pinning bucket number %d \n", nextBucket);
       if((rc = (indexHandle->pfh).GetThisPage(nextBucket, currBucketPH)))
         return (rc);
       if((rc = GetFirstBucketEntry(currBucketPH) ))
@@ -234,6 +248,7 @@ RC IX_IndexScan::FindNextValue(){
   if(leafSlot != NO_MORE_SLOTS && leafEntries[leafSlot].isValid == OCCUPIED_DUP){
     currKey = leafKeys + leafSlot * attrLength;
     currBucketNum = leafEntries[leafSlot].page;
+    printf("***pinning bucket number %d \n", currBucketNum);
     if((rc = (indexHandle->pfh).GetThisPage(currBucketNum, currBucketPH)))
       return (rc);
     if((rc = GetFirstBucketEntry(currBucketPH) ))
@@ -252,7 +267,7 @@ RC IX_IndexScan::FindNextValue(){
   // if it's not the root page, unpin it:
   if((currLeafNum != (indexHandle->header).rootPage)){
     if((rc = (indexHandle->pfh).UnpinPage(currLeafNum))){
-      printf("BAD\n");
+      //printf("BAD\n");
       return (rc);
     }
   }

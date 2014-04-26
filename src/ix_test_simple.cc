@@ -512,8 +512,11 @@ RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
             printf("Verify error: found two entries with same value %d\n", value);
             return (IX_EOF);  // What should be returned here?
          }
-         else if (rc != IX_EOF)
+         else if (rc != IX_EOF){
+            printf("ending here?\n");
+            PrintError(rc);
             return (rc);
+         }
       }
 
       if ((rc = scan.CloseScan())) {
@@ -989,7 +992,7 @@ RC AddDeleteVerifyDupRecords(IX_IndexHandle &ih, int nEntries){
    int value;
 
    int maxRepeats = 4;
-   int toDelete = 4;
+   int toDelete = 1000;
 
    //int* addedEntries = (int *)malloc(sizeof(int)*nEntries);
    //int* foundEntries = (int *)malloc(sizeof(int)*nEntries);
@@ -1083,7 +1086,7 @@ RC Test9(void){
     RC rc;
    int index=0;
    //int nDelete = FEW_ENTRIES * 8/10;
-   int nDelete = 249;
+   int nDelete = 300;
    IX_IndexHandle ih;
 
    printf("Test9: Delete a few integer entries from an index... \n");

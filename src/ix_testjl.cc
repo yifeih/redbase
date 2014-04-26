@@ -538,7 +538,7 @@ RC Test2(void)
          (rc = InsertIntEntries(ih, FEW_ENTRIES)) ||
          (rc = ixm.CloseIndex(ih)) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-			(rc = ih.Print()) ||
+			//(rc = ih.Print()) ||
          // ensure inserted entries are all there
          (rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
 
@@ -608,8 +608,9 @@ RC Test4(void)
    if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
          (rc = InsertIntEntries(ih, FEW_ENTRIES)) ||
-			(rc = ih.DeleteEntry((void*)&value, rid2)) || 
-			(rc = ih.Print()))
+			//(rc = ih.DeleteEntry((void*)&value, rid2)) || 
+			//(rc = ih.Print()))
+         (rc = ih.DeleteEntry((void*)&value, rid2)))
       return (rc);
 
    // Scan <
@@ -777,7 +778,8 @@ RC Test5(void)
 		else if (choice2[0] == '7')
 			op = NO_OP;
 		else
-			ih.Print();
+         return (0);
+			//ih.Print();
 
 	   if ((rc = scanlt.OpenScan(ih, op, &j))) {
 			printf("Scan error: opening scan\n");
@@ -923,8 +925,10 @@ RC Test6(void)
 			op = NE_OP;
 		else if (choice2[0] == '7')
 			op = NO_OP;
-		else
-			ih.Print();
+		//else
+		//	ih.Print();
+      else 
+         return (0);
 
 		if (choice2[0] != '8')
 		{

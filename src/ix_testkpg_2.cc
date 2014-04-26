@@ -805,6 +805,8 @@ RC DeleteInts(IX_IndexHandle &ih, int lo, int hi, int exLo, int exHi)
          while ((rc = indScn.GetNextEntry(rid)) != IX_EOF) {
             if ((rc = ih.DeleteEntry(&value, rid))) {
                cout << "Deleted " << count << " entries" << endl;
+               cout << "ERROR HERE" <<endl;
+               PrintError(rc);
                return rc;
             }
             count++;

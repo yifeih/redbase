@@ -981,7 +981,7 @@ RC Test7(void)
    // Add
    printf("             Adding %d existing int entries\n", N/2);
    for (i = 0; i < N/2; i++) {
-      if ((rc = InsertIntEntry(ih, values[i], i*2)) != IX_ENTRYEXISTS)
+      if ((rc = InsertIntEntry(ih, values[i], i*2)) != IX_DUPLICATEENTRY)
          goto err;
       if((i + 1) % PROG_UNIT == 0){
          // cast to long for PC's
@@ -1017,7 +1017,7 @@ RC Test7(void)
    // Delete half
    printf("             Deleting %d non-existing int entries\n", N/4);
    for (j = 0; j < N/4; j++) {
-      if ((rc = DeleteIntEntry(ih, values[j], j*2)) != IX_ENTRYNOTFOUND)
+      if ((rc = DeleteIntEntry(ih, values[j], j*2)) != IX_INVALIDENTRY)
          goto err;
       if((j + 1) % PROG_UNIT == 0){
          // cast to long for PC's

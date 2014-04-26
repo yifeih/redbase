@@ -125,6 +125,7 @@ public:
                 void *value,
                 ClientHint  pinHint = NO_HINT);
 
+
     // Get the next matching entry return IX_EOF if no more matching
     // entries.
     RC GetNextEntry(RID &rid);
@@ -160,6 +161,10 @@ private:
     PageNum currLeafNum;
     PageNum currBucketNum;
 
+    RID currRID;
+
+    bool unpinBucket;
+    bool unpinLeaf;
     bool hasBucketPinned;
     bool hasLeafPinned;
     bool initializedValue;
