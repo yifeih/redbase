@@ -232,9 +232,7 @@ RC IX_IndexScan::FindNextValue(){
 
     if(nextBucket != NO_MORE_PAGES){
       printf("*** pinning bucket number %d \n", nextBucket);
-      if((rc = (indexHandle->pfh).GetThisPage(nextBucket, currBucketPH)))
-        return (rc);
-      if((rc = GetFirstBucketEntry(currBucketPH) ))
+      if((rc = GetFirstBucketEntry(nextBucket, currBucketPH) ))
         return (rc);
       currBucketNum = nextBucket;
       return (0);
@@ -249,9 +247,8 @@ RC IX_IndexScan::FindNextValue(){
     currKey = leafKeys + leafSlot * attrLength;
     currBucketNum = leafEntries[leafSlot].page;
     printf("***pinning bucket number %d \n", currBucketNum);
-    if((rc = (indexHandle->pfh).GetThisPage(currBucketNum, currBucketPH)))
-      return (rc);
-    if((rc = GetFirstBucketEntry(currBucketPH) ))
+    
+    if((rc = GetFirstBucketEntry(currBucketNum, currBucketPH) ))
       return (rc);
     return (0);
   }
@@ -314,7 +311,7 @@ RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
     currBucketNum = leafEntries[leafSlot].page;
     if((rc = (indexHandle->pfh).GetThisPage(currBucketNum, currBucketPH)))
       return (rc);
-    if((rc = GetFirstBucketEntry(currBucketPH)))
+    if((rc = GetFirstBucketEntry(currBucketNum, currBucketPH)))
       return (rc);
     //printf("shouldnt be here\n");
   }
@@ -322,8 +319,10 @@ RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
   return (0);
 }
 
-RC IX_IndexScan::GetFirstBucketEntry(PF_PageHandle &bucketPH){
+RC IX_IndexScan::GetFirstBucketEntry(PageNum nextBucket, PF_PageHandle &bucketPH){
   RC rc = 0;
+  if((rc = (indexHandle->pfh).GetThisPage(nextBucket, currBucketPH)))
+        return (rc);
   hasBucketPinned = true;
   if((rc = bucketPH.GetData((char *&) bucketHeader)))
     return (rc);

@@ -134,7 +134,7 @@ public:
     RC CloseScan();
 private:
     RC GetFirstEntryInLeaf(PF_PageHandle &leafPH);
-    RC GetFirstBucketEntry(PF_PageHandle &bucketPH);
+    RC GetFirstBucketEntry(PageNum nextBucket, PF_PageHandle &bucketPH);
     RC FindNextValue();
     bool openScan;
     IX_IndexHandle *indexHandle;
