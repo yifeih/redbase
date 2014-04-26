@@ -104,8 +104,6 @@ private:
     struct IX_IndexHeader header;
     int (*comparator) (void * , void *, int);
 
-    bool splittwice;
-
 };
 
 //
@@ -136,6 +134,7 @@ private:
     RC GetFirstEntryInLeaf(PF_PageHandle &leafPH);
     RC GetFirstBucketEntry(PageNum nextBucket, PF_PageHandle &bucketPH);
     RC FindNextValue();
+    RC SetRID(bool setCurrent);
     bool openScan;
     IX_IndexHandle *indexHandle;
     bool (*comparator) (void *, void*, AttrType, int);
@@ -151,6 +150,8 @@ private:
     PF_PageHandle currBucketPH;
 
     char *currKey;
+    char *nextKey;
+    char *nextNextKey;
     struct IX_NodeHeader_L *leafHeader;
     struct IX_BucketHeader *bucketHeader;
     struct Node_Entry *leafEntries;
@@ -160,14 +161,21 @@ private:
     int bucketSlot;
     PageNum currLeafNum;
     PageNum currBucketNum;
+    PageNum nextBucketNum;
 
     RID currRID;
+    RID nextRID;
 
+    bool searchingBucket;
     bool unpinBucket;
     bool unpinLeaf;
     bool hasBucketPinned;
     bool hasLeafPinned;
     bool initializedValue;
+    bool endOfIndexReached;
+
+    bool checkLeafValues;
+    int count;
 };
 
 //

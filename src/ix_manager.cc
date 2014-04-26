@@ -50,7 +50,7 @@ RC IX_Manager::GetIndexFileName(const char *fileName, int indexNo, std::string &
 
 RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
                    AttrType attrType, int attrLength){
-  if(fileName == NULL)
+  if(fileName == NULL || indexNo < 0)
     return (IX_BADFILENAME);
   RC rc = 0;
   if(! IsValidIndex(attrType, attrLength))
@@ -134,6 +134,8 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 
 RC IX_Manager::DestroyIndex(const char *fileName, int indexNo){
   RC rc;
+  if(fileName == NULL || indexNo < 0)
+    return (IX_BADFILENAME);
   std::string indexname;
   if((rc = GetIndexFileName(fileName, indexNo, indexname)))
     return (rc);
@@ -177,6 +179,8 @@ RC IX_Manager::SetUpIH(IX_IndexHandle &ih, PF_FileHandle &fh, struct IX_IndexHea
 
 RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
                  IX_IndexHandle &indexHandle){
+  if(fileName == NULL || indexNo < 0)
+    return (IX_BADFILENAME);
   if(indexHandle.isOpenHandle == true)
     return (IX_INVALIDINDEXHANDLE);
   RC rc = 0;

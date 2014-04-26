@@ -82,7 +82,6 @@ IX_IndexScan::IX_IndexScan(){
   hasLeafPinned = false;
   scanEnded = true;
   scanStarted = false;
-  endOfIndexReached = true;
 }
 
 IX_IndexScan::~IX_IndexScan(){
@@ -136,8 +135,6 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
   hasBucketPinned = false;
   hasLeafPinned = false;
   scanStarted = false;
-  endOfIndexReached = false;
-  count = 0;
 
   return (rc);
 }
@@ -154,6 +151,8 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
   bool notFound = true;
   // compare
   while(notFound){
+  //for(int i= 0; i < 11; i++){
+    //printf("while loop \n");
     if(scanEnded == false && openScan == true && scanStarted == false){
       if((rc = indexHandle->GetFirstLeafPage(currLeafPH, currLeafNum)))
         return (rc);
@@ -164,36 +163,25 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
         //printf("returning end of file from scan\n");
         return (rc);
       }
-      currKey = nextNextKey;
-      scanStarted = true; // set the current RID
-      SetRID(true);
-      if((IX_EOF == FindNextValue()))
-        endOfIndexReached = true;
-    }
-    else{
-      currKey = nextKey;
-      currRID = nextRID;
+      scanStarted = true;
     }
     //printf("leaf slot found: %d \n", leafSlot);
-    SetRID(false);
-    nextKey = nextNextKey;
 
-    if((IX_EOF == FindNextValue())){
-      endOfIndexReached = true;
+    if(hasBucketPinned){
+      RID rid1(bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
+      currRID = rid1;
+      //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
     }
-
-    PageNum thisRIDPage;
-    if((rc = currRID.GetPageNum(thisRIDPage)))
-      return (rc);
-    if(thisRIDPage == -1){
-      scanEnded = true;
-      return (IX_EOF);
-      //printf("returning end of file\n");
+    else if(hasLeafPinned){
+      RID rid1(leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
+      currRID = rid1;
+      //printf("rid: %d %d \n", leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
     }
 
 
     if(compOp == NO_OP){
       rid = currRID;
+      //break;
       notFound = false;
     }
     else if((comparator((void *)currKey, value, attrType, attrLength))){
@@ -202,11 +190,8 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
       rid = currRID;
       //break;
       notFound = false;
-      //printf("current key: %d, value: %d \n", *(int*)currKey, *(int*)value);
-      //printf("passed comparator\n");
     }
 
-    /*
     printf("updating scan\n");
     if((IX_EOF == FindNextValue())){
       scanEnded = true;
@@ -219,56 +204,12 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
       //printf("scan ended \n");
       //return (IX_EOF);
     }
-    */
 
 
   }
-  SlotNum thisRIDpage;
-  currRID.GetSlotNum(thisRIDpage);
-  //printf("returning %d, nextKey: %d , page %d \n", *(int*)currKey, *(int*)nextKey, thisRIDpage);
-
-  //printf("returning %d \n", *(int*)currKey);
   //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
   //printf("returning from scan\n");
   return (rc);
-}
-
-RC IX_IndexScan::SetRID(bool setCurrent){
-  if(endOfIndexReached && setCurrent == false){
-    //printf("reached here\n");
-    RID rid1(-1,-1);
-    nextRID = rid1;
-    return (0);
-  }
-
-  if(setCurrent){
-    if(hasBucketPinned){
-      RID rid1(bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
-      currRID = rid1;
-      //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
-    }
-    else if(hasLeafPinned){
-      RID rid1(leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
-      currRID = rid1;
-      //printf("rid: %d %d \n", leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
-    }
-  }
-  else{
-    count++;
-    //printf("count: %d \n", count);
-    if(hasBucketPinned){
-      RID rid1(bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
-      nextRID = rid1;
-      //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
-    }
-    else if(hasLeafPinned){
-      RID rid1(leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
-      nextRID = rid1;
-      //printf("rid: %d %d \n", leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
-    }
-  }
-
-  return (0);
 }
 
 RC IX_IndexScan::FindNextValue(){
@@ -283,17 +224,14 @@ RC IX_IndexScan::FindNextValue(){
     }
     // otherwise, go to next bucket
     PageNum nextBucket = bucketHeader->nextBucket;
-    //printf("*** unpinning bucket number %d \n", currBucketNum);
+    printf("*** unpinning bucket number %d \n", currBucketNum);
     if((rc = (indexHandle->pfh).UnpinPage(currBucketNum) ))
       return (rc);
     
     hasBucketPinned = false;
 
     if(nextBucket != NO_MORE_PAGES){
-      //if((rc = (indexHandle->pfh).GetThisPage(nextBucket, currBucketPH)))
-      //  return (rc);
-
-      //printf("*** pinning bucket number %d \n", nextBucket);
+      printf("*** pinning bucket number %d \n", nextBucket);
       if((rc = GetFirstBucketEntry(nextBucket, currBucketPH) ))
         return (rc);
       currBucketNum = nextBucket;
@@ -306,9 +244,9 @@ RC IX_IndexScan::FindNextValue(){
   leafSlot = leafEntries[prevLeafSlot].nextSlot;
 
   if(leafSlot != NO_MORE_SLOTS && leafEntries[leafSlot].isValid == OCCUPIED_DUP){
-    nextNextKey = leafKeys + leafSlot * attrLength;
+    currKey = leafKeys + leafSlot * attrLength;
     currBucketNum = leafEntries[leafSlot].page;
-    //printf("***pinning bucket number %d \n", currBucketNum);
+    printf("***pinning bucket number %d \n", currBucketNum);
     
     if((rc = GetFirstBucketEntry(currBucketNum, currBucketPH) ))
       return (rc);
@@ -316,7 +254,7 @@ RC IX_IndexScan::FindNextValue(){
   }
   if(leafSlot != NO_MORE_SLOTS && leafEntries[leafSlot].isValid == OCCUPIED_NEW){
     //printf("hellow found right next value \n");
-    nextNextKey = leafKeys + leafSlot * attrLength;
+    currKey = leafKeys + leafSlot * attrLength;
     return (0);
   }
 
@@ -361,7 +299,7 @@ RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
   leafSlot = leafHeader->firstSlotIndex;
   if((leafSlot != NO_MORE_SLOTS)){
     //printf("update key %d \n", *(int*)currKey);
-    nextNextKey = leafKeys + attrLength*leafSlot;
+    currKey = leafKeys + attrLength*leafSlot;
     //printf("attribute length: %d \n", attrLength);
     //printf("current slot: %d, current value: %d \n", leafSlot, *(int*)currKey);
   }
@@ -371,9 +309,8 @@ RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
   if(leafEntries[leafSlot].isValid == OCCUPIED_DUP){
     //isBucketPinned = true;
     currBucketNum = leafEntries[leafSlot].page;
-    //printf("***pinning bucket number %d \n", currBucketNum);
-    //if((rc = (indexHandle->pfh).GetThisPage(currBucketNum, currBucketPH)))
-    //  return (rc);
+    if((rc = (indexHandle->pfh).GetThisPage(currBucketNum, currBucketPH)))
+      return (rc);
     if((rc = GetFirstBucketEntry(currBucketNum, currBucketPH)))
       return (rc);
     //printf("shouldnt be here\n");

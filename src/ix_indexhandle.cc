@@ -17,7 +17,7 @@ IX_IndexHandle::IX_IndexHandle(){
   isOpenHandle = false;
   header_modified = false;
 
-  splittwice = false;
+  //splittwice = false;
 }
 
 IX_IndexHandle::~IX_IndexHandle(){
@@ -76,8 +76,8 @@ RC IX_IndexHandle::PrintLeafNodesString(PageNum curr_page){
         //printf("compare");
         if(strncmp(curr_key, prevKey, header.attr_length) < 0 && isfirstcomp == false){
           printf("------------------------------------------------------ERROR \n");
-          if(splittwice)
-            printf("----------------------------------------------------split twice!!!\n");
+          //if(splittwice)
+          //  printf("----------------------------------------------------split twice!!!\n");
           //PrintRootPage();
           return (IX_EOF);
         }
@@ -706,7 +706,7 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
     if((rc = pfh.GetThisPage(nextNodePage, nextNodePH)) || (rc = nextNodePH.GetData((char *&)nextNodeHeader)))
       return (rc);
     if(nextNodeHeader->num_keys == header.maxKeys_N){
-      splittwice = true;
+      //splittwice = true;
       if((rc = SplitNode(nHeader, nextNodeHeader, nextNodePage, prevInsertIndex, newKeyIndex, newPageNum)))
         return (rc);
       char *value = keys + newKeyIndex*header.attr_length;
@@ -811,7 +811,7 @@ RC IX_IndexHandle::DeleteFromNode(struct IX_NodeHeader *nHeader, void *pData, co
       return (rc);
     }
     if(toDelete){
-      printf("toDelete is set to true\n");
+      //printf("toDelete is set to true\n");
     }
   }
   // else, delete from a following index
@@ -870,13 +870,13 @@ RC IX_IndexHandle::DeleteFromNode(struct IX_NodeHeader *nHeader, void *pData, co
 
     // delete this leaf/child node
     if(toDeleteNext){
-      printf("todelete next is true\n");
+      //printf("todelete next is true\n");
       if((rc = pfh.DisposePage(nextNodePage))){
-        printf("cannot not dispose page\n");
+        //printf("cannot not dispose page\n");
         return (rc);
       }
       if(useFirstPage == false){
-        printf("used first page\n");
+        //printf("used first page\n");
         if(prevIndex == BEGINNING_OF_SLOTS)
           nHeader->firstSlotIndex = entries[currIndex].nextSlot;
         else
@@ -885,7 +885,7 @@ RC IX_IndexHandle::DeleteFromNode(struct IX_NodeHeader *nHeader, void *pData, co
         nHeader->freeSlotIndex = currIndex;
       }
       else{
-        printf("not using first page\n");
+        //printf("not using first page\n");
         int firstslot = nHeader->firstSlotIndex;
         nHeader->firstSlotIndex = entries[firstslot].nextSlot;
         iHeader->firstPage = entries[firstslot].page;
@@ -958,7 +958,7 @@ RC IX_IndexHandle::DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, 
     PageNum ridPage;
     SlotNum ridSlot;
     if((rc = rid.GetPageNum(ridPage)) || (rc = rid.GetSlotNum(ridSlot))){
-      printf("error in retrieving rid\n");
+      //printf("error in retrieving rid\n");
       return (rc);
     }
 
@@ -1011,7 +1011,7 @@ RC IX_IndexHandle::DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, 
       return (IX_INVALIDENTRY);
 
     if(deletePage){ // delete the bucket
-      printf("deletingpage\n");
+      //printf("deletingpage %d \n", bucketNum);
       if((rc = pfh.DisposePage(bucketNum) ))
         return (rc);
       if(nextBucketNum == NO_MORE_PAGES){
@@ -1019,14 +1019,14 @@ RC IX_IndexHandle::DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, 
         if((rc = lastRID.GetPageNum(entries[currIndex].page)) || 
           (rc = lastRID.GetSlotNum(entries[currIndex].slot)))
           return (rc);
-        printf("---------nextrid: %d %d \n", entries[currIndex].page, entries[currIndex].slot);
+        //printf("---------nextrid: %d %d \n", entries[currIndex].page, entries[currIndex].slot);
       }
       else
         entries[currIndex].page = nextBucketNum;
     }
   }
   if(nHeader->num_keys == 0){
-    printf("hellw??\n");
+    //printf("hellw??\n");
     toDelete = true;
     // reset the pointers
     PageNum prevPage = nHeader->prevPage;
@@ -1047,7 +1047,7 @@ RC IX_IndexHandle::DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, 
       if((rc = pfh.MarkDirty(nextPage)) || (rc = pfh.UnpinPage(nextPage)))
         return (rc);
     }
-    printf("finished deleting leaf node\n");
+    //printf("finished deleting leaf node\n");
 
   }
   //printf("reaches the end of delete from leaf\n");
@@ -1057,7 +1057,7 @@ RC IX_IndexHandle::DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, 
 
 RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &rid, 
   bool &deletePage, RID &lastRID, PageNum &nextPage){
-  printf("beginning of delete from bucket\n");
+  //printf("beginning of delete from bucket\n");
   RC rc = 0;
   PageNum nextPageNum = bHeader->nextBucket;
   nextPage = bHeader->nextBucket;
@@ -1065,7 +1065,7 @@ RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &
   struct Bucket_Entry *entries = (struct Bucket_Entry *)((char *)bHeader + header.entryOffset_B);
 
   if((nextPageNum != NO_MORE_PAGES)){
-    printf("getting next page\n");
+    //printf("getting next page\n");
     bool toDelete = false;
     PF_PageHandle nextBucketPH;
     struct IX_BucketHeader *nextHeader;
@@ -1120,7 +1120,7 @@ RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &
 
   // if found, delete
   if(found){
-    printf("found please delete thnx\n");
+    //printf("found please delete thnx\n");
     if (prevIndex == BEGINNING_OF_SLOTS)
       bHeader->firstSlotIndex = entries[currIndex].nextSlot;
     else
@@ -1128,13 +1128,13 @@ RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &
     entries[currIndex].nextSlot = bHeader->freeSlotIndex;
     bHeader->freeSlotIndex = currIndex;
 
-    printf("num left in bucket : %d \n", bHeader->num_keys);
+    //printf("num left in bucket : %d \n", bHeader->num_keys);
     bHeader->num_keys--;
     if(bHeader->num_keys == 1){ // move this last one to the prev 
       int firstSlot = bHeader->firstSlotIndex;
       RID last(entries[firstSlot].page, entries[firstSlot].slot);
       lastRID = last;
-      printf("set delete to true \n");
+      //printf("set delete to true \n");
       deletePage = true;
     }
 

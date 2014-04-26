@@ -800,6 +800,7 @@ RC DeleteInts(IX_IndexHandle &ih, int lo, int hi, int exLo, int exHi)
    for (i = lo; i <= hi; i++) {
       if ((i < exLo) || (i > exHi)) {
          value = i * 10;
+         printf("searching and deleting value: %d \n", value);
          if ((rc = indScn.OpenScan(ih, EQ_OP, &value)))
             return (rc);
          while ((rc = indScn.GetNextEntry(rid)) != IX_EOF) {
@@ -811,6 +812,7 @@ RC DeleteInts(IX_IndexHandle &ih, int lo, int hi, int exLo, int exHi)
             }
             count++;
          }
+         printf("deleted: %d \n", count);
          indScn.CloseScan();
          if (rc !=  IX_EOF) return rc;
       }
