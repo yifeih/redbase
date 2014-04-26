@@ -75,21 +75,20 @@ private:
     RC InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum thisNodeNum, void *pData, const RID &rid);
     RC InsertIntoBucket(PageNum page, const RID &rid);
     //RC SplitInternal(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
-    RC SplitLeaf(PF_PageHandle &old_ph, PF_PageHandle &new_ph);
+    RC FindPrevIndex(struct IX_NodeHeader *nHeader, int thisIndex, int &prevIndex);
     RC SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader *oldHeader, PageNum oldPage, int index, 
         int &newKeyIndex, PageNum &newPageNum);
-    RC SplitBucket(struct IX_NodeHeader *nHeader, struct IX_BucketHeader *oldBHeader,
-  struct IX_BucketHeader *newBHeader, PageNum oldPage, PageNum newPage, int splitIndex);
-    //RC GetFirstNewValue(PF_PageHandle &ph, char *&value);
-
-    RC FindHalfwayIndex(char * nextSlotIndex, int size);
-    RC FindNextFreeSlot(char * header, int& slot, bool isBucket);
+    
     RC FindNodeInsertIndex(struct IX_NodeHeader *nHeader, 
         void* pData, int& index, bool& isDup);
     RC FindBucketInsertIndex(struct IX_BucketHeader *bHeader,
         void *pData, int &index, bool& searchNext, const RID &rid,
         int &iterloc);
-    RC UpdateNextSlotIndex(int* slotindex, int* firstPage, int before, int insert);
+
+    RC DeleteFromNode(struct IX_NodeHeader *nHeader, void *pData, const RID &rid, bool &toDelete);
+    RC DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &rid, 
+  bool &deletePage, RID &lastRID, PageNum &nextPage);
+    RC DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, const RID &rid, bool &toDelete);
 
     bool isValidIndexHeader() const;
     static int CalcNumKeysNode(int attrLength);
@@ -149,7 +148,7 @@ private:
 
     PF_PageHandle currLeafPH;
     PF_PageHandle currBucketPH;
-    //char *currEntry;
+
     char *currKey;
     struct IX_NodeHeader_L *leafHeader;
     struct IX_BucketHeader *bucketHeader;
@@ -211,7 +210,8 @@ void IX_PrintError(RC rc);
 #define IX_INVALIDBUCKET        (START_IX_WARN + 6)
 #define IX_DUPLICATEENTRY       (START_IX_WARN + 7)
 #define IX_INVALIDSCAN          (START_IX_WARN + 8)
-#define IX_EOF                  (START_IX_WARN + 9)
+#define IX_INVALIDENTRY         (START_IX_WARN + 9)
+#define IX_EOF                  (START_IX_WARN + 10)
 #define IX_LASTWARN             IX_EOF
 
 #define IX_ERROR                (START_IX_ERR - 0) // error

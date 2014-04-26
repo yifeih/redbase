@@ -43,7 +43,7 @@ SM_SOURCES     = #sm_stub.cc printer.cc
 QL_SOURCES     = #ql_manager_stub.cc
 UTILS_SOURCES  = #dbcreate.cc dbdestroy.cc redbase.cc
 PARSER_SOURCES = #scan.c parse.c nodes.c interp.c
-TESTER_SOURCES = ix_test_simple.cc ix_test.cc rm_testrecsizes.cc rm_testshnFIXED.cc rm_testyh_random.cc rm_test.cc rm_testgmf.cc rm_testkpg.cc #rm_testjl.cc #rm_test.cc #ix_test.cc parser_test.cc
+TESTER_SOURCES = ix_tester.cc ix_test_simple.cc ix_test.cc rm_testrecsizes.cc rm_testshnFIXED.cc rm_testyh_random.cc rm_test.cc rm_testgmf.cc rm_testkpg.cc #rm_testjl.cc #rm_test.cc #ix_test.cc parser_test.cc
 
 PF_OBJECTS     = $(addprefix $(BUILD_DIR), $(PF_SOURCES:.cc=.o))
 RM_OBJECTS     = $(addprefix $(BUILD_DIR), $(RM_SOURCES:.cc=.o))

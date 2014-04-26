@@ -1,3 +1,8 @@
+// This file is based on the original test file as described below
+// Adapted by John Liepins (liepins@stanford.edu) to be run with arguments
+// 5 and/or 6 that run the test in an interactive menu-driven mode to test
+// indexes of integers (5) and strings(6).
+
 //
 // File:        ix_testshell.cc
 // Description: Test IX component
@@ -10,9 +15,9 @@
 // expected to devise your own tests to test your code.
 //
 // 1997:  Tester has been modified to reflect the change in the 1997
-// interface.
+// interface.  
 // 2000:  Tester has been modified to reflect the change in the 2000
-// interface.
+// interface.  
 
 #include <cstdio>
 #include <iostream>
@@ -32,11 +37,10 @@ using namespace std;
 //
 #define FILENAME     "testrel"        // test file name
 #define BADFILE      "/abc/def/xyz"   // bad file name
-//#define STRLEN       39               // length of strings to index
-#define STRLEN       255
-#define FEW_ENTRIES  250
-#define MANY_ENTRIES 1000
-#define NENTRIES     10000             // Size of values array
+#define STRLEN       100               // length of strings to index
+#define FEW_ENTRIES  20    
+#define MANY_ENTRIES 3000
+#define NENTRIES     5000             // Size of values array
 #define PROG_UNIT    200              // how frequently to give progress
 // reports when adding lots of entries
 
@@ -61,9 +65,6 @@ RC Test3(void);
 RC Test4(void);
 RC Test5(void);
 RC Test6(void);
-RC Test7(void);
-RC Test8(void);
-RC Test9(void);
 
 void PrintError(RC rc);
 void LsFiles(char *fileName);
@@ -78,21 +79,19 @@ RC DeleteStringEntries(IX_IndexHandle &ih, int nEntries);
 RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists);
 RC PrintIndex(IX_IndexHandle &ih);
 
-//
+// 
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       9               // number of tests
+#define NUM_TESTS       6               // number of tests
 int (*tests[])() =                      // RC doesn't work on some compilers
 {
-   Test1,
+   Test1, 
    Test2,
    Test3,
    Test4,
-   Test5,
-   Test6,
-   Test7,
-   Test8,
-   Test9
+	Test5,
+	Test6
+
 };
 
 //
@@ -125,6 +124,7 @@ int main(int argc, char *argv[])
          if ((rc = (tests[testNum])())) {
             // Print the error and exit
             PrintError(rc);
+				
             return (1);
          }
    }
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
          if ((rc = (tests[testNum - 1])())) {
             // Print the error and exit
             PrintError(rc);
-            return (1);
+				return (1);
          }
       }
    }
@@ -185,7 +185,7 @@ void PrintError(RC rc)
 // LsFiles
 //
 // Desc: list the filename's directory entry
-//
+// 
 void LsFiles(char *fileName)
 {
    char command[80];
@@ -203,7 +203,7 @@ void ran(int n)
 {
    int i, r, t, m;
 
-   // Initialize values array
+   // Initialize values array 
    for (i = 0; i < NENTRIES; i++)
       values[i] = i;
 
@@ -232,36 +232,6 @@ RC InsertIntEntries(IX_IndexHandle &ih, int nEntries)
    for(i = 0; i < nEntries; i++) {
       value = values[i] + 1;
       RID rid(value, value*2);
-      printf("INSERTINTENTRIES: Adding %d \n", value);
-      if ((rc = ih.InsertEntry((void *)&value, rid)))
-         return (rc);
-
-      if((i + 1) % PROG_UNIT == 0){
-         // cast to long for PC's
-         printf("\r\t%d%%    ", (int)((i+1)*100L/nEntries));
-         fflush(stdout);
-      }
-   }
-   printf("\r\t%d%%      \n", (int)(i*100L/nEntries));
-
-   // Return ok
-   return (0);
-}
-
-//
-// InsertIntEntries
-//
-// Desc: Add a number of integer entries to the index
-//
-RC InsertIntRepeatEntries(IX_IndexHandle &ih, int value, int nEntries, int pageNum)
-{
-   RC  rc;
-   int i;
-
-   printf("             Adding %d int entries of value %d \n", nEntries, value);
-   for(i = 0; i < nEntries; i++) {
-      RID rid(value+i, pageNum);
-      printf("INSERTINTENTRIES: Adding %d \n", value);
       if ((rc = ih.InsertEntry((void *)&value, rid)))
          return (rc);
 
@@ -320,7 +290,6 @@ RC InsertStringEntries(IX_IndexHandle &ih, int nEntries)
       memset(value, ' ', STRLEN);
       sprintf(value, "number %d", values[i] + 1);
       RID rid(values[i] + 1, (values[i] + 1)*2);
-      printf("ADDING VALUE %s\n", value);
       if ((rc = ih.InsertEntry(value, rid)))
          return (rc);
 
@@ -456,8 +425,8 @@ RC DeleteStringEntries(IX_IndexHandle &ih, int nEntries)
 //   - nStart is the starting point in the values array to check
 //   - nEntries is the number of entries in the values array to check
 //   - If bExists == 1, verify that an index has entries as added
-//     by InsertIntEntries.
-//     If bExists == 0, verify that entries do NOT exist (you can
+//     by InsertIntEntries.  
+//     If bExists == 0, verify that entries do NOT exist (you can 
 //     use this to test deleting entries).
 //
 RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
@@ -475,7 +444,6 @@ RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
 
    for (i = nStart; i < nStart + nEntries; i++) {
       int value = values[i] + 1;
-      printf("TRYING TO FIND VALUE %d \n", value);
 
       if ((rc = scan.OpenScan(ih, EQ_OP, &value))) {
          printf("Verify error: opening scan\n");
@@ -502,7 +470,7 @@ RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
 
          if (pageNum != value || slotNum != (value*2)) {
             printf("Verify error: incorrect rid (%d,%d) found for entry %d\n",
-                  pageNum, slotNum, value);
+                  pageNum, slotNum, value);             
             return (IX_EOF);  // What should be returned here?
          }
 
@@ -521,7 +489,7 @@ RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
          return (rc);
       }
    }
-
+	printf("Done verifying index\n");
    return (0);
 }
 
@@ -533,27 +501,17 @@ RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
 // Test1 tests simple creation, opening, closing, and deletion of indices
 //
 RC Test1(void)
-{
+{                  
    RC rc;
    int index=0;
    IX_IndexHandle ih;
 
    printf("Test 1: create, open, close, delete an index... \n");
-   /*
-   if((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int)))){
-      printf("error in creation \n");
-      IX_PrintError(rc);
-      return (rc);
-   }*/
 
-   
    if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         (rc = ixm.CloseIndex(ih))){
-      printf("error here\n");
+         (rc = ixm.CloseIndex(ih)))
       return (rc);
-   }
-   
 
    LsFiles(FILENAME);
 
@@ -568,7 +526,7 @@ RC Test1(void)
 // Test2 tests inserting a few integer entries into the index.
 //
 RC Test2(void)
-{
+{                               
    RC rc;
    IX_IndexHandle ih;
    int index=0;
@@ -580,14 +538,12 @@ RC Test2(void)
          (rc = InsertIntEntries(ih, FEW_ENTRIES)) ||
          (rc = ixm.CloseIndex(ih)) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-
+			(rc = ih.Print()) ||
          // ensure inserted entries are all there
          (rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
 
          // ensure an entry not inserted is not there
          (rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
-         //(rc = ih.PrintBucketEntries()) ||
-         //(rc = ih.PrintRootNode()) ||
          (rc = ixm.CloseIndex(ih)))
       return (rc);
 
@@ -641,19 +597,21 @@ RC Test4(void)
 {
    RC             rc;
    IX_IndexHandle ih;
-   int            index=0;
+   int            index=0;      
    int            i;
    int            value=FEW_ENTRIES/2;
    RID            rid;
+	RID				rid2(value,value*2);
 
    printf("Test4: Inequality scans... \n");
 
    if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         (rc = InsertIntEntries(ih, FEW_ENTRIES)))
+         (rc = InsertIntEntries(ih, FEW_ENTRIES)) ||
+			(rc = ih.DeleteEntry((void*)&value, rid2)) || 
+			(rc = ih.Print()))
       return (rc);
 
-   printf("using value %d \n", value);
    // Scan <
    IX_IndexScan scanlt;
    if ((rc = scanlt.OpenScan(ih, LT_OP, &value))) {
@@ -669,7 +627,7 @@ RC Test4(void)
    if (rc != IX_EOF)
       return (rc);
 
-   printf("Found %d entries in <-scan.", i);
+   printf("Found %d entries in <-scan.", i);  
 
    // Scan <=
    IX_IndexScan scanle;
@@ -687,6 +645,7 @@ RC Test4(void)
 
    printf("Found %d entries in <=-scan.\n", i);
 
+	//value = (-100);
    // Scan >
    IX_IndexScan scangt;
    if ((rc = scangt.OpenScan(ih, GT_OP, &value))) {
@@ -731,378 +690,304 @@ RC Test4(void)
    return (0);
 }
 
-RC Test5(void){
-   RC rc;
+
+RC Test5(void)
+{
+   RC             rc;
+	RC					rc2;
    IX_IndexHandle ih;
-   int index=0;
+//   int            index=0;      
+   int            i;
+//   int            value=FEW_ENTRIES/2;
+   RID            rid;
+//	RID				rid2(value,value*2);
+	int				choice;
+	int				j;
+//	float				f;
+//	char*				c;
+	char				input[256];
 
-   printf("Test2: Insert a few integer entries into an index... \n");
+	do{
+	cout<<endl<<endl;
+	cout<<" 1) Create Index"<<endl;
+	cout<<" 2) Open Index"<<endl;
+	cout<<" 3) Print Index"<<endl;
+	cout<<" 4) Insert Entry"<<endl;
+	cout<<" 5) Delete Entry"<<endl;
+	cout<<" 6) Close Index"<<endl;
+	cout<<" 7) Destroy Index"<<endl;
+	cout<<" 8) Exit"<<endl<<endl;
+	cout<<" --> ";
+	cin>>choice;
 
-   if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         ((rc = InsertIntEntries(ih, 5000))) || 
-         (rc = InsertIntRepeatEntries(ih, 1, 10, 1)) || 
-         /*
-         (rc = InsertIntRepeatEntries(ih, 1, 400, 1)) || 
-         (rc = InsertIntRepeatEntries(ih, 2, 2, 1)) ||
-         (rc = InsertIntRepeatEntries(ih, 1, 400, 2)) ||
-         (rc = InsertIntRepeatEntries(ih, 3, 1, 3)) || 
-         (rc = InsertIntRepeatEntries(ih, 4, 1, 3)) ||
-         (rc = InsertIntRepeatEntries(ih, 5, 1, 3)) ||
-         (rc = InsertIntRepeatEntries(ih, 3, 1, 4)) ||
-         */
+   if (choice==1)
+	{
+		cout<<endl<<"Enter a filename: ";
+		cin>>input;
+		cout<<endl<<"Enter a number: ";
+		cin>>j;
+		if ((rc = ixm.CreateIndex(input, j, INT, sizeof(int))))
+			return rc;
+		cout<<endl<<"INDEX CREATED"<<endl<<endl;
+	}
+	if (choice==2)
+	{
+		cout<<endl<<"Enter a filename: ";
+		cin>>input;
+		cout<<endl<<"Enter a number: ";
+		cin>>j;
+		if ((rc = ixm.OpenIndex(input, j, ih)))
+			return rc;
+		cout<<endl<<"INDEX OPEN"<<endl<<endl;
+	}
+	if (choice==3)
+	{
+	   CompOp op;
+		IX_IndexScan scanlt;
+		cout<<endl;
+		cout<<" 1) ="<<endl;
+		cout<<" 2) <"<<endl;
+		cout<<" 3) >"<<endl;
+		cout<<" 4) <="<<endl;
+		cout<<" 5) >="<<endl;
+		cout<<" 6) !="<<endl;
+		cout<<" 7) NOOP"<<endl;
+		cout<<" 8) All"<<endl;
+		char choice2[4];
+		cout<<"Enter choice: ";
+		cin>>choice2;
+		
+		if (choice2[0] != '7' && choice2[0] != '8')
+		{
+			cout<<endl<<"Enter a value: ";
+			cin>>j;
+		}
+		if (choice2[0] == '1')
+			op = EQ_OP;
+		else if (choice2[0] == '2')
+			op = LT_OP;
+		else if (choice2[0] == '3')
+			op = GT_OP;
+		else if (choice2[0] == '4')
+			op = LE_OP;
+		else if (choice2[0] == '5')
+			op = GE_OP;
+		else if (choice2[0] == '6')
+			op = NE_OP;
+		else if (choice2[0] == '7')
+			op = NO_OP;
+		else
+			ih.Print();
 
-         /*
-         (rc = InsertIntRepeatEntries(ih, 1, 100, 1)) ||
-         (rc = InsertIntRepeatEntries(ih, 4, 101, 3)) ||
-         (rc = InsertIntRepeatEntries(ih, 3, 1, 2)) ||
-         (rc = InsertIntRepeatEntries(ih, 4, 105, 4)) ||
-         (rc = InsertIntRepeatEntries(ih, 1, 102, 4)) ||
-         (rc = InsertIntRepeatEntries(ih, 2, 10, 4)) ||
-         (rc = InsertIntRepeatEntries(ih, 1, 1, 8)) ||
-         */
-         
-         //(rc = InsertIntEntries(ih, MANY_ENTRIES)) ||
-         //(rc = ih.CheckAllValuesInt(1)) ||
-         //(rc = ih.PrintRootPage()) ||
-         (rc = ih.PrintAllEntries()) ||
+	   if ((rc = scanlt.OpenScan(ih, op, &j))) {
+			printf("Scan error: opening scan\n");
+			return (rc);
+		}
+		cout<<endl<<endl;
+		i = 0;
+		while (!(rc = scanlt.GetNextEntry(rid))) {
+			PageNum p;
+			SlotNum s;
+			if (((rc2 = (rid.GetPageNum(p))) || (rc2 = (rid.GetSlotNum(s)))))
+				return rc2;
+			cout<<"["<<p<<","<<s<<"]  ";
+		}
+		cout<<endl<<endl;
+		if (rc != IX_EOF)
+			return (rc);
+		scanlt.CloseScan();
+		cout<<"PRINTING DONE"<<endl;
+	}
+	if (choice==4)
+	{
+		if ((rc = InsertIntEntries(ih, MANY_ENTRIES)))
+			return rc;
+		cout<<"INSERTION DONE"<<endl;
+	}
+	if (choice==5)
+	{
+		PageNum p;
+		SlotNum s;
+		cout<<"Enter value: ";
+		cin>>j;
+		cout<<endl<<"Enter pagenum, slotnum: ";
+		cin>>p>>s;
+		cout<<endl;
+		RID r(p,s);
+		if ((rc = ih.DeleteEntry((void*)&j, r)))
+			return rc;
+		cout<<"DELETION DONE"<<endl;
+	}
+   if (choice == 6)
+	{
+		if ((rc = ixm.CloseIndex(ih)))
+			return (rc);
+		cout<<"INDEX CLOSED"<<endl;
+	}
+	if (choice == 7)
+	{
+		cout<<endl<<"Enter a filename: ";
+		cin>>input;
+		cout<<endl<<"Enter a number: ";
+		cin>>j;
+      if ((rc = ixm.DestroyIndex(input, j)))
+		   return (rc);
+	}
+   } while (choice != 8);
 
-         (rc = ixm.CloseIndex(ih)) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-
-         // ensure inserted entries are all there
-         //(rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
-
-         // ensure an entry not inserted is not there
-         //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
-         //(rc = ih.PrintBucketEntries()) ||
-         //(rc = ih.PrintRootNode()) ||
-         (rc = ixm.CloseIndex(ih)))
-      return (rc);
-
-   LsFiles(FILENAME);
-
-   if ((rc = ixm.DestroyIndex(FILENAME, index)))
-      return (rc);
-
-   printf("Passed Test 2\n\n");
    return (0);
 }
 
-RC Test6(void){
-   RC rc;
+
+RC Test6(void)
+{
+   RC             rc;
+	RC					rc2;
    IX_IndexHandle ih;
-   int index=0;
+//   int            index=0;      
+   int            i;
+//   int            value=FEW_ENTRIES/2;
+   RID            rid;
+//	RID				rid2(value,value*2);
+	int				choice;
+	int				j;
+//	float				f;
+//	char*				c;
+	char				input[256];
+	char				blabla[STRLEN+1];
 
-   printf("Test2: Insert a few integer entries into an index... \n");
+	do{
+	cout<<endl<<endl;
+	cout<<" 1) Create Index"<<endl;
+	cout<<" 2) Open Index"<<endl;
+	cout<<" 3) Print Index"<<endl;
+	cout<<" 4) Insert Entry"<<endl;
+	cout<<" 5) Delete Entry"<<endl;
+	cout<<" 6) Close Index"<<endl;
+	cout<<" 7) Destroy Index"<<endl;
+	cout<<" 8) Exit"<<endl<<endl;
+	cout<<" --> ";
+	cin>>choice;
 
-   if ((rc = ixm.CreateIndex(FILENAME, index, STRING, STRLEN)) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         ((rc = InsertStringEntries(ih, 4000))) || 
-         /*
-         (rc = InsertIntRepeatEntries(ih, 1, 400, 1)) || 
-         (rc = InsertIntRepeatEntries(ih, 2, 2, 1)) ||
-         (rc = InsertIntRepeatEntries(ih, 1, 400, 2)) ||
-         (rc = InsertIntRepeatEntries(ih, 3, 1, 3)) || 
-         (rc = InsertIntRepeatEntries(ih, 4, 1, 3)) ||
-         (rc = InsertIntRepeatEntries(ih, 5, 1, 3)) ||
-         (rc = InsertIntRepeatEntries(ih, 3, 1, 4)) ||
-         */
+   if (choice==1)
+	{
+		cout<<endl<<"Enter a filename: ";
+		cin>>input;
+		cout<<endl<<"Enter a number: ";
+		cin>>j;
+		if ((rc = ixm.CreateIndex(input, j, STRING, STRLEN)))
+			return rc;
+		cout<<endl<<"INDEX CREATED"<<endl<<endl;
+	}
+	if (choice==2)
+	{
+		cout<<endl<<"Enter a filename: ";
+		cin>>input;
+		cout<<endl<<"Enter a number: ";
+		cin>>j;
+		if ((rc = ixm.OpenIndex(input, j, ih)))
+			return rc;
+		cout<<endl<<"INDEX OPEN"<<endl<<endl;
+	}
+	if (choice==3)
+	{
+		CompOp op;
+		IX_IndexScan scanlt;
+		cout<<endl;
+		cout<<" 1) ="<<endl;
+		cout<<" 2) <"<<endl;
+		cout<<" 3) >"<<endl;
+		cout<<" 4) <="<<endl;
+		cout<<" 5) >="<<endl;
+		cout<<" 6) !="<<endl;
+		cout<<" 7) NOOP"<<endl;
+		cout<<" 8) All"<<endl;
+		char choice2[4];
+		cout<<"Enter choice: ";
+		cin>>choice2;
+		
+		cout<<endl<<"Enter a value: ";
+		cin>>j;
 
-         /*
-         (rc = InsertIntRepeatEntries(ih, 1, 100, 1)) ||
-         (rc = InsertIntRepeatEntries(ih, 4, 101, 3)) ||
-         (rc = InsertIntRepeatEntries(ih, 3, 1, 2)) ||
-         (rc = InsertIntRepeatEnt       bbries(ih, 4, 105, 4)) ||
-         (rc = InsertIntRepeatEntries(ih, 1, 102, 4)) ||
-         (rc = InsertIntRepeatEntries(ih, 2, 10, 4)) ||
-         (rc = InsertIntRepeatEntries(ih, 1, 1, 8)) ||
-         */
-         
-         //(rc = InsertIntEntries(ih, MANY_ENTRIES)) ||
-         //(rc = ih.PrintRootPage()) ||
-         //(rc = ih.PrintAllEntries()) ||
-         (rc = ixm.CloseIndex(ih)) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
+		if (choice2[0] == '1')
+			op = EQ_OP;
+		else if (choice2[0] == '2')
+			op = LT_OP;
+		else if (choice2[0] == '3')
+			op = GT_OP;
+		else if (choice2[0] == '4')
+			op = LE_OP;
+		else if (choice2[0] == '5')
+			op = GE_OP;
+		else if (choice2[0] == '6')
+			op = NE_OP;
+		else if (choice2[0] == '7')
+			op = NO_OP;
+		else
+			ih.Print();
 
-         // ensure inserted entries are all there
-         //(rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
+		if (choice2[0] != '8')
+		{
+		memset(blabla, ' ', STRLEN);
+      sprintf(blabla, "number %d", j);
+	   if ((rc = scanlt.OpenScan(ih, op, (void*)blabla))) {
+			printf("Scan error: opening scan\n");
+			return (rc);
+		}
+		cout<<endl<<endl;
+		i = 0;
+		while (!(rc = scanlt.GetNextEntry(rid))) {
+			PageNum p;
+			SlotNum s;
+			if (((rc2 = (rid.GetPageNum(p))) || (rc2 = (rid.GetSlotNum(s)))))
+				return rc2;
+			cout<<"["<<p<<","<<s<<"]  ";
+		}
+		cout<<endl<<endl;
+		if (rc != IX_EOF)
+			return (rc);
+		scanlt.CloseScan();
+		}
+		cout<<"PRINTING DONE"<<endl;
+	}
+	if (choice==4)
+	{
+		if ((rc = InsertStringEntries(ih, MANY_ENTRIES)))
+			return rc;
+		cout<<"INSERTION DONE"<<endl;
+	}
+	if (choice==5)
+	{
+		PageNum p;
+		SlotNum s;
+		cout<<endl<<"Enter a value: ";
+		cin>>j;
+		memset(blabla, ' ', STRLEN);
+      sprintf(blabla, "number %d", j);
+		cout<<endl<<"Enter pagenum, slotnum: ";
+		cin>>p>>s;
+		cout<<endl;
+		RID r(p,s);
+		if ((rc = ih.DeleteEntry(blabla, r)))
+			return rc;
+		cout<<"DELETION DONE"<<endl;
+	}
+   if (choice == 6)
+	{
+		if ((rc = ixm.CloseIndex(ih)))
+			return (rc);
+		cout<<"INDEX CLOSED"<<endl;
+	}
+	if (choice == 7)
+	{
+		cout<<endl<<"Enter a filename: ";
+		cin>>input;
+		cout<<endl<<"Enter a number: ";
+		cin>>j;
+      if ((rc = ixm.DestroyIndex(input, j)))
+		   return (rc);
+	}
+   } while (choice != 8);
 
-         // ensure an entry not inserted is not there
-         //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
-         //(rc = ih.PrintBucketEntries()) ||
-         //(rc = ih.PrintRootNode()) ||
-         (rc = ixm.CloseIndex(ih)))
-      return (rc);
-
-   LsFiles(FILENAME);
-
-   if ((rc = ixm.DestroyIndex(FILENAME, index)))
-      return (rc);
-
-   printf("Passed Test 2\n\n");
    return (0);
 }
-
-
-RC AddTestRecordsWithRepeats(IX_IndexHandle &ih, int nEntries){
-
-   RC   rc;
-   int  i;
-   //char value[STRLEN];
-   int value;
-
-   int maxRepeats = 400;
-
-   //int* addedEntries = (int *)malloc(sizeof(int)*nEntries);
-   //int* foundEntries = (int *)malloc(sizeof(int)*nEntries);
-   int addedEntries[nEntries];
-   int foundEntries[nEntries];
-
-   int totalNumEntries = 0;
-   for(int k = 0; k < nEntries; k++){
-      int numRepeat = (rand() % maxRepeats);
-      addedEntries[k] = numRepeat;
-      foundEntries[k] = 0;
-   }
-
-
-   printf("             Adding %d int entries\n", nEntries);
-   ran(nEntries);
-   for(i = 0; i < nEntries; i++) {
-      value = values[i] + 1;
-      printf("adding this many times: %d \n", addedEntries[value-1]);
-      for(int j = 0; j < addedEntries[value-1]; j++){
-         RID rid(value, value*2 + j);
-         printf("INSERTINTENTRIES: Adding %d %d %d \n", value, value, value*2+j);
-         if ((rc = ih.InsertEntry((void *)&value, rid)))
-            return (rc);
-
-         if((i + 1) % PROG_UNIT == 0){
-         // cast to long for PC's
-            printf("\r\t%d%%    ", (int)((i+1)*100L/nEntries));
-            fflush(stdout);
-         }
-      }
-   }
-   printf("\r\t%d%%      \n", (int)(i*100L/nEntries));
-
-   printf("Check added values\n");
-
-   IX_IndexScan scan;
-   if ((rc = scan.OpenScan(ih, NO_OP, &value))) {
-      return (rc);
-   }
-   RID rid;
-   while((0 == scan.GetNextEntry(rid))){
-      PageNum page;
-      if((rc = rid.GetPageNum(page)))
-         return (rc);
-      
-      foundEntries[page - 1] += 1;
-   }
-
-   printf("ended scan\n");
-
-   for(int j = 0; j < nEntries; j++){
-      if(foundEntries[j] != addedEntries[j])
-         printf("ERROR in verification\n");
-      //printf("found entries: %d \n", foundEntries[j]);
-   }
-
-   scan.CloseScan();
-   //free(foundEntries);
-   //free(addedEntries);
-
-   // Return ok
-   return (0);
-}
-
-RC Test7(void){
-   srand (time(NULL));
-   RC rc;
-   IX_IndexHandle ih;
-   int index=0;
-
-   printf("Test7: Insert a few integer entries into an index... \n");
-
-   if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         ((rc = AddTestRecordsWithRepeats(ih, 1000))) ||
-
-         // ensure inserted entries are all there
-         //(rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
-
-         // ensure an entry not inserted is not there
-         //(rc = VerifyIntIndex(ih, FEW_ENTRIES, 1, FALSE)) ||
-         //(rc = ih.PrintBucketEntries()) ||
-         //(rc = ih.PrintRootNode()) ||
-         (rc = ixm.CloseIndex(ih)))
-      return (rc);
-
-   LsFiles(FILENAME);
-
-   if ((rc = ixm.DestroyIndex(FILENAME, index)))
-      return (rc);
-
-   printf("Passed Test 7\n\n");
-   return (0);
-
-}
-
-
-RC Test8(void){
-   RC rc;
-   int index=0;
-   //int nDelete = FEW_ENTRIES * 8/10;
-   int nDelete = 249;
-   IX_IndexHandle ih;
-
-   printf("Test8: Delete a few integer entries from an index... \n");
-
-   if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         (rc = InsertIntEntries(ih, FEW_ENTRIES)) ||
-         (rc = DeleteIntEntries(ih, nDelete)) ||
-         (rc = ixm.CloseIndex(ih)) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         // ensure deleted entries are gone
-         (rc = VerifyIntIndex(ih, 0, nDelete, FALSE)) ||
-         // ensure non-deleted entries still exist
-         (rc = VerifyIntIndex(ih, nDelete, FEW_ENTRIES - nDelete, TRUE)) ||
-         (rc = ixm.CloseIndex(ih)))
-      return (rc);
-
-   LsFiles(FILENAME);
-
-   if ((rc = ixm.DestroyIndex(FILENAME, index)))
-      return (rc);
-
-   printf("Passed Test 8\n\n");
-   return (0);
-}
-
-RC AddDeleteVerifyDupRecords(IX_IndexHandle &ih, int nEntries){
-   RC   rc;
-   int  i;
-   //char value[STRLEN];
-   int value;
-
-   int maxRepeats = 4;
-   int toDelete = 4;
-
-   //int* addedEntries = (int *)malloc(sizeof(int)*nEntries);
-   //int* foundEntries = (int *)malloc(sizeof(int)*nEntries);
-   int addedEntries[nEntries];
-   int foundEntries[nEntries];
-
-   int totalNumEntries = 0;
-   for(int k = 0; k < nEntries; k++){
-      int numRepeat = (rand() % maxRepeats) + toDelete;
-      addedEntries[k] = numRepeat;
-      printf("added entries: %d \n", addedEntries[k]);
-      foundEntries[k] = 0;
-   }
-
-   printf("             Adding %d int entries\n", nEntries);
-   ran(nEntries);
-   for(i = 0; i < nEntries; i++) {
-      value = values[i] + 1;
-      printf("adding this many times: %d \n", addedEntries[value-1]);
-      for(int j = 0; j < addedEntries[value-1]; j++){
-         RID rid(value, value*2 + j);
-         printf("INSERTINTENTRIES: Adding %d %d %d \n", value, value, value*2+j);
-         if ((rc = ih.InsertEntry((void *)&value, rid)))
-            return (rc);
-
-         if((i + 1) % PROG_UNIT == 0){
-         // cast to long for PC's
-            printf("\r\t%d%%    ", (int)((i+1)*100L/nEntries));
-            fflush(stdout);
-         }
-      }
-   }
-   printf("\r\t%d%%      \n", (int)(i*100L/nEntries));
-
-   printf("Deleting two of each value\n");
-
-   for(i = 0; i < nEntries; i++){
-      value = values[i] + 1;
-      for(int j = 0; j < toDelete; j++){
-         RID rid(value, value*2 + j);
-         //RID rid2(value, value*2 + 1);
-         if((rc = ih.DeleteEntry((void*)&value, rid)))
-            return (rc);
-         PageNum page;
-         SlotNum slot;
-         if((rid.GetSlotNum(slot)) || (rid.GetPageNum(page)))
-            return (rc);
-         printf("got: %d %d \n", page, slot);
-         //if((rc = ih.DeleteEntry((void *)&value, rid2)))
-         //   return (rc);
-      }
-
-   }
-
-   printf("Check added values\n");
-
-   IX_IndexScan scan;
-   if ((rc = scan.OpenScan(ih, NO_OP, &value))) {
-      return (rc);
-   }
-   RID rid;
-   while((0 == scan.GetNextEntry(rid))){
-      PageNum page;
-      if((rc = rid.GetPageNum(page)))
-         return (rc);
-      
-      foundEntries[page - 1] += 1;
-   }
-
-   printf("ended scan\n");
-
-   for(int j = 0; j < nEntries; j++){
-      if(foundEntries[j] != (addedEntries[j] - toDelete)){
-         printf("ERROR in verification\n");
-      }
-      printf("found entries: %d \n", foundEntries[j]);
-   }
-
-   scan.CloseScan();
-   //free(foundEntries);
-   //free(addedEntries);
-
-   // Return ok
-   return (0);
-
-
-}
-
-RC Test9(void){
-   srand (time(NULL));
-    RC rc;
-   int index=0;
-   //int nDelete = FEW_ENTRIES * 8/10;
-   int nDelete = 249;
-   IX_IndexHandle ih;
-
-   printf("Test9: Delete a few integer entries from an index... \n");
-
-   if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         (rc = AddDeleteVerifyDupRecords(ih, 300)) || 
-
-         (rc = ixm.CloseIndex(ih)))
-      return (rc);
-
-   LsFiles(FILENAME);
-
-   if ((rc = ixm.DestroyIndex(FILENAME, index)))
-      return (rc);
-
-   printf("Passed Test 9\n\n");
-   return (0);
-}
-
-
-

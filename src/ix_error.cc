@@ -27,6 +27,7 @@ static char *IX_WarnMsg[] = {
   (char*)"invalid file scan",
   (char*)"end of page",
   (char*)"end of file",
+  (char*)"invalid entry",
   (char*)"invalid filename"
 };
 
