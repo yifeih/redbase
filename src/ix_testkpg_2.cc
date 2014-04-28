@@ -827,7 +827,10 @@ RC DeleteInts(IX_IndexHandle &ih, int lo, int hi, int exLo, int exHi)
 // Full blown test
 //
 RC Test1(void)
-{                  
+{        
+
+   int numRepeats = 400;
+   int numIntegers = 250;          
    RC rc;
    IX_IndexHandle ihOK1, ihOK2, ihOK3, ihOK4, ihOK5, ihBAD1;
    int OK1 = 5, 
@@ -1396,14 +1399,14 @@ end:
 
 
    // Subtest 1: add 50 of values 1 - 50
-   if ((rc = InsertInts(ihOK5, 50, 1, 50, 0, 0))) goto oops;
+   if ((rc = InsertInts(ihOK5, numRepeats, 1, numIntegers, 0, 0))) goto oops;
    count = 0;
-   for (i = 1; i <= 50; i++) {
+   for (i = 1; i <= numIntegers; i++) {
       value = i * 10;
       if ((rc = indScn.OpenScan(ihOK5, EQ_OP, &value)))
          goto oops;
       while ((rc = indScn.GetNextEntry(rid)) != IX_EOF) {
-         if ((value < 10) || (value > 500)) {
+         if ((value < 10) || (value > 10*numIntegers)) {
             cout << "Unexpected entry found\n" << endl;
             goto oops;
          }
@@ -1413,14 +1416,14 @@ end:
          goto oops;
    }
    printf("\n\nAdd 50 of vals 1-50 : %s\n", 
-         ((count == 2500) ? "PASS" : "FAIL\n"));  
+         ((count == numIntegers*numRepeats) ? "PASS" : "FAIL\n"));  
 
 
    // Subtest 2: delete all values except val = 5
-   if ((rc = DeleteInts(ihOK5, 1, 50, 5, 5))) goto oops;
+   if ((rc = DeleteInts(ihOK5, 1, numIntegers, 5, 5))) goto oops;
    printf("\nDeleteInts passed\n");
    count = 0;
-   for (i = 1; i <= 50; i++) {
+   for (i = 1; i <= numIntegers; i++) {
       value = i * 10;
       if ((rc = indScn.OpenScan(ihOK5, EQ_OP, &value)))
          goto oops;
@@ -1435,18 +1438,18 @@ end:
          goto oops;
    }
    printf("\n\nDel 50 all vals except 5 : %s\n", 
-         ((count == 50) ? "PASS" : "FAIL\n"));  
+         ((count == numRepeats) ? "PASS" : "FAIL\n"));  
 
 
    // Subtest 3: Add 50 values 1-50 (except val = 5)
-   if ((rc = InsertInts(ihOK5, 50, 1, 50, 5, 5))) goto oops;
+   if ((rc = InsertInts(ihOK5, numRepeats, 1, numIntegers, 5, 5))) goto oops;
    count = 0;
-   for (i = 1; i <= 50; i++) {
+   for (i = 1; i <= numIntegers; i++) {
       value = i * 10;
       if ((rc = indScn.OpenScan(ihOK5, EQ_OP, &value)))
          goto oops;
       while ((rc = indScn.GetNextEntry(rid)) != IX_EOF) {
-         if ((value < 10) || (value > 500)) {
+         if ((value < 10) || (value > 10*numIntegers)) {
             cout << "Unexpected entry found\n" << endl;
             goto oops;
          }
@@ -1456,13 +1459,13 @@ end:
          goto oops;
    }
    printf("\n\nAdd 50 of vals 1-50 (exc val = 5): %s\n", 
-         ((count == 2500) ? "PASS" : "FAIL\n"));  
+         ((count == numIntegers*numRepeats) ? "PASS" : "FAIL\n"));  
 
 
    // Subtest 4: Del all (except val = 5-6)
-   if ((rc = DeleteInts(ihOK5, 1, 50, 5, 6))) goto oops;
+   if ((rc = DeleteInts(ihOK5, 1, numIntegers, 5, 6))) goto oops;
    count = 0;
-   for (i = 1; i <= 50; i++) {
+   for (i = 1; i <= numIntegers; i++) {
       value = i * 10;
       if ((rc = indScn.OpenScan(ihOK5, EQ_OP, &value)))
          goto oops;
@@ -1477,19 +1480,19 @@ end:
          goto oops;
    }
    printf("\n\nDel 50 all vals except 5-6 : %s\n", 
-         ((count == 100) ? "PASS" : "FAIL\n"));  
+         ((count == 2*numRepeats) ? "PASS" : "FAIL\n"));  
 
 
 
    // Subtest 5: Add 50 values (except val = 5-6) 
-   if ((rc = InsertInts(ihOK5, 50, 1, 50, 5, 6))) goto oops;
+   if ((rc = InsertInts(ihOK5, numRepeats, 1, numIntegers, 5, 6))) goto oops;
    count = 0;
-   for (i = 1; i <= 50; i++) {
+   for (i = 1; i <= numIntegers; i++) {
       value = i * 10;
       if ((rc = indScn.OpenScan(ihOK5, EQ_OP, &value)))
          goto oops;
       while ((rc = indScn.GetNextEntry(rid)) != IX_EOF) {
-         if ((value < 10) || (value > 500)) {
+         if ((value < 10) || (value > 10*numIntegers)) {
             cout << "Unexpected entry found\n" << endl;
             goto oops;
          }
@@ -1499,13 +1502,13 @@ end:
          goto oops;
    }
    printf("\n\nAdd 50 of vals 1-50 (exc val = 5-6): %s\n", 
-         ((count == 2500) ? "PASS" : "FAIL\n"));  
+         ((count == numIntegers*numRepeats) ? "PASS" : "FAIL\n"));  
 
 
    // Subtest 5: Del all (except val = 5-7)
-   if ((rc = DeleteInts(ihOK5, 1, 50, 5, 7))) goto oops;
+   if ((rc = DeleteInts(ihOK5, 1, numIntegers, 5, 7))) goto oops;
    count = 0;
-   for (i = 1; i <= 50; i++) {
+   for (i = 1; i <= numIntegers; i++) {
       value = i * 10;
       if ((rc = indScn.OpenScan(ihOK5, EQ_OP, &value)))
          goto oops;
@@ -1520,18 +1523,18 @@ end:
          goto oops;
    }
    printf("\n\nDel 50 all vals except 5-7 : %s\n", 
-         ((count == 150) ? "PASS" : "FAIL\n"));  
+         ((count == 3*numRepeats) ? "PASS" : "FAIL\n"));  
 
 
    // Subtest add 50 values (exc val = 5-7)
-   if ((rc = InsertInts(ihOK5, 50, 1, 50, 5, 7))) goto oops;
+   if ((rc = InsertInts(ihOK5, numRepeats, 1, numIntegers, 5, 7))) goto oops;
    count = 0;
-   for (i = 1; i <= 50; i++) {
+   for (i = 1; i <= numIntegers; i++) {
       value = i * 10;
       if ((rc = indScn.OpenScan(ihOK5, EQ_OP, &value)))
          goto oops;
       while ((rc = indScn.GetNextEntry(rid)) != IX_EOF) {
-         if ((value < 10) || (value > 500)) {
+         if ((value < 10) || (value > 10*numIntegers)) {
             cout << "Unexpected entry found\n" << endl;
             goto oops;
          }
@@ -1541,14 +1544,14 @@ end:
          goto oops;
    }
    printf("\n\nAdd 50 of vals 1-50 (exc val = 5 - 7): %s\n", 
-         ((count == 2500) ? "PASS" : "FAIL\n"));  
+         ((count == numIntegers*numRepeats) ? "PASS" : "FAIL\n"));  
 
 
    // Subtest 5: Del all (except val = 5-8)
-   if ((rc = DeleteInts(ihOK5, 1, 50, 5, 8))) goto oops;
+   if ((rc = DeleteInts(ihOK5, 1, numIntegers, 5, 8))) goto oops;
 
    count = 0;
-   for (i = 1; i <= 50; i++) {
+   for (i = 1; i <= numIntegers; i++) {
       value = i * 10;
       if ((rc = indScn.OpenScan(ihOK5, EQ_OP, &value)))
          goto oops;
@@ -1564,7 +1567,7 @@ end:
    }
 
 oops:
-   printf("\n\nTHE ACCORDIAN : %s\n", ((count == 200) ? "PASS" : "FAIL\n"));  
+   printf("\n\nTHE ACCORDIAN : %s\n", ((count == 4*numRepeats) ? "PASS" : "FAIL\n"));  
    if (rc) PrintError(rc);
 
    if ((rc = ixm.CloseIndex(ihOK5))) {

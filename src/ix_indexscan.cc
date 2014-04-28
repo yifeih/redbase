@@ -83,6 +83,8 @@ IX_IndexScan::IX_IndexScan(){
   scanEnded = true;
   scanStarted = false;
   endOfIndexReached = true;
+  attrLength = 0;
+  attrType = INT;
 }
 
 IX_IndexScan::~IX_IndexScan(){
