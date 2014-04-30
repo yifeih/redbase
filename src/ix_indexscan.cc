@@ -75,7 +75,7 @@ bool inot_equal(void * value1, void * value2, AttrType attrtype, int attrLength)
 
 
 IX_IndexScan::IX_IndexScan(){
-  openScan = false;
+  openScan = false;  // Initialize all values
   value = NULL;
   initializedValue = false;
   hasBucketPinned = false;
@@ -106,16 +106,16 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
                 ClientHint  pinHint){
   RC rc = 0;
 
-  if(openScan == true || compOp == NE_OP)
-    return (IX_INVALIDSCAN);
+  if(openScan == true || compOp == NE_OP) // makes sure that the scan is not already open
+    return (IX_INVALIDSCAN);              // and disallows NE_OP comparator
 
-  if(indexHandle.isValidIndexHeader())
+  if(indexHandle.isValidIndexHeader()) // makes sure that the indexHanlde is valid
     this->indexHandle = const_cast<IX_IndexHandle*>(&indexHandle);
   else
     return (IX_INVALIDSCAN);
 
   this->value = NULL;
-  this->compOp = compOp;
+  this->compOp = compOp; // sets up the comparator values, and the comparator
   switch(compOp){
     case EQ_OP : comparator = &iequal; break;
     case LT_OP : comparator = &iless_than; break;
@@ -126,36 +126,38 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
     default: return (IX_INVALIDSCAN);
   }
 
-  if(compOp != NO_OP){
+  // sets up attribute length and type
+  this->attrType = (indexHandle.header).attr_type;
   attrLength = ((this->indexHandle)->header).attr_length;
-  this->value = (void *) malloc(attrLength);
-  memcpy(this->value, value, attrLength);
-  initializedValue = true;
+  if(compOp != NO_OP){ 
+    this->value = (void *) malloc(attrLength); // sets up the value
+    memcpy(this->value, value, attrLength);
+    initializedValue = true;
   }
 
-  openScan = true;
+  openScan = true; // sets up all indicators
   scanEnded = false;
-  hasBucketPinned = false;
   hasLeafPinned = false;
   scanStarted = false;
   endOfIndexReached = false;
-  count = 0;
 
   return (rc);
 }
 
+/*
+ * This function returns the next RID that meets the requirements of the scan
+ */
 RC IX_IndexScan::GetNextEntry(RID &rid){
   RC rc = 0;
-  //printf("entered get next entry\n");
-  if(scanEnded == true && openScan == true)
+  if(scanEnded == true && openScan == true) // return end of file if the scan has ended
     return (IX_EOF);
 
-  if(scanEnded == true || openScan == false)
+  if(scanEnded == true || openScan == false) // if the scan is false, then return IX_INVALIDSCAN
     return (IX_INVALIDSCAN);
 
-  bool notFound = true;
-  // compare
+  bool notFound = true; // indicator for whether the next value has been found
   while(notFound){
+    // In the first iteration of the scan, retrieve the first entry
     if(scanEnded == false && openScan == true && scanStarted == false){
       if((rc = indexHandle->GetFirstLeafPage(currLeafPH, currLeafNum)))
         return (rc);
@@ -163,161 +165,127 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
         if(rc == IX_EOF){
           scanEnded = true;
         }
-        //printf("returning end of file from scan\n");
         return (rc);
       }
-      currKey = nextNextKey;
-      scanStarted = true; // set the current RID
-      SetRID(true);
-      if((IX_EOF == FindNextValue()))
+      currKey = nextNextKey; // store the current key. 
+      scanStarted = true; // scan has now started. set the indicator
+      SetRID(true);       // Set the current RID
+      // Get the next value. If none exist, mark the end of the scan has been reached.
+      if((IX_EOF == FindNextValue())) 
         endOfIndexReached = true;
     }
     else{
-      currKey = nextKey;
-      currRID = nextRID;
+      currKey = nextKey; // Otherwise, continue the scan by updating the current value
+      currRID = nextRID; // to the one in the buffer (nextRID/nextKey)
     }
-    //printf("leaf slot found: %d \n", leafSlot);
-    SetRID(false);
-    nextKey = nextNextKey;
+    SetRID(false); // Set the element in the buffer to the current state of the scan
+    nextKey = nextNextKey; 
 
-    if((IX_EOF == FindNextValue())){
+    if((IX_EOF == FindNextValue())){ // advance the scan by one step
       endOfIndexReached = true;
     }
 
     PageNum thisRIDPage;
-    if((rc = currRID.GetPageNum(thisRIDPage)))
-      return (rc);
-    if(thisRIDPage == -1){
+    if((rc = currRID.GetPageNum(thisRIDPage))) // check that the current RID is not 
+      return (rc);                             // invalid values. If so, then the
+    if(thisRIDPage == -1){                     // end of the scan has been reached, so return IX_EOF
       scanEnded = true;
       return (IX_EOF);
-      //printf("returning end of file\n");
     }
 
-
+    // If found the next satisfying value, then set the RID to return, and break
     if(compOp == NO_OP){
       rid = currRID;
       notFound = false;
     }
     else if((comparator((void *)currKey, value, attrType, attrLength))){
-      //printf("finished comaring, and they equal\n");
-      //printf("returned: %d \n", *(int*)currKey);
-      rid = currRID;
-      //break;
+      rid = currRID; 
       notFound = false;
-      //printf("current key: %d, value: %d \n", *(int*)currKey, *(int*)value);
-      //printf("passed comparator\n");
     }
-
-    /*
-    printf("updating scan\n");
-    if((IX_EOF == FindNextValue())){
-      scanEnded = true;
-
-      if(notFound == true){
-        //printf("ending scan with error code\n");
-        rc = IX_EOF;
-      }
-      notFound = false;
-      //printf("scan ended \n");
-      //return (IX_EOF);
-    }
-    */
-
 
   }
   SlotNum thisRIDpage;
   currRID.GetSlotNum(thisRIDpage);
-  //printf("returning %d, nextKey: %d , page %d \n", *(int*)currKey, *(int*)nextKey, thisRIDpage);
-
-  //printf("returning %d \n", *(int*)currKey);
-  //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
-  //printf("returning from scan\n");
   return (rc);
 }
 
+/*
+ * This sets one of the private variable RIDs. If setCurrent is true, it sets
+ * currRID. If setCurrent is false, it sets nextRID.
+ */
 RC IX_IndexScan::SetRID(bool setCurrent){
   if(endOfIndexReached && setCurrent == false){
-    //printf("reached here\n");
-    RID rid1(-1,-1);
-    nextRID = rid1;
+    RID rid1(-1,-1); // If we have reached the end of the scan, set the nextRID
+    nextRID = rid1;  // to an invalid value.
     return (0);
   }
 
   if(setCurrent){
-    if(hasBucketPinned){
+    if(hasBucketPinned){ // if bucket is pinned, use bucket page/slot to set RID
       RID rid1(bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
       currRID = rid1;
-      //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
     }
-    else if(hasLeafPinned){
+    else if(hasLeafPinned){ // otherwise, use the leaf value to set page/slot of RID
       RID rid1(leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
       currRID = rid1;
-      //printf("rid: %d %d \n", leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
     }
   }
   else{
-    count++;
-    //printf("count: %d \n", count);
     if(hasBucketPinned){
       RID rid1(bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
       nextRID = rid1;
-      //printf("rid: %d %d \n", bucketEntries[bucketSlot].page, bucketEntries[bucketSlot].slot);
     }
     else if(hasLeafPinned){
       RID rid1(leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
       nextRID = rid1;
-      //printf("rid: %d %d \n", leafEntries[leafSlot].page, leafEntries[leafSlot].slot);
     }
   }
 
   return (0);
 }
 
-RC IX_IndexScan::FindNextValue(){
+/*
+ * This function adavances the state of the search by one element. It updates all the
+ * private variables assocaited with this scan. 
+ */
+RC IX_IndexScan::FindNextValue(){ 
   RC rc = 0;
-  if(hasBucketPinned){
-    //printf("bucket is pinned \n");
+  if(hasBucketPinned){ // If a bucket is pinned, then search in this bucket
     int prevSlot = bucketSlot;
-    bucketSlot = bucketEntries[prevSlot].nextSlot;
-    if(bucketSlot != NO_MORE_SLOTS){
-      //printf("no more buckets\n");
-      return (0); // found next bucket slot
+    bucketSlot = bucketEntries[prevSlot].nextSlot; // update the slot index
+    if(bucketSlot != NO_MORE_SLOTS){ 
+      return (0); // found next bucket slot, so stop searching
     }
-    // otherwise, go to next bucket
+    // otherwise, unpin this bucket
     PageNum nextBucket = bucketHeader->nextBucket;
-    //printf("*** unpinning bucket number %d \n", currBucketNum);
     if((rc = (indexHandle->pfh).UnpinPage(currBucketNum) ))
       return (rc);
-    
     hasBucketPinned = false;
 
-    if(nextBucket != NO_MORE_PAGES){
-      //if((rc = (indexHandle->pfh).GetThisPage(nextBucket, currBucketPH)))
-      //  return (rc);
-
-      //printf("*** pinning bucket number %d \n", nextBucket);
+    if(nextBucket != NO_MORE_PAGES){ // If this is a valid bucket, open it up, and get
+                                     // the first entry
       if((rc = GetFirstBucketEntry(nextBucket, currBucketPH) ))
         return (rc);
       currBucketNum = nextBucket;
       return (0);
     }
   }
-  // otherwise, deal with node level
-  //printf("go to leaf level\n");
+  // otherwise, deal with leaf level. 
   int prevLeafSlot = leafSlot;
-  leafSlot = leafEntries[prevLeafSlot].nextSlot;
+  leafSlot = leafEntries[prevLeafSlot].nextSlot; // update to the next leaf slot
 
+  // If the leaf slot containts duplicate entries, open up the bucket associated
+  // with it, and update the key.
   if(leafSlot != NO_MORE_SLOTS && leafEntries[leafSlot].isValid == OCCUPIED_DUP){
     nextNextKey = leafKeys + leafSlot * attrLength;
     currBucketNum = leafEntries[leafSlot].page;
-    //printf("***pinning bucket number %d \n", currBucketNum);
     
     if((rc = GetFirstBucketEntry(currBucketNum, currBucketPH) ))
       return (rc);
     return (0);
   }
+  // Otherwise, stay update the key.
   if(leafSlot != NO_MORE_SLOTS && leafEntries[leafSlot].isValid == OCCUPIED_NEW){
-    //printf("hellow found right next value \n");
     nextNextKey = leafKeys + leafSlot * attrLength;
     return (0);
   }
@@ -328,12 +296,12 @@ RC IX_IndexScan::FindNextValue(){
   // if it's not the root page, unpin it:
   if((currLeafNum != (indexHandle->header).rootPage)){
     if((rc = (indexHandle->pfh).UnpinPage(currLeafNum))){
-      //printf("BAD\n");
       return (rc);
     }
   }
   hasLeafPinned = false;
 
+  // If the next page is a valid page, then retrieve the first entry in this leaf page
   if(nextLeafPage != NO_MORE_PAGES){
     currLeafNum = nextLeafPage;
     if((rc = (indexHandle->pfh).GetThisPage(currLeafNum, currLeafPH)))
@@ -343,18 +311,21 @@ RC IX_IndexScan::FindNextValue(){
     return (0);
   }
 
-  return (IX_EOF);
+  return (IX_EOF); // Otherwise, no more elements
 
 }
 
+
+/*
+ * This function retrieves the first entry in an open leafPH.
+ */
 RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
-  //printf("finding first entry\n");
   RC rc = 0;
   hasLeafPinned = true;
   if((rc = leafPH.GetData((char *&) leafHeader)))
     return (rc);
 
-  if(leafHeader->num_keys == 0)
+  if(leafHeader->num_keys == 0) // no keys in the leaf... return IX_EOF
     return (IX_EOF);
 
   leafEntries = (struct Node_Entry *)((char *)leafHeader + (indexHandle->header).entryOffset_N);
@@ -362,43 +333,40 @@ RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
 
   leafSlot = leafHeader->firstSlotIndex;
   if((leafSlot != NO_MORE_SLOTS)){
-    //printf("update key %d \n", *(int*)currKey);
-    nextNextKey = leafKeys + attrLength*leafSlot;
-    //printf("attribute length: %d \n", attrLength);
-    //printf("current slot: %d, current value: %d \n", leafSlot, *(int*)currKey);
+    nextNextKey = leafKeys + attrLength*leafSlot; // set the key to the first value
   }
   else
     return (IX_INVALIDSCAN);
-  //printf("reached here\n");
-  if(leafEntries[leafSlot].isValid == OCCUPIED_DUP){
-    //isBucketPinned = true;
-    currBucketNum = leafEntries[leafSlot].page;
-    //printf("***pinning bucket number %d \n", currBucketNum);
-    //if((rc = (indexHandle->pfh).GetThisPage(currBucketNum, currBucketPH)))
-    //  return (rc);
+  if(leafEntries[leafSlot].isValid == OCCUPIED_DUP){ // if it's a duplciate value, go into the bucket
+    currBucketNum = leafEntries[leafSlot].page;      // to retrieve the first entry
     if((rc = GetFirstBucketEntry(currBucketNum, currBucketPH)))
       return (rc);
-    //printf("shouldnt be here\n");
   }
-  //printf("hi\n");
   return (0);
 }
 
+/*
+ * This function retrieve the first entry in a bucket given the BucketPageNum. 
+ */
 RC IX_IndexScan::GetFirstBucketEntry(PageNum nextBucket, PF_PageHandle &bucketPH){
   RC rc = 0;
-  if((rc = (indexHandle->pfh).GetThisPage(nextBucket, currBucketPH)))
+  if((rc = (indexHandle->pfh).GetThisPage(nextBucket, currBucketPH))) // pin the bucket
         return (rc);
   hasBucketPinned = true;
-  if((rc = bucketPH.GetData((char *&) bucketHeader)))
+  if((rc = bucketPH.GetData((char *&) bucketHeader))) // retrieve bucket contents
     return (rc);
 
   bucketEntries = (struct Bucket_Entry *) ((char *)bucketHeader + (indexHandle->header).entryOffset_B);
-  bucketSlot = bucketHeader->firstSlotIndex;
+  bucketSlot = bucketHeader->firstSlotIndex; // set the current scan to the first slot in bucket
 
   return (0);
 
 }
 
+/*
+ * This function cleans up the scan. It unpins all the pages that the scan currently has pinned,
+ * and frees any values that it malloced.
+ */
 RC IX_IndexScan::CloseScan(){
   RC rc = 0;
   if(openScan == false)

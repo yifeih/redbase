@@ -21,6 +21,10 @@ IX_Manager::IX_Manager(PF_Manager &pfm) : pfm(pfm){
 IX_Manager::~IX_Manager(){
 }
 
+/*
+ * This function checks that the parameters passed in for attrType and attrLength
+ * make it a valid Index. Return true if so.
+ */
 bool IX_Manager::IsValidIndex(AttrType attrType, int attrLength){
   if(attrType == INT && attrLength == 4)
     return true;
@@ -32,6 +36,10 @@ bool IX_Manager::IsValidIndex(AttrType attrType, int attrLength){
     return false;
 }
 
+/*
+ * This function is given a fileName and index number, and returns the name of the
+ * index file to be created as a string in indexname. 
+ */
 RC IX_Manager::GetIndexFileName(const char *fileName, int indexNo, std::string &indexname){
   //RC rc = 0;
   std::stringstream convert;
@@ -40,20 +48,20 @@ RC IX_Manager::GetIndexFileName(const char *fileName, int indexNo, std::string &
   indexname = std::string(fileName);
   indexname.append(".");
   indexname.append(idx_num);
-  if(indexname.size() > PATH_MAX || idx_num.size() > 10)
-    return (IX_BADINDEXNAME);
-  //printf("hello: %s \n", indexname.c_str());
-  //if((rc = pfm.CreateFile(indexname.c_str())))
-  //  return (rc);
+  if(indexname.size() > PATH_MAX || idx_num.size() > 10) // sizes of file and index number
+    return (IX_BADINDEXNAME);                            // cannot exceed certain sizes
   return (0);
 }
 
+/*
+ * Creates a new index given the filename, the index number, attribute type and length.
+ */
 RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
                    AttrType attrType, int attrLength){
-  if(fileName == NULL || indexNo < 0)
+  if(fileName == NULL || indexNo < 0) // Check that the file name and index number are valid
     return (IX_BADFILENAME);
   RC rc = 0;
-  if(! IsValidIndex(attrType, attrLength))
+  if(! IsValidIndex(attrType, attrLength)) // check that attribute length and type are valid
     return (IX_BADINDEXSPEC);
 
   // Create index file:
@@ -64,16 +72,17 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
     return (rc);
   }
 
-  // Make the header page
+  // Make the file
   PF_FileHandle fh;
   PF_PageHandle ph_header;
   PF_PageHandle ph_root;
   if((rc = pfm.OpenFile(indexname.c_str(), fh)))
     return (rc);
-
+  // Calculate the keys per node and keys per bucket
   int numKeys_N = IX_IndexHandle::CalcNumKeysNode(attrLength);
   int numKeys_B = IX_IndexHandle::CalcNumKeysBucket(attrLength);
 
+  // Create the header and root page
   PageNum headerpage;
   PageNum rootpage;
   if((rc = fh.AllocatePage(ph_header)) || (rc = ph_header.GetPageNum(headerpage))
@@ -84,7 +93,7 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   struct IX_NodeHeader_L *rootheader;
   struct Node_Entry *entries;
   if((rc = ph_header.GetData((char *&) header)) || (rc = ph_root.GetData((char *&) rootheader))){
-    goto cleanup_and_exit;
+    goto cleanup_and_exit; // if this fails, then destroy the file
   }
 
   // setup header page
@@ -92,16 +101,15 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   header->attr_length = attrLength;
   header->maxKeys_N= numKeys_N;
   header->maxKeys_B = numKeys_B;
-  printf("max i: %d, max l: %d \n", numKeys_N, numKeys_B);
+  //printf("max i: %d, max l: %d \n", numKeys_N, numKeys_B);
 
   header->entryOffset_N = sizeof(struct IX_NodeHeader_I);
   header->entryOffset_B = sizeof(struct IX_BucketHeader);
   header->keysOffset_N = header->entryOffset_N + numKeys_N*sizeof(struct Node_Entry);
-  //header->keysOffset_B = header->entryOffset_B + numKeys_B*sizeof(struct Bucket_Entry);
   header->rootPage = rootpage;
-  //header->firstBucketCreated = false;
-  header->firstBucket = NO_MORE_PAGES;
+  //header->firstBucket = NO_MORE_PAGES;
 
+  // Set up the root node
   rootheader->isLeafNode = true;
   rootheader->isEmpty = true;
   rootheader->num_keys = 0;
@@ -118,11 +126,9 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
     else
       entries[i].nextSlot = i+1;
   }
-  printf("NODE CREATION: entries[0].nextSlot: %d \n", entries[0].nextSlot);
+  //printf("NODE CREATION: entries[0].nextSlot: %d \n", entries[0].nextSlot);
 
-  // Opens the file, creates a new page and copies the header into it
-  //PF_FileHandle fh;
-
+  // Mark both pages as dirty, and close the file
   cleanup_and_exit:
   RC rc2;
   if((rc2 = fh.MarkDirty(headerpage)) || (rc2 = fh.UnpinPage(headerpage)) ||
@@ -132,6 +138,9 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
   return (rc);
 }
 
+/*
+ * This function destroys a valid index given the file name and index number.
+ */
 RC IX_Manager::DestroyIndex(const char *fileName, int indexNo){
   RC rc;
   if(fileName == NULL || indexNo < 0)
@@ -144,7 +153,10 @@ RC IX_Manager::DestroyIndex(const char *fileName, int indexNo){
   return (0);
 }
 
-// Returns an open root page in ih.
+/*
+ * This function sets up the private variables of an IX_IndexHandle to get it 
+ * ready to refer to an open file
+ */
 RC IX_Manager::SetUpIH(IX_IndexHandle &ih, PF_FileHandle &fh, struct IX_IndexHeader *header){
   RC rc = 0;
   memcpy(&ih.header, header, sizeof(struct IX_IndexHeader));
@@ -153,17 +165,15 @@ RC IX_Manager::SetUpIH(IX_IndexHandle &ih, PF_FileHandle &fh, struct IX_IndexHea
   if(! IsValidIndex(ih.header.attr_type, ih.header.attr_length))
     return (IX_INVALIDINDEXFILE);
 
-  if(! ih.isValidIndexHeader()){
-    printf("is not valid header\n");
+  if(! ih.isValidIndexHeader()){ // check that the header is valid
     return (rc);
   }
 
-  if((rc = fh.GetThisPage(header->rootPage, ih.rootPH))){
-    printf("HI\n");
+  if((rc = fh.GetThisPage(header->rootPage, ih.rootPH))){ // retrieve the root page
     return (rc);
   }
 
-  if(ih.header.attr_type == INT)
+  if(ih.header.attr_type == INT) // set up the comparator 
     ih.comparator = compare_int;
   else if(ih.header.attr_type == FLOAT)
     ih.comparator = compare_float;
@@ -177,9 +187,13 @@ RC IX_Manager::SetUpIH(IX_IndexHandle &ih, PF_FileHandle &fh, struct IX_IndexHea
 }
 
 
+/*
+ * This function, given a valid fileName and index Number, opens up the
+ * index associated with it, and returns it via the indexHandle variable
+ */
 RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
                  IX_IndexHandle &indexHandle){
-  if(fileName == NULL || indexNo < 0)
+  if(fileName == NULL || indexNo < 0) // check for valid filename, and valid indexHandle
     return (IX_BADFILENAME);
   if(indexHandle.isOpenHandle == true)
     return (IX_INVALIDINDEXHANDLE);
@@ -203,7 +217,6 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
   struct IX_IndexHeader * header = (struct IX_IndexHeader *) pData;
 
   rc = SetUpIH(indexHandle, fh, header);
-  printf("finish setup\n");
   RC rc2;
   if((rc2 = fh.UnpinPage(firstpage)))
     return (rc2);
@@ -214,6 +227,9 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
   return (rc); 
 }
 
+/*
+ * This function modifies the IX_IndexHandle of a file to close it.
+ */
 RC IX_Manager::CleanUpIH(IX_IndexHandle &indexHandle){
   if(indexHandle.isOpenHandle == false)
     return (IX_INVALIDINDEXHANDLE);
@@ -221,15 +237,16 @@ RC IX_Manager::CleanUpIH(IX_IndexHandle &indexHandle){
   return (0);
 }
 
+/*
+ * Given a valid index handle, closes the file associated with it
+ */
 RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle){
   RC rc = 0;
   PF_PageHandle ph;
   PageNum page;
   char *pData;
-  //printf("reached closeIndex \n");
 
-  if(indexHandle.isOpenHandle == false){
-    //printf("what \n");
+  if(indexHandle.isOpenHandle == false){ // checks that it's a valid index handle
     return (IX_INVALIDINDEXHANDLE);
   }
 
@@ -238,7 +255,7 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle){
   if((rc = indexHandle.pfh.MarkDirty(root)) || (rc = indexHandle.pfh.UnpinPage(root)))
     return (rc);
 
-  //printf("passed marked page \n");
+  // Check that the header is modified. If so, write that too.
   if(indexHandle.header_modified == true){
     if((rc = indexHandle.pfh.GetFirstPage(ph)) || ph.GetPageNum(page))
       return (rc);

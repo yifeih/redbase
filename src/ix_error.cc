@@ -23,12 +23,12 @@ static char *IX_WarnMsg[] = {
   (char*)"invalid index file",
   (char*)"page is full",
   (char*)"invalid file",
-  (char*)"invalid file handle",
-  (char*)"invalid file scan",
-  (char*)"end of page",
+  (char*)"invalid bucket number",
+  (char*)"cannot insert duplicate entry",
+  (char*)"invalid scan instance",
+  (char*)"invalid record entry",
   (char*)"end of file",
-  (char*)"invalid entry",
-  (char*)"invalid filename"
+  (char*)"IX warning"
 };
 
 static char *IX_ErrorMsg[] = {

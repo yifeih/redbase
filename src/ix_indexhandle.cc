@@ -14,337 +14,32 @@
 
 
 IX_IndexHandle::IX_IndexHandle(){
-  isOpenHandle = false;
+  isOpenHandle = false;       // indexhandle is initially closed
   header_modified = false;
-
-  //splittwice = false;
 }
 
 IX_IndexHandle::~IX_IndexHandle(){
 
 }
 
-RC IX_IndexHandle::PrintRootPage(){
-  printf("PRINTING ROOT PAGE\n");
-  RC rc = 0;
-  struct IX_NodeHeader *rHeader;
-  if((rc = rootPH.GetData((char *&)rHeader)))
-    return (rc);
-
-  struct Node_Entry *entries = (struct Node_Entry *)((char *)rHeader + header.entryOffset_N);
-  char *keys = (char *)rHeader + header.keysOffset_N;
-
-  int prev_idx = BEGINNING_OF_SLOTS;
-  int curr_idx = rHeader->firstSlotIndex;
-  while(curr_idx != NO_MORE_SLOTS){
-    printf("Key: %d, Page: %d \n", *(int *)(keys + curr_idx * header.attr_length), entries[curr_idx].page);
-    prev_idx = curr_idx;
-    curr_idx = entries[prev_idx].nextSlot;
-  }
-
-  return (0);
-}
-
-
-RC IX_IndexHandle::PrintLeafNodesString(PageNum curr_page){
-  RC rc = 0;
-  PF_PageHandle ph;
-  struct IX_NodeHeader_L *LHeader;
-  PageNum thispage = curr_page;
-  char *prevKey = (char *)malloc(header.attr_length);
-  int numcompared = 0;
-  while(thispage != NO_MORE_PAGES){
-    printf("*****printing leafnode %d \n", thispage);
-    if((rc = pfh.GetThisPage(thispage, ph)) || ph.GetData((char *&)LHeader)){
-      printf("return here\n");
-      return (rc);
-    }
-    struct Node_Entry *entries = (struct Node_Entry *)((char *)LHeader + header.entryOffset_N);
-    char *keys = (char *)LHeader + header.keysOffset_N;
-    int prev_idx = BEGINNING_OF_SLOTS;
-    int curr_idx = LHeader->firstSlotIndex;
-    bool isfirstcomp = true;
-    //int prevkey = *(int *)(keys + header.attr_length*curr_idx);
-    //printf("first slot index: %d \n", curr_idx);
-    while(curr_idx != NO_MORE_SLOTS){
-      if(entries[curr_idx].isValid == OCCUPIED_NEW){
-        //printf("\nNew Entry: %d, page: %d, slot: %d , index: %d \n", *(int*)(keys + curr_idx*header.attr_length), 
-        //  entries[curr_idx].page, entries[curr_idx].slot, curr_idx);
-        //int curr_key = *(int *)(keys + curr_idx*header.attr_length);
-        char * curr_key = keys + curr_idx * header.attr_length;
-        numcompared++;
-        //printf("compare");
-        if(strncmp(curr_key, prevKey, header.attr_length) < 0 && isfirstcomp == false){
-          printf("------------------------------------------------------ERROR \n");
-          //if(splittwice)
-          //  printf("----------------------------------------------------split twice!!!\n");
-          //PrintRootPage();
-          return (IX_EOF);
-        }
-        isfirstcomp = false;
-        memcpy(prevKey, curr_key, header.attr_length);
-      }
-      else if(entries[curr_idx].isValid == OCCUPIED_DUP){
-        //printf("\nDup Entry: %d \n", *(int *)(keys + curr_idx * header.attr_length));
-        //printf("bucket location: %d \n", entries[curr_idx].page);
-        PrintBuckets(entries[curr_idx].page);
-      }
-      else{
-        free(prevKey);
-        printf("invalid spot\n");
-        return (IX_EOF);
-      }
-      prev_idx = curr_idx;
-      curr_idx = entries[prev_idx].nextSlot;
-      //printf("next index: %d \n", curr_idx);
-      //printf("curr_slot: %d \n", curr_idx);
-    }
-    //printf("prev page: %d \n", prevpage);
-    PageNum prevpage = thispage;
-    thispage = LHeader->nextPage;
-    //printf("next page: %d \n", thispage);
-    if((rc = pfh.UnpinPage(prevpage)))
-      return (rc);
-    //if(splittwice)
-    //  printf("THERE is a page 4\n");
-  }
-  free(prevKey);
-  printf("numcompared %d \n", numcompared);
-  return (0);
-}
-
-RC IX_IndexHandle::PrintAllEntriesString(){
-  //printf("PRINTING ALL ENTRIES\n");
-  RC rc = 0;
-  struct IX_NodeHeader *rHeader;
-  if((rc = rootPH.GetData((char *&)rHeader)))
-    return (rc);
-
-  if(! rHeader->isLeafNode){
-    PageNum rootNodeNum;
-    rootPH.GetPageNum(rootNodeNum);
-    //printf("root node %d \n", rootNodeNum);
-    PageNum curr_page = rHeader->invalid1;
-    PF_PageHandle ph;
-    struct IX_NodeHeader *header;
-    if((pfh.GetThisPage(curr_page, ph)) || (rc = ph.GetData((char *&)header)))
-      return (rc);
-    while(! header->isLeafNode){
-      PageNum prev_page = curr_page;
-      curr_page = header->invalid1;
-      if((rc = pfh.UnpinPage(prev_page)))
-        return (rc);
-      if((pfh.GetThisPage(curr_page, ph)) || (rc = ph.GetData((char *&)header)))
-        return (rc);
-    }
-    if(pfh.UnpinPage(curr_page))
-      return (rc);
-    //printf("rawr\n");
-    PrintLeafNodesString(curr_page);
-    //PrintLeafNodes(curr_page);
-
-  }
-  else{
-    if((rc = PrintLeafNodesString(header.rootPage)))
-      return (rc);
-  }
-  return (0);
-}
-
-
-RC IX_IndexHandle::PrintAllEntries(){
-  //printf("PRINTING ALL ENTRIES\n");
-  RC rc = 0;
-  struct IX_NodeHeader *rHeader;
-  if((rc = rootPH.GetData((char *&)rHeader)))
-    return (rc);
-
-  if(! rHeader->isLeafNode){
-    PageNum rootNodeNum;
-    rootPH.GetPageNum(rootNodeNum);
-    //printf("root node %d \n", rootNodeNum);
-    PageNum curr_page = rHeader->invalid1;
-    PF_PageHandle ph;
-    struct IX_NodeHeader *header;
-    if((pfh.GetThisPage(curr_page, ph)) || (rc = ph.GetData((char *&)header)))
-      return (rc);
-    while(! header->isLeafNode){
-      PageNum prev_page = curr_page;
-      curr_page = header->invalid1;
-      if((rc = pfh.UnpinPage(prev_page)))
-        return (rc);
-      if((pfh.GetThisPage(curr_page, ph)) || (rc = ph.GetData((char *&)header)))
-        return (rc);
-    }
-    if(pfh.UnpinPage(curr_page))
-      return (rc);
-    //printf("rawr\n");
-    PrintLeafNodes(curr_page);
-  }
-  else{
-    if((rc = PrintLeafNodes(header.rootPage)))
-      return (rc);
-  }
-  return (0);
-}
-
-RC IX_IndexHandle::CheckAllValuesInt(PageNum curr_page){
-  printf("checking all values");
-  RC rc = 0;
-  PF_PageHandle ph;
-  struct IX_NodeHeader_L *LHeader;
-  PageNum thispage = curr_page;
-  int prevkey = 0;
-  while(thispage != NO_MORE_PAGES){
-    //printf("*****printing leafnode %d \n", thispage);
-    if((rc = pfh.GetThisPage(thispage, ph)) || ph.GetData((char *&)LHeader)){
-      return (rc);
-    }
-    struct Node_Entry *entries = (struct Node_Entry *)((char *)LHeader + header.entryOffset_N);
-    char *keys = (char *)LHeader + header.keysOffset_N;
-    int prev_idx = BEGINNING_OF_SLOTS;
-    int curr_idx = LHeader->firstSlotIndex;
-    //int prevkey = *(int *)(keys + header.attr_length*curr_idx);
-    //printf("first slot index: %d \n", curr_idx);
-    while(curr_idx != NO_MORE_SLOTS){
-      if(entries[curr_idx].isValid == OCCUPIED_NEW){
-        printf("checking\n");
-        //printf("\nNew Entry: %d, page: %d, slot: %d , index: %d \n", *(int*)(keys + curr_idx*header.attr_length), 
-        //  entries[curr_idx].page, entries[curr_idx].slot, curr_idx);
-        //printf("compare");
-        int curr_key = *(int *)(keys + curr_idx*header.attr_length);
-        printf("currkey: %d \n", curr_key);
-        if(curr_key != (prevkey +1)){
-          printf("------------------------------------------------------ERROR \n");
-          //if(splittwice)
-          //  printf("----------------------------------------------------split twice!!!\n");
-          //PrintRootPage();
-          return (IX_EOF);
-        }
-        prevkey = curr_key;
-      }
-      else if(entries[curr_idx].isValid == OCCUPIED_DUP){
-        //printf("\nDup Entry: %d \n", *(int *)(keys + curr_idx * header.attr_length));
-        //printf("bucket location: %d \n", entries[curr_idx].page);
-        PrintBuckets(entries[curr_idx].page);
-      }
-      else{
-        printf("error here\n");
-        return (IX_EOF);
-      }
-      prev_idx = curr_idx;
-      curr_idx = entries[prev_idx].nextSlot;
-      //printf("next index: %d \n", curr_idx);
-      //printf("curr_slot: %d \n", curr_idx);
-    }
-    //printf("prev page: %d \n", prevpage);
-    PageNum prevpage = thispage;
-    thispage = LHeader->nextPage;
-    //printf("next page: %d \n", thispage);
-    if((rc = pfh.UnpinPage(prevpage)))
-      return (rc);
-    //if(splittwice)
-    //  printf("THERE is a page 4\n");
-  }
-  return (0);
-}
-
-RC IX_IndexHandle::PrintLeafNodes(PageNum curr_page){
-  RC rc = 0;
-  PF_PageHandle ph;
-  struct IX_NodeHeader_L *LHeader;
-  PageNum thispage = curr_page;
-  int prevkey = 0;
-  while(thispage != NO_MORE_PAGES){
-    //printf("*****printing leafnode %d \n", thispage);
-    if((rc = pfh.GetThisPage(thispage, ph)) || ph.GetData((char *&)LHeader)){
-      return (rc);
-    }
-    struct Node_Entry *entries = (struct Node_Entry *)((char *)LHeader + header.entryOffset_N);
-    char *keys = (char *)LHeader + header.keysOffset_N;
-    int prev_idx = BEGINNING_OF_SLOTS;
-    int curr_idx = LHeader->firstSlotIndex;
-    //int prevkey = *(int *)(keys + header.attr_length*curr_idx);
-    //printf("first slot index: %d \n", curr_idx);
-    while(curr_idx != NO_MORE_SLOTS){
-      if(entries[curr_idx].isValid == OCCUPIED_NEW){
-        //printf("\nNew Entry: %d, page: %d, slot: %d , index: %d \n", *(int*)(keys + curr_idx*header.attr_length), 
-        //  entries[curr_idx].page, entries[curr_idx].slot, curr_idx);
-        //printf("compare");
-        int curr_key = *(int *)(keys + curr_idx*header.attr_length);
-        if(curr_key < (prevkey )){
-          printf("------------------------------------------------------ERROR \n");
-          //if(splittwice)
-          //  printf("----------------------------------------------------split twice!!!\n");
-          //PrintRootPage();
-          return (IX_EOF);
-        }
-        prevkey = curr_key;
-      }
-      else if(entries[curr_idx].isValid == OCCUPIED_DUP){
-        //printf("\nDup Entry: %d \n", *(int *)(keys + curr_idx * header.attr_length));
-        //printf("bucket location: %d \n", entries[curr_idx].page);
-        PrintBuckets(entries[curr_idx].page);
-      }
-      else
-        return (IX_EOF);
-      prev_idx = curr_idx;
-      curr_idx = entries[prev_idx].nextSlot;
-      //printf("next index: %d \n", curr_idx);
-      //printf("curr_slot: %d \n", curr_idx);
-    }
-    //printf("prev page: %d \n", prevpage);
-    PageNum prevpage = thispage;
-    thispage = LHeader->nextPage;
-    //printf("next page: %d \n", thispage);
-    if((rc = pfh.UnpinPage(prevpage)))
-      return (rc);
-    //if(splittwice)
-    //  printf("THERE is a page 4\n");
-  }
-  return (0);
-}
-
-RC IX_IndexHandle::PrintBuckets(PageNum page){
-  RC rc = 0;
-  PF_PageHandle ph;
-  struct IX_BucketHeader *bHeader;
-  PageNum thispage = page;
-  while(thispage != NO_MORE_PAGES){
-    printf("print bucket: %d \n", thispage);
-    if((rc = pfh.GetThisPage(thispage, ph)) || (rc = ph.GetData((char *&)bHeader)))
-      return (rc);
-    struct Bucket_Entry *entries = (struct Bucket_Entry *)((char*)bHeader + header.entryOffset_B);
-    int prev_idx = BEGINNING_OF_SLOTS;
-    int curr_idx = bHeader->firstSlotIndex;
-    //printf("first index: %d \n", curr_idx);
-    while(curr_idx != NO_MORE_SLOTS){
-      printf(" page %d slot %d | " , entries[curr_idx].page, entries[curr_idx].slot);
-      prev_idx = curr_idx;
-      curr_idx = entries[prev_idx].nextSlot;
-    }
-    PageNum prevpage = thispage;
-    thispage = bHeader->nextBucket;
-    if((rc = pfh.UnpinPage(prevpage)))
-      return (rc);
-    //printf("this page : %d \n", thispage);
-  }
-  return (0);
-
-}
-
+/*
+ * This function initializes the insert of a certain value and RID into the
+ * Index. If the entry already exists, return IX_DUPLICATEENTRY
+ */
 RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
+  // only insert if this is a valid, open indexHandle
   if(! isValidIndexHeader() || isOpenHandle == false)
     return (IX_INVALIDINDEXHANDLE);
+
+  // Retrieve the root header
   RC rc = 0;
   struct IX_NodeHeader *rHeader;
   if((rc = rootPH.GetData((char *&)rHeader))){
-    printf("failing here\n");
     return (rc);
   }
 
+  // If the root is full, create a new empty root node
   if(rHeader->num_keys == header.maxKeys_N){
-    printf("splitting the topmost node\n");
     PageNum newRootPage;
     char *newRootData;
     PF_PageHandle newRootPH;
@@ -352,58 +47,68 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
       return (rc);
     struct IX_NodeHeader_I *newRootHeader = (struct IX_NodeHeader_I *)newRootData;
     newRootHeader->isEmpty = false;
-    newRootHeader->firstPage = header.rootPage;
+    newRootHeader->firstPage = header.rootPage; // update the root node
 
     int unused;
     PageNum unusedPage;
-    if((rc = SplitNode((struct IX_NodeHeader *&)newRootData, (struct IX_NodeHeader *&)rHeader, header.rootPage, BEGINNING_OF_SLOTS, unused, unusedPage)))
+    // Split the current root node into two nodes, and make the parent the new
+    // root node
+    if((rc = SplitNode((struct IX_NodeHeader *&)newRootData, (struct IX_NodeHeader *&)rHeader, header.rootPage, 
+      BEGINNING_OF_SLOTS, unused, unusedPage)))
       return (rc);
     if((rc = pfh.MarkDirty(header.rootPage)) || (rc = pfh.UnpinPage(header.rootPage)))
       return (rc);
-    rootPH = newRootPH; // reset root
+    rootPH = newRootPH; // reset root PF_PageHandle
     header.rootPage = newRootPage;
-    header_modified = true;
+    header_modified = true; // New root page has been set, so the index header has been modified
+
+    // Retrieve the contents of the new Root node
     struct IX_NodeHeader *useMe;
     if((rc = newRootPH.GetData((char *&)useMe))){
       return (rc);
     }
+    // Insert into the non-full root node
     if((rc = InsertIntoNonFullNode(useMe, header.rootPage, pData, rid)))
       return (rc);
   }
-  else{
-    //printf("reached here\n");
+  else{ // If root is not full, insert into it
     if((rc = InsertIntoNonFullNode(rHeader, header.rootPage, pData, rid)))
       return (rc);
-    //printf("reached insert entry\n");
-    //if((rc = InsertIntoNonFullNode((char *&)rHeader,pData, rid)))
-    //  return (rc);
   }
 
+  // Mark the root node as dirty
   if((rc = pfh.MarkDirty(header.rootPage)))
     return (rc);
 
-  //PrintAllEntriesString();
   return (rc);
 }
 
-// index refers to prev index in parent
+/*
+ * This function deals with splitting a node:
+ * pHeader - the header of the parent node
+ * oldHeader - the header of the full node to be split
+ * oldPage - the PageNum of the old node to be split
+ * index - the index into which to insert the new node into in the parent node
+ * newKeyIndex - the index of the first key that points to the new node
+ * newPageNum - the page number of the new node
+ */
 RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader *oldHeader, 
   PageNum oldPage, int index, int & newKeyIndex, PageNum &newPageNum){
   RC rc = 0;
   //printf("********* SPLIT ********* at index %d \n", index);
-  bool isLeaf = false;
+  bool isLeaf = false;  // Determines if the new page should be a leaf page
   if(oldHeader->isLeafNode == true){
-    //printf("yes is leaf!\n");
     isLeaf = true;
   }
-  PageNum newPage;
+  PageNum newPage;  // Creates the new page, and acquires its headers
   struct IX_NodeHeader *newHeader;
   PF_PageHandle newPH;
   if((rc = CreateNewNode(newPH, newPage, (char *&)newHeader, isLeaf))){
     return (rc);
   }
-  newPageNum = newPage;
-  //printf("NEWPAGENUM: %d \n", newPageNum);
+  newPageNum = newPage; // returns new page number
+
+  // Retrieve the appropriate pointers to all the nodes' contents
   struct Node_Entry *pEntries = (struct Node_Entry *) ((char *)pHeader + header.entryOffset_N);
   struct Node_Entry *oldEntries = (struct Node_Entry *) ((char *)oldHeader + header.entryOffset_N);
   struct Node_Entry *newEntries = (struct Node_Entry *) ((char *)newHeader + header.entryOffset_N);
@@ -411,22 +116,26 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
   char *newKeys = (char *)newHeader + header.keysOffset_N;
   char *oldKeys = (char *)oldHeader + header.keysOffset_N;
 
+  // Keep the first header.masKeys_N/2 values in the old node
   int prev_idx1 = BEGINNING_OF_SLOTS;
   int curr_idx1 = oldHeader->firstSlotIndex;
   for(int i=0; i < header.maxKeys_N/2 ; i++){
     prev_idx1 = curr_idx1;
     curr_idx1 = oldEntries[prev_idx1].nextSlot;
   }
-
   oldEntries[prev_idx1].nextSlot = NO_MORE_SLOTS;
-  char *parentKey = oldKeys + curr_idx1*header.attr_length;
-  
-  char * tempchar = (char *)malloc(header.attr_length);
-  memcpy(tempchar, parentKey, header.attr_length);
-  //printf("split key: %s \n", tempchar);
-  free(tempchar);
 
-  if(!isLeaf){ // update the keys
+  // This is the key to use in the parent node to point to the new node we're creating
+  char *parentKey = oldKeys + curr_idx1*header.attr_length; 
+  
+  //char * tempchar = (char *)malloc(header.attr_length);
+  //memcpy(tempchar, parentKey, header.attr_length);
+  //printf("split key: %s \n", tempchar);
+  //free(tempchar);
+
+  // If we're not splitting a leaf node, then update the firstPageNum pointer in
+  // the new internal node's header.
+  if(!isLeaf){ 
     struct IX_NodeHeader_I *newIHeader = (struct IX_NodeHeader_I *)newHeader;
     newIHeader->firstPage = oldEntries[curr_idx1].page;
     newIHeader->isEmpty = false;
@@ -436,18 +145,14 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
     oldHeader->freeSlotIndex = prev_idx1;
     oldHeader->num_keys--;
   }
-  //prev_idx1 = curr_idx1;
 
+  // Now, move the remaining header.maxKeys_N/2 values into the new node
   int prev_idx2 = BEGINNING_OF_SLOTS;
   int curr_idx2 = newHeader->freeSlotIndex;
   while(curr_idx1 != NO_MORE_SLOTS){
-    //printf("current_index2: %d \n", curr_idx2);
-    //printf("curr_index1: %d \n", curr_idx1);
     newEntries[curr_idx2].page = oldEntries[curr_idx1].page;
     newEntries[curr_idx2].slot = oldEntries[curr_idx1].slot;
     newEntries[curr_idx2].isValid = oldEntries[curr_idx1].isValid;
-    //if(oldEntries[curr_idx1].isValid != OCCUPIED_NEW)
-    //  printf("-----------ERRORRRRRR ------------\n");
     memcpy(newKeys + curr_idx2*header.attr_length, oldKeys + curr_idx1*header.attr_length, header.attr_length);
     if(prev_idx2 == BEGINNING_OF_SLOTS){
       newHeader->freeSlotIndex = newEntries[curr_idx2].nextSlot;
@@ -462,8 +167,6 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
     prev_idx2 = curr_idx2;  
     curr_idx2 = newHeader->freeSlotIndex; // update insert index
 
-   // newEntries[curr_idx1].isValid = UNOCCUPIED;
-    //entries1[curr_idx1].nextSlot = oldBHeader->freeSlotIndex;
     prev_idx1 = curr_idx1;
     curr_idx1 = oldEntries[prev_idx1].nextSlot;
     oldEntries[prev_idx1].nextSlot = oldHeader->freeSlotIndex;
@@ -472,12 +175,10 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
     newHeader->num_keys++;
   }
 
-  // insert parent key into parent at index i
+  // insert parent key into parent at index specified in parameters
   int loc = pHeader->freeSlotIndex;
   memcpy(pKeys + loc * header.attr_length, parentKey, header.attr_length);
-  newKeyIndex = loc;
-  //printf("new key location: %d \n", newKeyIndex);
-  //printf("next free key: %d \n", pEntries[newKeyIndex].nextSlot);
+  newKeyIndex = loc;  // return the slot location that points to the new node
   pEntries[loc].page = newPage;
   pEntries[loc].isValid = OCCUPIED_NEW;
   if(index == BEGINNING_OF_SLOTS){
@@ -492,14 +193,13 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
   }
   pHeader->num_keys++;
 
-  // if is leaf node, update the page pointers
+  // if is leaf node, update the page pointers to the previous and next leaf node
   if(isLeaf){
     struct IX_NodeHeader_L *newLHeader = (struct IX_NodeHeader_L *) newHeader;
     struct IX_NodeHeader_L *oldLHeader = (struct IX_NodeHeader_L *) oldHeader;
     newLHeader->nextPage = oldLHeader->nextPage;
     newLHeader->prevPage = oldPage;
     oldLHeader->nextPage = newPage;
-    //printf("oldLHeader->nextPage : %d \n", newPage);
     if(newLHeader->nextPage != NO_MORE_PAGES){
       PF_PageHandle nextPH;
       struct IX_NodeHeader_L *nextHeader;
@@ -511,27 +211,31 @@ RC IX_IndexHandle::SplitNode(struct IX_NodeHeader *pHeader, struct IX_NodeHeader
     }
   }
 
+  // Mark the new page as dirty, and unpin it
   if((rc = pfh.MarkDirty(newPage))||(rc = pfh.UnpinPage(newPage))){
     return (rc);
   }
-  //PrintLeafNodes(newPage);
-  //printf("****finishsplit***\n");
   return (rc);
 }
 
+
+/*
+ * This inserts an RID into a bucket associated with a certain key
+ */
 RC IX_IndexHandle::InsertIntoBucket(PageNum page, const RID &rid){
   RC rc = 0;
-  PageNum ridPage;
+  PageNum ridPage; // Gets the Page and Slot Number from this rid object
   SlotNum ridSlot;
   if((rc = rid.GetPageNum(ridPage)) || (rc = rid.GetSlotNum(ridSlot))){
     return (rc);
   }
 
-  bool notEnd = true;
+  bool notEnd = true; // for searching for an empty spot in the bucket
   PageNum currPage = page;
   PF_PageHandle bucketPH;
   struct IX_BucketHeader *bucketHeader;
   while(notEnd){
+    // Get the contents of this bucket
     if((rc = pfh.GetThisPage(currPage, bucketPH)) || (rc = bucketPH.GetData((char *&)bucketHeader))){
       return (rc);
     }
@@ -540,8 +244,9 @@ RC IX_IndexHandle::InsertIntoBucket(PageNum page, const RID &rid){
     int prev_idx = BEGINNING_OF_SLOTS;
     int curr_idx = bucketHeader->firstSlotIndex;
     while(curr_idx != NO_MORE_SLOTS){
+      // If we found a duplicate entry, then return an error
       if(entries[curr_idx].page == ridPage && entries[curr_idx].slot == ridSlot){
-        RC rc2 = 0;
+        RC rc2 = 0; 
         if((rc2 = pfh.UnpinPage(currPage)))
           return (rc2);
         return (IX_DUPLICATEENTRY);
@@ -549,38 +254,35 @@ RC IX_IndexHandle::InsertIntoBucket(PageNum page, const RID &rid){
       prev_idx = curr_idx;
       curr_idx = entries[prev_idx].nextSlot;
     }
-    // INSERT if it's the last bucket
-    //printf("number of nodes in bucket: %d \n", bucketHeader->num_keys);
+    // If this is the last bucket in the string of buckets, and it's full, create a new bucket
     if(bucketHeader->nextBucket == NO_MORE_PAGES && bucketHeader->num_keys == header.maxKeys_B){
-      notEnd = false;
+      notEnd = false; // end the search
       PageNum newBucketPage;
       PF_PageHandle newBucketPH;
       if((rc = CreateNewBucket(newBucketPage)))
         return (rc);
       bucketHeader->nextBucket = newBucketPage;
-      if((rc = pfh.MarkDirty(currPage)) || (rc = pfh.UnpinPage(currPage)))
+      if((rc = pfh.MarkDirty(currPage)) || (rc = pfh.UnpinPage(currPage))) // unpin previous bucket
         return (rc);
-      currPage = newBucketPage;
+      // Get the contents of the new bucket
+      currPage = newBucketPage; 
       if((rc = pfh.GetThisPage(currPage, bucketPH)) || (rc = bucketPH.GetData((char *&)bucketHeader)))
         return (rc);
       entries = (struct Bucket_Entry *)((char *)bucketHeader + header.entryOffset_B);
     }
+    // If it's the last bucket in the string of buckets, insert the value in
     if(bucketHeader->nextBucket == NO_MORE_PAGES){
-      notEnd = false;
-      //printf("reached bucket insertion in bucket number %d \n", currPage);
-      int loc = bucketHeader->freeSlotIndex;
+      notEnd = false; // end search
+      int loc = bucketHeader->freeSlotIndex;  // Insert into this location
       entries[loc].slot = ridSlot;
       entries[loc].page = ridPage;
       bucketHeader->freeSlotIndex = entries[loc].nextSlot;
       entries[loc].nextSlot = bucketHeader->firstSlotIndex;
       bucketHeader->firstSlotIndex = loc;
-      //printf("first slot: %d, next slot%d \n", bucketHeader->firstSlotIndex, 
-      //  entries[bucketHeader->firstSlotIndex]);
       bucketHeader->num_keys++;
-      //printf("no more slots %d \n", NO_MORE_SLOTS);
     }
 
-
+    // Update the currPage pointer to the next bucket in the sequence
     PageNum nextPage = bucketHeader->nextBucket;
     if((rc = pfh.MarkDirty(currPage)) || (rc = pfh.UnpinPage(currPage)))
       return (rc);
@@ -590,61 +292,28 @@ RC IX_IndexHandle::InsertIntoBucket(PageNum page, const RID &rid){
 }
 
 /*
-RC IX_IndexHandle::SearchEntry(void *pData, const RID &rid){
-  if(! isValidIndexHeader() || isOpenHandle == false)
-    return (IX_INVALIDINDEXHANDLE);
-  RC rc = 0;
-  struct IX_NodeHeader *rHeader;
-  if((rc = rootPH.GetData((char *&)rHeader))){
-    printf("failing here\n");
-    return (rc);
-  }
-
-  struct IX_NodeHeader *nHeader = rHeader;
-  while(! nHeader->isLeafNode){
-    int searchIndex;
-    bool isDup;
-    if((rc = FindNodeInsertIndex(nHeader, pData, index, isDup)))
-      return (rc);
-
-    PageNum nextNodeNum;
-    if(index == BEGINNING_OF_SLOTS){
-
-    }
-
-  }
-
-}
-*/
-
+ * This inserts a value and RID into a node given its header and page number. 
+ */
 RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum thisNodeNum, void *pData, 
   const RID &rid){
   RC rc = 0;
 
+  // Retrieve contents of this node
   struct Node_Entry *entries = (struct Node_Entry *) ((char *)nHeader + header.entryOffset_N);
   char *keys = (char *)nHeader + header.keysOffset_N;
-  //printf("entries[0].nextSlot: %d \n", entries[0].nextSlot);
+
+  // If it is a leaf node, then insert into it
   if(nHeader->isLeafNode){
     int prevInsertIndex = BEGINNING_OF_SLOTS;
     bool isDup = false;
-    if((rc = FindNodeInsertIndex(nHeader, pData, prevInsertIndex, isDup)))
+    if((rc = FindNodeInsertIndex(nHeader, pData, prevInsertIndex, isDup))) // get appropriate index
       return (rc);
-    //printf("found index: %d \n", prevInsertIndex);
-    //printf("inserting after value: %d \n", *(int *)(keys + prevInsertIndex*header.attr_length));
-    /*
-    char * tempchar = (char *)malloc(header.attr_length);
-    memcpy(tempchar, keys + prevInsertIndex * header.attr_length, header.attr_length);
-    printf("inserting after value: %s \n", tempchar);
-    free(tempchar);
-    */
-    // if it's not a duplicate, insert
-    //int thisSlot = entries[prevInsertIndex].nextSlot;
+    // If it's not a duplicate, then insert a new key for it, and update
+    // the slot and page values. 
     if(!isDup){
-      //printf("not duplicate\n");
       int index = nHeader->freeSlotIndex;
-      //printf("index: %d, next index: %d \n", index, entries[index].nextSlot);
       memcpy(keys + header.attr_length * index, (char *)pData, header.attr_length);
-      entries[index].isValid = OCCUPIED_NEW;
+      entries[index].isValid = OCCUPIED_NEW; // mark it as a single entry
       if((rc = rid.GetPageNum(entries[index].page)) || (rc = rid.GetSlotNum(entries[index].slot)))
         return (rc);
       nHeader->isEmpty = false;
@@ -664,53 +333,52 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
     else {
       PageNum bucketPage;
       if (isDup && entries[prevInsertIndex].isValid == OCCUPIED_NEW){
-        if((rc = CreateNewBucket(bucketPage)))
+        if((rc = CreateNewBucket(bucketPage))) // create a new bucket
           return (rc);
         entries[prevInsertIndex].isValid = OCCUPIED_DUP;
         RID rid2(entries[prevInsertIndex].page, entries[prevInsertIndex].slot);
+        // Insert this new RID, and the existing entry into the bucket
         if((rc = InsertIntoBucket(bucketPage, rid2)) || (rc = InsertIntoBucket(bucketPage, rid)))
           return (rc);
-        entries[prevInsertIndex].page = bucketPage;
-
+        entries[prevInsertIndex].page = bucketPage; // page now points to bucket
       }
       else{
         bucketPage = entries[prevInsertIndex].page;
-        if((rc = InsertIntoBucket(bucketPage, rid)))
+        if((rc = InsertIntoBucket(bucketPage, rid))) // insert in existing bucket
           return (rc);
       }
       
     }
 
   }
-  else{
-    //PrintRootPage();
+  else{ // Otherwise, this is a internal node
+    // Get its contents, and find the insert location
     struct IX_NodeHeader_I *nIHeader = (struct IX_NodeHeader_I *)nHeader;
     PageNum nextNodePage;
     int prevInsertIndex = BEGINNING_OF_SLOTS;
     bool isDup;
     if((rc = FindNodeInsertIndex(nHeader, pData, prevInsertIndex, isDup)))
       return (rc);
-    //printf("HIHIHIindex found: %d \n", prevInsertIndex);
     if(prevInsertIndex == BEGINNING_OF_SLOTS)
       nextNodePage = nIHeader->firstPage;
     else{
       nextNodePage = entries[prevInsertIndex].page;
-      //int thisIndex = entries[prevInsertIndex].nextSlot;
-      //nextNodePage = entries[thisIndex].page;
     }
-    // read
+
+    // Read this next page to insert into.
     PF_PageHandle nextNodePH;
     struct IX_NodeHeader *nextNodeHeader;
     int newKeyIndex;
     PageNum newPageNum;
     if((rc = pfh.GetThisPage(nextNodePage, nextNodePH)) || (rc = nextNodePH.GetData((char *&)nextNodeHeader)))
       return (rc);
+    // If this next node is full, the split the node
     if(nextNodeHeader->num_keys == header.maxKeys_N){
-      //splittwice = true;
       if((rc = SplitNode(nHeader, nextNodeHeader, nextNodePage, prevInsertIndex, newKeyIndex, newPageNum)))
         return (rc);
       char *value = keys + newKeyIndex*header.attr_length;
-      //printf("SPLIT AT NODE: %d \n", *(int *)value);
+
+      // check which of the two split nodes to insert into.
       int compared = comparator(pData, (void *)value, header.attr_length);
       if(compared >= 0){
         PageNum nextPage = newPageNum;
@@ -721,20 +389,7 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
         nextNodePage = nextPage;
       }
     }
-    //printf("NEW PAGE NUMBER FPR SPLIT: %d \n", newPageNum);
-    // determine which one is the next node to be inserted into
-    
-    /*
-    if(compared >= 0){
-      PageNum nextPage = nextNodeHeader->invalid1;
-      if((rc = pfh.MarkDirty(nextNodePage)) || (rc = pfh.UnpinPage(nextNodePage)))
-        return (rc);
-      if((rc = pfh.GetThisPage(nextPage, nextNodePH)) || (rc = nextNodePH.GetData((char *&) nextNodeHeader)))
-        return (rc);
-      nextNodePage = nextPage;
-    }
-    */
-
+    // Insert into the following node, then mark it dirty and unpin it
     if((rc = InsertIntoNonFullNode(nextNodeHeader, nextNodePage, pData, rid)))
       return (rc);
     if((rc = pfh.MarkDirty(nextNodePage)) || (rc = pfh.UnpinPage(nextNodePage)))
@@ -744,20 +399,24 @@ RC IX_IndexHandle::InsertIntoNonFullNode(struct IX_NodeHeader *nHeader, PageNum 
   return (rc);
 }
 
+/*
+ * This finds the index in a node in which to insert a key into, given the node
+ * header and the key to insert. It returns the index to insert into, and whether
+ * there already exists a key of this value in this particular node.
+ */
 RC IX_IndexHandle::FindNodeInsertIndex(struct IX_NodeHeader *nHeader, 
   void *pData, int& index, bool& isDup){
+  // Setup 
   struct Node_Entry *entries = (struct Node_Entry *)((char *)nHeader + header.entryOffset_N);
   char *keys = ((char *)nHeader + header.keysOffset_N);
-  //printf("STARTING FINDNODE INSERT INDEX: \n");
+
+  // Search until we reach a key in the node that is greater than the pData entered
   int prev_idx = BEGINNING_OF_SLOTS;
   int curr_idx = nHeader->firstSlotIndex;
-  //iterloc = -1;
-  //printf("current idx: %d, %d \n", nHeader->firstSlotIndex, *(int *) (keys + header.attr_length*nHeader->firstSlotIndex));
   isDup = false;
   while(curr_idx != NO_MORE_SLOTS){
     char *value = keys + header.attr_length * curr_idx;
     int compared = comparator(pData, (void*) value, header.attr_length);
-    //printf("N comparing %d, %d. result: %d \n", *(int *)pData, *(int *)value, compared);
     if(compared == 0)
       isDup = true;
     if(compared < 0)
@@ -767,14 +426,14 @@ RC IX_IndexHandle::FindNodeInsertIndex(struct IX_NodeHeader *nHeader,
 
   } 
   index = prev_idx;
-  //printf("index found: %d \n", index);
-  //if(isDup)
-  //  printf("is a duplicate\n");
-  //printf("node found index: %d \n", index);
   return (0);
 }
 
 
+/*
+ * Given a key and a RID, delete that entry in the index. If it
+ * does not exist, return IX_INVALIDENTRY. 
+ */
 RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid){
   RC rc = 0;
   if(! isValidIndexHeader() || isOpenHandle == false)
@@ -787,13 +446,19 @@ RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid){
     return (rc);
   }
 
-  if(rHeader->isEmpty)
+  // If the root page is empty, then no entries can exist
+  if(rHeader->isEmpty && (! rHeader->isLeafNode) )
+    return (IX_INVALIDENTRY);
+  if(rHeader->num_keys== 0 && rHeader->isLeafNode)
     return (IX_INVALIDENTRY);
 
-  bool toDelete = false;
-  if((rc = DeleteFromNode(rHeader, pData, rid, toDelete)))
+  // toDelete is an indicator for whether to delete this current node
+  // because it has no more contents
+  bool toDelete = false; 
+  if((rc = DeleteFromNode(rHeader, pData, rid, toDelete))) // Delete the value from this node
     return (rc);
 
+  // If the tree is empty, set the current node to a leaf node.
   if(toDelete){
     rHeader->isLeafNode = true;
   }
@@ -802,81 +467,64 @@ RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid){
 }
 
 
+/*
+ * This function deletes a entry RID/key from a node given its node Header. It returns
+ * a boolean toDelete that indicates whether the current node is empty or not, to signal
+ * to the caller to delete this node
+ */
 RC IX_IndexHandle::DeleteFromNode(struct IX_NodeHeader *nHeader, void *pData, const RID &rid, bool &toDelete){
   RC rc = 0;
   toDelete = false;
-  if(nHeader->isLeafNode){
+  if(nHeader->isLeafNode){ // If it's a leaf node, delete it from there
     if((rc = DeleteFromLeaf((struct IX_NodeHeader_L *)nHeader, pData, rid, toDelete))){
-      //printf("reached here\n");
       return (rc);
-    }
-    if(toDelete){
-      //printf("toDelete is set to true\n");
     }
   }
-  // else, delete from a following index
+  // else, find the appropriate child node, and delete it from there
   else{
     int prevIndex, currIndex;
-    bool isDup;
+    bool isDup;  // Find the index of the chil dnode
     if((rc = FindNodeInsertIndex(nHeader, pData, currIndex, isDup)))
       return (rc);
-
     struct IX_NodeHeader_I *iHeader = (struct IX_NodeHeader_I *)nHeader;
     struct Node_Entry *entries = (struct Node_Entry *)((char *)nHeader + header.entryOffset_N);
-    char *keys = (char *)nHeader + header.entryOffset_N;
     
     PageNum nextNodePage;
     bool useFirstPage = false;
-    if(currIndex == BEGINNING_OF_SLOTS){ // use first slot
-      useFirstPage = true;
+    if(currIndex == BEGINNING_OF_SLOTS){ // Use the first slot in the internal node
+      useFirstPage = true;               // as the child that contains this value
       nextNodePage = iHeader->firstPage;
       prevIndex = currIndex;
     }
-    /*
-    else if(isDup == true){ // key exists, go down the next path
-      
-      printf("****** IS IN THE INTERNAL NODE ****\n");
-      currIndex = entries[prevIndex].nextSlot;
-      nextNodePage = entries[currIndex].page;
-    }*/
-    else{ // if key does not exist, go down the prev node
-      //char *prevKey = keys + prevIndex * header.attr_length;
-      //if((rc = FindNodeInsertIndex(nHeader, (void *)prevKey, prevIndex, isDup)))
-      //  return (rc);
-      //if(prevIndex == BEGINNING_OF_SLOTS)
-      //  currIndex = nHeader->firstSlotIndex;
-      //else
-      //currIndex = entries[prevIndex].nextSlot;
-      //nextNodePage = entries[currIndex].page;
+    else{ // Otherwise, go down the appropraite page. Also retrieve the index of the
+          // page before this index for deletion purposes
       if((rc = FindPrevIndex(nHeader, currIndex, prevIndex)))
         return (rc);
       nextNodePage = entries[currIndex].page;
     }
 
+    // Acquire the contents of this child page
     PF_PageHandle nextNodePH;
     struct IX_NodeHeader *nextHeader;
     if((rc = pfh.GetThisPage(nextNodePage, nextNodePH)) || (rc = nextNodePH.GetData((char *&)nextHeader)))
       return (rc);
-
-    bool toDeleteNext = false;
-    rc = DeleteFromNode(nextHeader, pData, rid, toDeleteNext);
+    bool toDeleteNext = false; // indicator for deleting the child page
+    rc = DeleteFromNode(nextHeader, pData, rid, toDeleteNext); // Delete from this child page
 
     RC rc2 = 0;
     if((rc2 = pfh.MarkDirty(nextNodePage)) || (rc2 = pfh.UnpinPage(nextNodePage)))
       return (rc2);
 
-    if(rc == IX_INVALIDENTRY)
+    if(rc == IX_INVALIDENTRY) // If the entry was not found, tell the caller
       return (rc);
 
-    // delete this leaf/child node
+    // If the entry was successfully deleted, check whether to delete this child node
     if(toDeleteNext){
-      //printf("todelete next is true\n");
-      if((rc = pfh.DisposePage(nextNodePage))){
-        //printf("cannot not dispose page\n");
+      if((rc = pfh.DisposePage(nextNodePage))){ // if so, dispose of page
         return (rc);
       }
-      if(useFirstPage == false){
-        //printf("used first page\n");
+      if(useFirstPage == false){ // If the deleted page was the first page, put the 
+                                  // following page into the firstPage slot
         if(prevIndex == BEGINNING_OF_SLOTS)
           nHeader->firstSlotIndex = entries[currIndex].nextSlot;
         else
@@ -884,19 +532,17 @@ RC IX_IndexHandle::DeleteFromNode(struct IX_NodeHeader *nHeader, void *pData, co
         entries[currIndex].nextSlot = nHeader->freeSlotIndex;
         nHeader->freeSlotIndex = currIndex;
       }
-      else{
-        //printf("not using first page\n");
+      else{ // Otherwise, just delete this page from the sequence of slot pointers
         int firstslot = nHeader->firstSlotIndex;
         nHeader->firstSlotIndex = entries[firstslot].nextSlot;
         iHeader->firstPage = entries[firstslot].page;
         entries[firstslot].nextSlot = nHeader->freeSlotIndex;
         nHeader->freeSlotIndex = firstslot;
       }
-
-      // update counters
-      if(nHeader->num_keys == 0){
-        nHeader->isEmpty = true;
-        toDelete = true;
+      // update counters of this node's contents
+      if(nHeader->num_keys == 0){ // If there are no more keys, and we just deleted
+        nHeader->isEmpty = true;  // the first page, return the indicator to delete this
+        toDelete = true;          // node
       }
       else
         nHeader->num_keys--;
@@ -908,15 +554,14 @@ RC IX_IndexHandle::DeleteFromNode(struct IX_NodeHeader *nHeader, void *pData, co
   return (rc);
 }
 
+/*
+ * Given a node header, and a valid index, returns the index of the slot
+ * directly preceding the given one in prevIndex.
+ */
 RC IX_IndexHandle::FindPrevIndex(struct IX_NodeHeader *nHeader, int thisIndex, int &prevIndex){
-  RC rc = 0;
   struct Node_Entry *entries = (struct Node_Entry *)((char *)nHeader + header.entryOffset_N);
-  char *keys = ((char *)nHeader + header.keysOffset_N);
-  //printf("STARTING FINDNODE INSERT INDEX: \n");
   int prev_idx = BEGINNING_OF_SLOTS;
   int curr_idx = nHeader->firstSlotIndex;
-  //iterloc = -1;
-  //printf("current idx: %d, %d \n", nHeader->firstSlotIndex, *(int *) (keys + header.attr_length*nHeader->firstSlotIndex));
   while(curr_idx != thisIndex){
     prev_idx = curr_idx;
     curr_idx = entries[prev_idx].nextSlot;
@@ -925,52 +570,44 @@ RC IX_IndexHandle::FindPrevIndex(struct IX_NodeHeader *nHeader, int thisIndex, i
   return (0);
 }
 
-
+/*
+ * This function deletes an entry from a leaf given the header of the leaf. It returns
+ * in toDelete whether this leaf node is empty, and whether to delete it
+ */
 RC IX_IndexHandle::DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, const RID &rid, bool &toDelete){
   RC rc = 0;
   int prevIndex, currIndex;
-  bool isDup;
+  bool isDup; // find index of deletion
   if((rc = FindNodeInsertIndex((struct IX_NodeHeader *)nHeader, pData, currIndex, isDup)))
     return (rc);
-  if(isDup == false) // does not exist
+  if(isDup == false) // If this entry exists, a key should exist for it in the leaf
     return (IX_INVALIDENTRY);
 
+  // Setup 
   struct Node_Entry *entries = (struct Node_Entry *)((char *)nHeader + header.entryOffset_N);
   char *key = (char *)nHeader + header.keysOffset_N;
 
-  if(currIndex== nHeader->firstSlotIndex)
-    prevIndex = currIndex;
+  if(currIndex== nHeader->firstSlotIndex) // Set up previous index for deletion of key
+    prevIndex = currIndex;                // purposes
   else{
     if((rc = FindPrevIndex((struct IX_NodeHeader *)nHeader, currIndex, prevIndex)))
       return (rc);
   }
-  /*
-  if(prevIndex == BEGINNING_OF_SLOTS){
-    printf("correct?\n");
-    currIndex = nHeader->firstSlotIndex;
-  }
-  else
-    currIndex = entries[prevIndex].nextSlot;
-    */
 
-  // if only entry, delete it
+  // if only entry, delete it from the leaf
   if(entries[currIndex].isValid == OCCUPIED_NEW){
     PageNum ridPage;
     SlotNum ridSlot;
     if((rc = rid.GetPageNum(ridPage)) || (rc = rid.GetSlotNum(ridSlot))){
-      //printf("error in retrieving rid\n");
       return (rc);
     }
-
-    //printf("searching at index: %d\n", currIndex);
-    //printf("searching for: %d %d \n", ridPage, ridSlot);
-    //printf("got: %d %d \n", entries[currIndex].page, entries[currIndex].slot);
+    // If this RID and key value don't match, then the entry is not there. Return IX_INVALIDENTRY
     int compare = comparator((void*)(key + header.attr_length*currIndex), pData, header.attr_length);
     if(ridPage != entries[currIndex].page || ridSlot != entries[currIndex].slot || compare != 0 )
       return (IX_INVALIDENTRY);
 
+    // Otherwise, delete from leaf page
     if(currIndex == nHeader->firstSlotIndex){
-      //printf("delete first node entry\n");
       nHeader->firstSlotIndex = entries[currIndex].nextSlot;
     }
     else
@@ -979,57 +616,46 @@ RC IX_IndexHandle::DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, 
     entries[currIndex].nextSlot = nHeader->freeSlotIndex;
     nHeader->freeSlotIndex = currIndex;
     entries[currIndex].isValid = UNOCCUPIED;
-    nHeader->num_keys--;
-    //printf("number of keys remaining: %d \n", nHeader->num_keys);
+    nHeader->num_keys--; // update the key counter
   }
-  // if duplicate, delete it from bucket
+  // if duplicate, delete it from the corresponding bucket
   else if(entries[currIndex].isValid == OCCUPIED_DUP){
-    //printf("deleting from bucket\n");
     PageNum bucketNum = entries[currIndex].page;
     PF_PageHandle bucketPH;
     struct IX_BucketHeader *bHeader;
     bool deletePage = false;
     RID lastRID;
-    PageNum nextBucketNum;
+    PageNum nextBucketNum; // Retrieve the bucket header
     if((rc = pfh.GetThisPage(bucketNum, bucketPH)) || (rc = bucketPH.GetData((char *&)bHeader))){
-      //printf("not valid page\n");
       return (rc);
     }
-    /*
-    if((rc = DeleteFromBucket(bHeader, rid, deletePage, lastRID, nextBucketNum))){
-      RC rc2 = 0;
-      if((rc2 = pfh.MarkDirty(bucketNum)) || (pfh.UnpinPage(bucketNum)))
-        return (rc2);
-      return (rc);
-    }*/
     rc = DeleteFromBucket(bHeader, rid, deletePage, lastRID, nextBucketNum);
     RC rc2 = 0;
     if((rc2 = pfh.MarkDirty(bucketNum)) || (rc = pfh.UnpinPage(bucketNum)))
       return (rc2);
 
-    if(rc == IX_INVALIDENTRY)
+    if(rc == IX_INVALIDENTRY) // If it doesnt exist in the bucket, notify the function caller
       return (IX_INVALIDENTRY);
 
-    if(deletePage){ // delete the bucket
-      //printf("deletingpage %d \n", bucketNum);
+    if(deletePage){ // If we need to delete the bucket, 
       if((rc = pfh.DisposePage(bucketNum) ))
         return (rc);
-      if(nextBucketNum == NO_MORE_PAGES){
+      // If there are no more buckets, then place the last RID into the leaf page, and
+      // update the isValid flag to OCCUPIED_NEW
+      if(nextBucketNum == NO_MORE_PAGES){ 
         entries[currIndex].isValid = OCCUPIED_NEW;
         if((rc = lastRID.GetPageNum(entries[currIndex].page)) || 
           (rc = lastRID.GetSlotNum(entries[currIndex].slot)))
           return (rc);
-        //printf("---------nextrid: %d %d \n", entries[currIndex].page, entries[currIndex].slot);
       }
-      else
+      else // otherwise, set the bucketPointer to the next bucket
         entries[currIndex].page = nextBucketNum;
     }
   }
-  if(nHeader->num_keys == 0){
-    //printf("hellw??\n");
-    toDelete = true;
-    // reset the pointers
-    PageNum prevPage = nHeader->prevPage;
+  if(nHeader->num_keys == 0){ // If the leaf is now empty, 
+    toDelete = true;          // return the indicator to delete
+    // Update the leaf pointers of its previous and next neighbors
+    PageNum prevPage = nHeader->prevPage; 
     PageNum nextPage = nHeader->nextPage;
     PF_PageHandle leafPH;
     struct IX_NodeHeader_L *leafHeader;
@@ -1047,38 +673,43 @@ RC IX_IndexHandle::DeleteFromLeaf(struct IX_NodeHeader_L *nHeader, void *pData, 
       if((rc = pfh.MarkDirty(nextPage)) || (rc = pfh.UnpinPage(nextPage)))
         return (rc);
     }
-    //printf("finished deleting leaf node\n");
 
   }
-  //printf("reaches the end of delete from leaf\n");
   return (0);
 }
 
 
+/*
+ * Given an RID and a bucketHeader, it deletes the RID from the bucket. It returns
+ * an indicator for whether to delete the bucket, an RID signifying the last RID remaining
+ * in the bucket, and the next Bucket page which tihs bucket points to.
+ */
 RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &rid, 
   bool &deletePage, RID &lastRID, PageNum &nextPage){
-  //printf("beginning of delete from bucket\n");
   RC rc = 0;
-  PageNum nextPageNum = bHeader->nextBucket;
-  nextPage = bHeader->nextBucket;
+  PageNum nextPageNum = bHeader->nextBucket; 
+  nextPage = bHeader->nextBucket; // set the nextBucket pointer
 
   struct Bucket_Entry *entries = (struct Bucket_Entry *)((char *)bHeader + header.entryOffset_B);
 
-  if((nextPageNum != NO_MORE_PAGES)){
-    //printf("getting next page\n");
-    bool toDelete = false;
+  if((nextPageNum != NO_MORE_PAGES)){ // If there's a bucket after this one, search in it first
+    bool toDelete = false; // whether to delete the following bucket
     PF_PageHandle nextBucketPH;
     struct IX_BucketHeader *nextHeader;
     RID last;
-    PageNum nextNextPage;
+    PageNum nextNextPage; // Get this next bucket
     if((rc = pfh.GetThisPage(nextPageNum, nextBucketPH)) || (rc = nextBucketPH.GetData((char *&)nextHeader)))
       return (rc);
-    rc = DeleteFromBucket(nextHeader, rid, toDelete, last, nextNextPage);
+    // Recursively call go delete from this bucket
+    rc = DeleteFromBucket(nextHeader, rid, toDelete, last, nextNextPage); 
+
     int numKeysInNext = nextHeader->num_keys;
     RC rc2 = 0;
     if((rc2 = pfh.MarkDirty(nextPageNum)) || (rc2 = pfh.UnpinPage(nextPageNum)))
       return (rc2);
 
+    // If the following bucket only has one key remaining, and there is space in this
+    // bucket, then put the lastRID into this bucket, and delete the following bucket
     if(toDelete && bHeader->num_keys < header.maxKeys_B && numKeysInNext == 1){
       int loc = bHeader->freeSlotIndex;
       if((rc2 = last.GetPageNum(entries[loc].page)) || (rc2 = last.GetSlotNum(entries[loc].slot)))
@@ -1089,23 +720,26 @@ RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &
       bHeader->firstSlotIndex = loc;
 
       bHeader->num_keys++;
-      numKeysInNext == 0;
+      numKeysInNext = 0;
     }
     if(toDelete && numKeysInNext == 0){
       if((rc2 = pfh.DisposePage(nextPageNum)))
         return (rc2);
-      bHeader->nextBucket = nextNextPage;
+      bHeader->nextBucket = nextNextPage; // make this bucket point to the bucket 
+                                          // the deleted bucket pointed to
     }
 
-    if(rc == 0)
+    if(rc == 0) // if we found the value, return
       return (0);
   }
 
+  // Otherwise, search in this bucket
   PageNum ridPage;
   SlotNum ridSlot;
   if((rc = rid.GetPageNum(ridPage))|| (rc = rid.GetSlotNum(ridSlot)))
     return (rc);
   
+  // Search through entire values
   int prevIndex = BEGINNING_OF_SLOTS;
   int currIndex = bHeader->firstSlotIndex;
   bool found = false;
@@ -1118,9 +752,8 @@ RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &
     currIndex = entries[prevIndex].nextSlot;
   }
 
-  // if found, delete
+  // if found, delete from it
   if(found){
-    //printf("found please delete thnx\n");
     if (prevIndex == BEGINNING_OF_SLOTS)
       bHeader->firstSlotIndex = entries[currIndex].nextSlot;
     else
@@ -1128,103 +761,29 @@ RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &
     entries[currIndex].nextSlot = bHeader->freeSlotIndex;
     bHeader->freeSlotIndex = currIndex;
 
-    //printf("num left in bucket : %d \n", bHeader->num_keys);
     bHeader->num_keys--;
-    if(bHeader->num_keys == 1){ // move this last one to the prev 
+    // If there is one or less keys in this bucket, mark it for deletion.
+    if(bHeader->num_keys == 1 || bHeader->num_keys == 0){
       int firstSlot = bHeader->firstSlotIndex;
       RID last(entries[firstSlot].page, entries[firstSlot].slot);
-      lastRID = last;
-      //printf("set delete to true \n");
+      lastRID = last; // Return the last RID to move to the previous bucket
       deletePage = true;
     }
 
     return (0);
 
   }
-
-  printf("not found\n");
-  return (IX_INVALIDENTRY);
+  return (IX_INVALIDENTRY); // if not found, return IX_INVALIDENTRY
 
 }
 
-/// RETURN NOT FOUND IF NOT FOUND
+
+
 /*
-RC IX_IndexHandle::DeleteFromBucket(struct IX_BucketHeader *bHeader, const RID &rid, 
-  bool &deletePage, RID &lastRID, PageNum &nextPage){
-  RC rc = 0;
-  nextPage = bHeader->nextBucket;
-
-  struct Bucket_Entry *entries = (struct Bucket_Entry *)((char *)bHeader + header.entryOffset_B);
-
-  PageNum ridPage;
-  SlotNum ridSlot;
-  if((rc = rid.GetPageNum(ridPage))|| (rc = rid.GetSlotNum(ridSlot)))
-    return (rc);
-  
-  int prevIndex = BEGINNING_OF_SLOTS;
-  int currIndex = bHeader->firstSlotIndex;
-  bool found = false;
-  while(currIndex != NO_MORE_SLOTS){
-    if(entries[currIndex].page == ridPage && entries[currIndex].slot == ridSlot){
-      found = true;
-      break;
-    }
-    prevIndex = currIndex;
-    currIndex = entries[prevIndex].nextSlot;
-  }
-
-  if(found){
-    if (prevIndex == BEGINNING_OF_SLOTS)
-      bHeader->firstSlotIndex = entries[currIndex].nextSlot;
-    else
-      entries[prevIndex].nextSlot = entries[currIndex].nextSlot;
-    entries[currIndex].nextSlot = bHeader->firstSlotIndex;
-    bHeader->firstSlotIndex = currIndex;
-
-    bHeader->num_keys--;
-    if(bHeader->num_keys == 1){ // move this last one to the prev 
-      int firstSlot = bHeader->firstSlotIndex;
-      RID last(entries[firstSlot].page, entries[firstSlot].slot);
-      lastRID = last;
-      deletePage = true;
-    }
-
-  }
-  else if(nextPage == NO_MORE_PAGES){
-    return (IX_INVALIDENTRY);
-  }
-  else{ // search in next bucket
-    bool toDelete = false;
-    PF_PageHandle nextBucketPH;
-    struct IX_BucketHeader *nextHeader;
-    if((rc = pfh.GetThisPage(nextPage, nextBucketPH)) || (rc = nextBucketPH.GetData((char *&)nextHeader)))
-      return (rc);
-    PageNum nextBucketPage;
-    rc = DeleteFromBucket(nextHeader, rid, toDelete, lastRID, nextBucketPage);
-    RC rc2 = 0;
-    if((rc2 = pfh.MarkDirty(nextPage)) || (rc2 = pfh.UnpinPage(nextPage)))
-      return (rc2);
-    if(rc == IX_INVALIDENTRY)
-      return (IX_INVALIDENTRY);
-
-    if(toDelete){
-      if(bHeader->num_keys < header.maxKeys_B){
-        // add it to the current index
-      }
-      else{
-        bHeader->nextBucket = nextBucketPage;
-      }
-
-    }
-  }
-
-
-  return (0);
-}
-*/
-
-
-// Returns the page handle with the header set up
+ * This function creates a new page and sets it up as a node. It returns the open
+ * PF_PageHandle, the page number, and the pointer to its data. 
+ * isLeaf is a boolean that signifies whether this page should be a leaf or not
+ */
 RC IX_IndexHandle::CreateNewNode(PF_PageHandle &ph, PageNum &page, char *&nData, bool isLeaf){
   RC rc = 0;
   if((rc = pfh.AllocatePage(ph)) || (rc = ph.GetPageNum(page))){
@@ -1244,19 +803,22 @@ RC IX_IndexHandle::CreateNewNode(PF_PageHandle &ph, PageNum &page, char *&nData,
 
   struct Node_Entry *entries = (struct Node_Entry *)((char*)nHeader + header.entryOffset_N);
 
-  for(int i=0; i < header.maxKeys_N; i++){
-    entries[i].isValid = UNOCCUPIED;
+  for(int i=0; i < header.maxKeys_N; i++){ // Sets up the slot pointers into a 
+    entries[i].isValid = UNOCCUPIED;       // linked list in the freeSlotIndex list
     entries[i].page = NO_MORE_PAGES;
     if(i == (header.maxKeys_N -1))
       entries[i].nextSlot = NO_MORE_SLOTS;
     else
       entries[i].nextSlot = i+1;
   }
-  //printf("NODE CREATION: %d \n", page);
 
   return (rc);
 }
 
+/*
+ * This function creates a new bucket page and sets it up as a bucket. It returns the
+ * page number in page
+ */
 RC IX_IndexHandle::CreateNewBucket(PageNum &page){
   char *nData;
   PF_PageHandle ph;
@@ -1279,19 +841,22 @@ RC IX_IndexHandle::CreateNewBucket(PageNum &page){
 
   struct Bucket_Entry *entries = (struct Bucket_Entry *)((char *)bHeader + header.entryOffset_B);
 
-  for(int i=0; i < header.maxKeys_B; i++){
-    if(i == (header.maxKeys_B -1))
+  for(int i=0; i < header.maxKeys_B; i++){ // Sets up the slot pointers to a linked
+    if(i == (header.maxKeys_B -1))         // list in the freeSlotIndex list
       entries[i].nextSlot = NO_MORE_SLOTS;
     else
       entries[i].nextSlot = i+1;
   }
-  //printf("NEW BUCKET PAGE %d \n", page);
   if( (rc =pfh.MarkDirty(page)) || (rc = pfh.UnpinPage(page)))
     return (rc);
 
   return (rc);
 }
 
+
+/*
+ * Forces all pages in the index only if the indexHandle refers to a valid open index
+ */
 RC IX_IndexHandle::ForcePages(){
   RC rc = 0;
   if (isOpenHandle == false)
@@ -1300,12 +865,14 @@ RC IX_IndexHandle::ForcePages(){
   return (rc);
 }
 
-// returns pinned first leaf page
+/*
+ * Returns the Open PF_PageHandle and the page number of the first leaf page in 
+ * this index
+ */
 RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
   RC rc = 0;
   struct IX_NodeHeader *rHeader;
-  if((rc = rootPH.GetData((char *&)rHeader))){
-    //printf("failing here\n");
+  if((rc = rootPH.GetData((char *&)rHeader))){ // retrieve header info
     return (rc);
   }
 
@@ -1316,6 +883,8 @@ RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
     return (0);
   }
 
+  // Otherwise, search down by always going down the first page in each
+  // internal node
   struct IX_NodeHeader_I *nHeader = (struct IX_NodeHeader_I *)rHeader;
   PageNum nextPageNum = nHeader->firstPage;
   PF_PageHandle nextPH;
@@ -1323,8 +892,8 @@ RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
     return (IX_EOF);
   if((rc = pfh.GetThisPage(nextPageNum, nextPH)) || (rc = nextPH.GetData((char *&)nHeader)))
     return (rc);
-  while(nHeader->isLeafNode == false){
-    PageNum prevPage = nextPageNum;
+  while(nHeader->isLeafNode == false){ // if it's not a leaf node, unpin it and go
+    PageNum prevPage = nextPageNum;    // to its first child
     nextPageNum = nHeader->firstPage;
     if((rc = pfh.UnpinPage(prevPage)))
       return (rc);
@@ -1337,29 +906,21 @@ RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
   return (rc);
 }
 
-
-
+/*
+ * This function check that the header is a valid header based on the sizes of the attributes,
+ * the number of keys, and the offsets. It returns true if it is, and false if it's not
+ */
 bool IX_IndexHandle::isValidIndexHeader() const{
-  //printf("maxkeys: %d, %d \n", header.maxKeys_I, header.maxKeys_L);
   if(header.maxKeys_N <= 0 || header.maxKeys_B <= 0){
-    printf("fail 1\n");
     return false;
   }
   if(header.entryOffset_N != sizeof(struct IX_NodeHeader) || 
     header.entryOffset_B != sizeof(struct IX_BucketHeader)){
-    //printf("keyheaders: %d , %d \n", header.keyHeadersOffset_I, header.keyHeadersOffset_L);
-    //printf("part 2 not true \n");
-    printf("fail 2\n");
     return false;
   }
 
-  //printf("size of keyHeader_L : %d \n", sizeof(struct KeyHeader_L));
-  //int attrLength1 = (header.keysOffset_B - header.entryOffset_B)/(header.maxKeys_B);
   int attrLength2 = (header.keysOffset_N - header.entryOffset_N)/(header.maxKeys_N);
-  //printf("attribute length: %d, %d \n", attrLength1, attrLength2);
-  //if(attrLength1 != sizeof(struct Bucket_Entry) || attrLength2 != sizeof(struct Node_Entry))
   if(attrLength2 != sizeof(struct Node_Entry)){
-    printf("fail 3\n");
     return false;
   }
   if((header.entryOffset_B + header.maxKeys_B * sizeof(Bucket_Entry) > PF_PAGE_SIZE) ||
@@ -1368,11 +929,19 @@ bool IX_IndexHandle::isValidIndexHeader() const{
   return true;
 }
 
+
+/*
+ * Calculates the number of keys in a node that it can hold based on a given 
+ * attribute length.
+ */
 int IX_IndexHandle::CalcNumKeysNode(int attrLength){
   int body_size = PF_PAGE_SIZE - sizeof(struct IX_NodeHeader);
   return floor(1.0*body_size / (sizeof(struct Node_Entry) + attrLength));
 }
 
+/*
+ * Calculates the number of entries that a bucket.
+ */
 int IX_IndexHandle::CalcNumKeysBucket(int attrLength){
   int body_size = PF_PAGE_SIZE - sizeof(struct IX_BucketHeader);
   return floor(1.0*body_size / (sizeof(Bucket_Entry)));

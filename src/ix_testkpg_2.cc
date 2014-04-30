@@ -547,6 +547,7 @@ RC VerifyStringIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
    printf("Verifying index contents\n");
 
    for (i = nStart; i < nStart + nEntries; i++) {
+      //printf("nStart = %d \n", i);
       int value = values[i] + 1;
       memset(valStr, ' ', STRLEN);
       sprintf(valStr, "number %d", value); 
@@ -573,6 +574,7 @@ RC VerifyStringIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
          if ((rc = rid.GetPageNum(pageNum)) ||
                (rc = rid.GetSlotNum(slotNum)))
             return (rc);
+         //printf("valStr: %s, rid: %d, %d \n", valStr, pageNum, slotNum);
 
          if (pageNum != value || slotNum != (value*2)) {
             printf("Verify error: incorrect rid (%d,%d) found for entry %s\n",
@@ -829,8 +831,8 @@ RC DeleteInts(IX_IndexHandle &ih, int lo, int hi, int exLo, int exHi)
 RC Test1(void)
 {        
 
-   int numRepeats = 400;
-   int numIntegers = 250;          
+   int numRepeats = 50;
+   int numIntegers = 50;          
    RC rc;
    IX_IndexHandle ihOK1, ihOK2, ihOK3, ihOK4, ihOK5, ihBAD1;
    int OK1 = 5, 
@@ -1193,6 +1195,7 @@ RC Test1(void)
 
 
    //Inserting and validating STRINGS
+   
    printf("\n *** Insertion and Validation Test (STRING): %s\n",
          ((rc = ixm.CreateIndex(FILENAME, OK5, STRING, STRLEN)) ||
           (rc = ixm.OpenIndex(FILENAME, OK5, ihOK5)) ||
@@ -1210,7 +1213,6 @@ RC Test1(void)
    if (rc) {
       PrintError(rc);
    }
-
    printf("\n *** Destroying Index Test (STRING): %s\n",
          (rc = ixm.DestroyIndex(FILENAME, OK5)) 
          ? "FAIL\a" : "PASS");
@@ -1573,6 +1575,7 @@ oops:
    if ((rc = ixm.CloseIndex(ihOK5))) {
       PrintError(rc);
    }
+
 
    return (0);
 }

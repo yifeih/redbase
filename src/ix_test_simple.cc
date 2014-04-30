@@ -768,7 +768,7 @@ RC Test5(void){
          //(rc = InsertIntEntries(ih, MANY_ENTRIES)) ||
          //(rc = ih.CheckAllValuesInt(1)) ||
          //(rc = ih.PrintRootPage()) ||
-         (rc = ih.PrintAllEntries()) ||
+         //(rc = ih.PrintAllEntries()) ||
 
          (rc = ixm.CloseIndex(ih)) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||

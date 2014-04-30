@@ -1,0 +1,31 @@
+Overall Design:
+On the Index File level:
+Each index file has a header page that contains the basic information about the index: the attribute type, the attribute length, the root page number, as well as information about the offsets of the entries in tree/bucket pages (explained more later). When a file is open, these header contents on the first page are copied into the indexHandle header object for easy reference. The first page is unpinned to leave more room in the buffer. When the index is closed, the contents of the header page are updated if they have been modified. 
+Furthermore, each file has a root page that is always pinned while the index is open. This is because it is accessed a lot, so it makes sense to keep it pinned in buffer. 
+
+The tree:
+For the most part, this tree is structured like a normal B+ tree. Each node contains a header (indicating whether it’s a leaf node, if it’s empty, and number of keys that it contains), a list of entries (which contain a flag for whether the entry exists, is a duplicate, or a singleton, the index location of the next entry, and the page/slot number), and a list of keys. To make things easier to implement, the leaf nodes look exactly like the internal nodes (except the internal nodes do not use the “slot” field for each entry, just the “page” field that points to the page numbers of its child nodes). In addition to the general header, each internal node contains a PageNum of the first page that it points to, and each leaf node contains pointers to the next and previous leaf nodes in the tree. 
+
+To keep the order of the entries/keys, I keep a singly-linked list of free slots and used slots. When a node is initialized, the free list is set up. When a value needs to be insert into a location in the list, I retrieve the index preceding the location that I want to insert it in, and update that index’s “nextSlot” pointer to the next free location, and insert my new value there. When an entry is deleted, it is added to the beginning of the free list. 
+
+As long as duplicate values are not inserted, the RIDs are kept at the leaf nodes (at the variables “page” and “slot” in Node_Entry in the leaf nodes). However, when a duplicate is inserted, then a bucket page is created for all those duplicates. The indicator “isValid” is updated to OCCUPIED_DUP (from OCCUPIED_NEW), and the “page” field is set to the PageNum of the new bucket. When enough duplicates that are inserted overfills this bucket, then a new bucket is added, and the previous bucket header’s “nextBucket” field is set to this new bucket. 
+
+Insertion:
+I basically took the insertion algorithm from this page: http://www.di.ufpb.br/lucidio/Btrees.pdf. However, I had to modify it a bit because of the bucketing that I do. Basically, the algorithm takes advantage of the fact that nodes are split at the root. Whenever we want to insert into a full node, we split it first, and then insert into that node. 
+
+Deletion:
+I decided to do lazy deletion. Whenever an entry is deleted, I will mark it as deleted, but the space occupied by that entry can then be reused. When a bucket, a leaf, or an internal node is empty, I will delete it from the tree. When all contents of the tree are deleted (and the we are asked to delete the root page), we will set the root page to be a leaf node. 
+
+To make deletion consistent with insertion, I need to make sure that when an value goes from OCCUPIED_DUP to OCCUPIED_NEW, I move the entry into the leaf node and delete the bucket. This is done by marking a bucket as “to-be-deleted” if there is only one entry inside of it, and passing that entry from the last bucket to the previous bucket, or the leaf associated with that bucket. If the previous bucket has room, it will move this last entry into itself. If it doesn’t, it will do so next time something is deleted from it because of the recursive nature of the algorithm. This ensures that if there is only one value of a key, it will always be found in the leaf. 
+
+Search:
+Because of the way I do bucketing and deletion, I had to be more clever with my search in terms to be able to delete while searching. Basically, as I delete, I know that the following record might change places (move from one bucket to the previous bucket) in the middle of the search. Therefore, the state of the search will always be two entries ahead of the current RID that it returns. This also ensures that the can does not keep a bucket or leaf pinned if the delete algorithm wants to delete that bucket or leaf. Scan will keep two RIDs in its private variables: the current RID to return, and the RID of the next element to return. If the scan state has reached the end of the file, it sets the next RID to an invalid value. Before returning the current RID, scan checks whether it’s a valid RID. If not, it knows that there are no more values, so it returns IX_EOF. 
+
+Testing Process:
+I tested by running all the tests in the class test folder. This includes ix_testkpg2, ix_tester, ix_testpark, and ix_testjl. I didn’t really have time to create my own tests, but I did tweak some of ix_testkpg2’s tests to incorporate more entries (to expand my buckets, or leaves). I also write a test that inserts a given number of random values, all a given number of times. Then, it deletes a random number of each, and checks that the count of the remaining keys that exists are the appropriate numbers. 
+
+Known Bugs: 
+Not yet?
+
+Additional Help:
+I talked a lot with Jaeho about the best way to implement a B+ tree to take into account infinite duplicates. I talked briefly with Sophia Nguyen about basic design at the very beginning of the assignment, but I did not discuss with anybody while doing the actual implementation. I also consulted this website: http://www.di.ufpb.br/lucidio/Btrees.pdf for the insertion algorithm. 
