@@ -357,6 +357,7 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
   // we reach a page that has some records in it.
   if(nextPage){
     while(true){
+      //printf("Getting next page\n");
       if((PF_EOF == pfh.GetNextPage(nextRecPage, ph)))
         return (RM_EOF); // reached the end of file
 
@@ -369,6 +370,7 @@ RC RM_FileHandle::GetNextRecord(PageNum page, SlotNum slot, RM_Record &rec, PF_P
       if(GetNextOneBit(bitmap, header.numRecordsPerPage, 0, nextRec) != RM_ENDOFPAGE)
         break;
       // if there are no records, on the page, unpin and get the next page
+      //printf("Unpinning page\n");
       if((rc = pfh.UnpinPage(nextRecPage)))
         return (rc);
     }

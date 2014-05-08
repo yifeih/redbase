@@ -206,6 +206,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
       }
       return (rc);
     }
+    hasPagePinned = true;
     // If we retrieved a record on the next page, reset numRecOnPage to
     // reflect the number of records seen on this new current page
     if(useNextPage){
@@ -222,6 +223,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
     // and set the indicator (useNextPage)
     if(numRecOnPage == numSeenOnPage){
       useNextPage = true;
+      //printf("unpin page in filescan\n");
       if(rc = fileHandle->pfh.UnpinPage(scanPage)){
         return (rc);
       }
@@ -266,7 +268,8 @@ RC RM_FileScan::CloseScan () {
   if(openScan == false){
     return (RM_INVALIDSCAN);
   }
-  if(scanEnded == false && hasPagePinned == true){
+  if(hasPagePinned == true){
+    //printf("unpinning page\n");
     if((rc = fileHandle->pfh.UnpinPage(scanPage)))
       return (rc);
   }

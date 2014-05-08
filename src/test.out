@@ -1,0 +1,75 @@
+SM layer test sequence
+running test # 1 ****************
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> create table stars (starid = i, stname = c20, plays = c12, soapid = i);
+CreateTable
+   relName     =stars
+   attrCount   =4
+   attributes[0].attrName=starid   attrType=INT   attrLength=4
+   attributes[1].attrName=stname   attrType=STRING   attrLength=20
+   attributes[2].attrName=plays   attrType=STRING   attrLength=12
+   attributes[3].attrName=soapid   attrType=INT   attrLength=4
+
+REDBASE >> load soaps("../soaps.data");
+Load
+   relName =soaps
+   fileName=../soaps.data
+
+REDBASE >> print soaps;
+Print
+   relName=soaps
+soapid      sname                       network rating      
+------------------------------------------------------------
+
+0 tuple(s).
+
+REDBASE >> create index stars(starid);
+CreateIndex
+   relName =stars
+   attrName=starid
+
+REDBASE >> create index stars(stname);
+CreateIndex
+   relName =stars
+   attrName=stname
+
+REDBASE >> load stars("../stars.data");
+Load
+   relName =stars
+   fileName=../stars.data
+
+REDBASE >> print stars;
+Print
+   relName=stars
+starid      stname              plays       soapid      
+--------------------------------------------------------
+
+0 tuple(s).
+
+REDBASE >> ls;
+attrcat
+relcat
+soaps
+stars
+stars.0
+stars.1
+
+REDBASE >> Bye.
+running test # tester ****************
+
+REDBASE >> illegal character [#]
+ /bin/csh -f
+
+REDBASE >> illegal character [#]
+syntax error
+
+REDBASE >> Bye.
