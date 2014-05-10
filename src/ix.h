@@ -56,6 +56,7 @@ public:
 
     // Force index files to disk
     RC ForcePages();
+    RC PrintIndex();
 private:
     // Creates new node and bucket pages
     RC CreateNewNode(PF_PageHandle &ph, PageNum &page, char *& nData, bool isLeaf);
@@ -103,6 +104,7 @@ private:
 
     // The comparator used to compare keys in this index
     int (*comparator) (void * , void *, int);
+    bool (*printer) (void *, int);
 
 };
 

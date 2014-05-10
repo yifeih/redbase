@@ -23,6 +23,7 @@ REDBASE >> load soaps("../soaps.data");
 Load
    relName =soaps
    fileName=../soaps.data
+cannot open file :( 
 
 REDBASE >> print soaps;
 Print
@@ -46,6 +47,7 @@ REDBASE >> load stars("../stars.data");
 Load
    relName =stars
    fileName=../stars.data
+IX warning: invalid index handle
 
 REDBASE >> print stars;
 Print
@@ -73,3 +75,5 @@ REDBASE >> illegal character [#]
 syntax error
 
 REDBASE >> Bye.
+I can not find a test number sm_test.1.
+I can not find a test number test.1.

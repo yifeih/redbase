@@ -24,8 +24,7 @@ typedef struct RelCatEntry{
   int tupleLength;
   int attrCount;
   int indexCount;
-  PageNum attrPage;
-  SlotNum attrSlot;
+  int indexCurrNum;
 } RelCatEntry;
 
 typedef struct AttrCatEntry{
@@ -35,9 +34,17 @@ typedef struct AttrCatEntry{
   AttrType attrType;
   int attrLength;
   int indexNo;
-  PageNum nextPage;
-  SlotNum nextSlot;
+  int attrNum;
 } AttrCatEntry;
+
+typedef struct Attr{
+  int offset;
+  int type;
+  int length;
+  int indexNo;
+  IX_IndexHandle ih;
+  bool (*recInsert) (char *, std::string, int);
+} Attr;
 
 //
 // SM_Manager: provides data management
@@ -75,23 +82,42 @@ public:
 
 private:
   bool isValidAttrType(AttrInfo attribute);
-  RC InsertRelCat(const char *relName, int attrCount, int recSize, RID &attrRID);
-  RC InsertAttrCat(const char *relName, AttrInfo attr, int offset, RID &nextRID);
+  RC InsertRelCat(const char *relName, int attrCount, int recSize);
+  RC InsertAttrCat(const char *relName, AttrInfo attr, int offset, int attrNum);
   RC GetRelEntry(const char *relName, RM_Record &relRec, RelCatEntry *&entry);
-  RC GetAttrEntry(RID &attrRID, RM_Record &attrRec, AttrCatEntry *&entry);
+  RC GetAttrEntry(RM_FileScan& fs, RM_Record &attrRec, AttrCatEntry *&entry);
 
   RC FindAttr(const char *relName, const char *attrName, RM_Record &attrRec, AttrCatEntry *&entry);
   RC SetUpPrint(RelCatEntry* rEntry, DataAttrInfo *attributes);
   RC SetUpRelCatAttributes(DataAttrInfo *attributes);
   RC SetUpAttrCatAttributes(DataAttrInfo *attributes);
 
+  RC PrepareAttr(RelCatEntry *rEntry, Attr* attributes);
+  RC OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr* attributes, 
+    int attrCount, int recLength);
+  RC CleanUpAttr(Attr* attributes, int attrCount);
+
   RM_Manager &rmm;
   IX_Manager &ixm;
 
   RM_FileHandle relcatFH;
   RM_FileHandle attrcatFH;
+  bool printIndex;
 
-  
+};
+
+class SM_AttrIterator{
+  friend class SM_Manager;
+public:
+  SM_AttrIterator    ();
+  ~SM_AttrIterator   ();  
+  RC OpenIterator(RM_FileHandle &fh, char *relName);
+  RC GetNextAttr(RM_Record &attrRec, AttrCatEntry *&entry);
+  RC CloseIterator();
+
+private:
+  bool validIterator;
+  RM_FileScan fs;
 
 };
 
@@ -107,7 +133,8 @@ void SM_PrintError(RC rc);
 #define SM_INVALIDATTR          (START_SM_WARN + 4)
 #define SM_INDEXEDALREADY       (START_SM_WARN + 5)
 #define SM_NOINDEX              (START_SM_WARN + 6)
-#define SM_LASTWARN             SM_NOINDEX
+#define SM_BADLOADFILE          (START_SM_WARN + 7)
+#define SM_LASTWARN             SM_BADLOADFILE
 
 #define SM_INVALIDDB            (START_SM_ERR - 0)
 #define SM_ERROR                (START_SM_ERR - 1) // error

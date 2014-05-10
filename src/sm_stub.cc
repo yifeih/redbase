@@ -1,11 +1,13 @@
 //
 // File:        SM component stubs
 // Description: Print parameters of all SM_Manager methods
-// Authors:     Dallan Quass (quass@cs.stanford.edu)
+// Authors:     Yifei Huang (yifei@stanford.edu)
 //
 
 #include <cstdio>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <unistd.h>
 #include "redbase.h"
 #include "sm.h"
@@ -17,8 +19,30 @@
 
 using namespace std;
 
-SM_Manager::SM_Manager(IX_Manager &ixm, RM_Manager &rmm) : rmm(rmm), ixm(ixm){
+bool recInsert_int(char *location, string value, int length){
+  int num;
+  istringstream(value) >> num;
+  //printf("num: %d \n", num);
+  memcpy(location, (char*)&num, length);
+  return true;
+}
 
+bool recInsert_float(char *location, string value, int length){
+  //float num;
+  //istringstream(value) >> num;
+  float num = (float)atof(value.c_str());
+  //printf("num: %f \n", num);
+  memcpy(location, (char*)&num, length);
+  return true;
+}
+
+bool recInsert_string(char *location, string value, int length){
+  memcpy(location, value.c_str(), length);
+  return true;
+}
+
+SM_Manager::SM_Manager(IX_Manager &ixm, RM_Manager &rmm) : rmm(rmm), ixm(ixm){
+  printIndex = false;
 }
 
 SM_Manager::~SM_Manager()
@@ -122,16 +146,16 @@ RC SM_Manager::CreateTable(const char *relName,
 
   // For each attribute, insert into attrcat:
   RID rid;
-  int currOffset = totalRecSize;
-  for(int i = (attrCount - 1); i >= 0; i--){
+  int currOffset = 0;
+  for(int i = 0; i < attrCount; i++){
     AttrInfo attr = attributes[i];
-    currOffset -= attr.attrLength;
-    if((rc = InsertAttrCat(relName, attr, currOffset, rid)))
+    if((rc = InsertAttrCat(relName, attr, currOffset, i)))
       return (rc);
+    currOffset += attr.attrLength;
   }
     
   // Insert into RelCat
-  if((rc = InsertRelCat(relName, attrCount, totalRecSize, rid)))
+  if((rc = InsertRelCat(relName, attrCount, totalRecSize)))
     return (rc);
 
   if((rc = attrcatFH.ForcePages()) || (rc = relcatFH.ForcePages()))
@@ -140,30 +164,23 @@ RC SM_Manager::CreateTable(const char *relName,
   return (0);
 }
 
-RC SM_Manager::InsertRelCat(const char *relName, int attrCount, int recSize, RID &attrRID){
+RC SM_Manager::InsertRelCat(const char *relName, int attrCount, int recSize){
   RC rc = 0;
   RelCatEntry* rEntry = (RelCatEntry *) malloc(sizeof(RelCatEntry));
   memcpy(rEntry->relName, relName, MAXNAME + 1);
   rEntry->tupleLength = recSize;
   rEntry->attrCount = attrCount;
   rEntry->indexCount = 0;
-  RC rc2 = 0;
-  RC rc3 = 0;
-  rc2 = attrRID.GetPageNum(rEntry->attrPage);
-  rc3 = attrRID.GetSlotNum(rEntry->attrSlot);
+  rEntry->indexCurrNum = 0;
 
   RID relRID;
-  rc = relcatFH.InsertRec((char *&)rEntry, attrRID);
+  rc = relcatFH.InsertRec((char *&)rEntry, relRID);
   free(rEntry);
 
-  if((rc2))
-    return rc2;
-  if((rc3))
-    return rc3;
   return rc;
 }
 
-RC SM_Manager::InsertAttrCat(const char *relName, AttrInfo attr, int offset, RID &nextRID){
+RC SM_Manager::InsertAttrCat(const char *relName, AttrInfo attr, int offset, int attrNum){
   RC rc = 0;
   AttrCatEntry *aEntry = (AttrCatEntry *)malloc(sizeof(AttrCatEntry));
 
@@ -173,21 +190,11 @@ RC SM_Manager::InsertAttrCat(const char *relName, AttrInfo attr, int offset, RID
   aEntry->attrType = attr.attrType;
   aEntry->attrLength = attr.attrLength;
   aEntry->indexNo = NO_INDEXES;
-
-  RC rc2 = 0;
-  RC rc3 = 0;
-  rc2 = nextRID.GetPageNum(aEntry->nextPage);
-  rc3 = nextRID.GetSlotNum(aEntry->nextSlot);
-
+  aEntry->attrNum = attrNum;
 
   RID attrRID;
-  rc = attrcatFH.InsertRec((char *&)aEntry, nextRID);
-
+  rc = attrcatFH.InsertRec((char *&)aEntry, attrRID);
   free(aEntry);
-  if((rc2))
-    return rc2;
-  if((rc3))
-    return rc3;
   return rc;
 
 }
@@ -212,24 +219,32 @@ RC SM_Manager::DropTable(const char *relName)
     return (rc);
   int numAttr = relEntry->attrCount;
 
-  RID attrRID(relEntry->attrPage, relEntry->attrSlot);
-  RM_Record attrRec;
+
+  SM_AttrIterator attrIt;
+  if((rc = attrIt.OpenIterator(attrcatFH, const_cast<char*>(relName))))
+    return (rc);
   AttrCatEntry *attrEntry;
+  RM_Record attrRec;
   for(int i=0; i < numAttr; i++){
-    if((rc = GetAttrEntry(attrRID, attrRec, attrEntry))){
+    if((rc = attrIt.GetNextAttr(attrRec, attrEntry))){
       return (rc);
     }
-    RID nextRID(attrEntry->nextPage, attrEntry->nextSlot);
 
     if((attrEntry->indexNo != NO_INDEXES)){
       if((rc = DropIndex(relName, attrEntry->attrName)))
         return (rc);
     }
-
-    if((rc = attrcatFH.DeleteRec(attrRID)))
+    RID attrRID;
+    if((rc = attrRec.GetRid(attrRID)) || (rc = attrcatFH.DeleteRec(attrRID)))
       return (rc);
-    attrRID = nextRID;
+
   }
+  if((rc = attrIt.CloseIterator()))
+    return (rc);
+
+  RID relRID;
+  if((rc = relRec.GetRid(relRID)) || (rc = relcatFH.DeleteRec(relRID)))
+    return (rc);
 
   return (0);
 }
@@ -241,7 +256,7 @@ RC SM_Manager::GetRelEntry(const char *relName, RM_Record &relRec, RelCatEntry *
   if((rc = fs.OpenScan(relcatFH, STRING, MAXNAME+1, 0, EQ_OP, const_cast<char*>(relName))))
     return (rc);
   if((rc = fs.GetNextRec(relRec)))
-    return (rc);
+    return (SM_BADRELNAME);
   
   if((rc = fs.CloseScan()))
     return (rc);
@@ -252,9 +267,9 @@ RC SM_Manager::GetRelEntry(const char *relName, RM_Record &relRec, RelCatEntry *
   return (0);
 }
 
-RC SM_Manager::GetAttrEntry(RID &attrRID, RM_Record &attrRec, AttrCatEntry *&entry){
+RC SM_Manager::GetAttrEntry(RM_FileScan& fs, RM_Record &attrRec, AttrCatEntry *&entry){
   RC rc = 0;
-  if((rc = attrcatFH.GetRec(attrRID, attrRec)))
+  if((rc = fs.GetNextRec(attrRec)))
     return (rc);
   if((rc = attrRec.GetData((char *&)entry)))
     return (rc);
@@ -288,11 +303,37 @@ RC SM_Manager::CreateIndex(const char *relName,
   if(aEntry->indexNo != NO_INDEXES)
     return (SM_INDEXEDALREADY);
 
-  if((rc = ixm.CreateIndex(relName, rEntry->indexCount, aEntry->attrType, aEntry->attrLength)))
+  printf("gets past index check\n");
+  if((rc = ixm.CreateIndex(relName, rEntry->indexCurrNum, aEntry->attrType, aEntry->attrLength)))
+    return (rc);
+
+  IX_IndexHandle ih;
+  RM_FileHandle fh;
+  RM_FileScan fs;
+  if((rc = ixm.OpenIndex(relName, rEntry->indexCurrNum, ih)))
+    return (rc);
+  if((rc = rmm.OpenFile(relName, fh)))
+    return (rc);
+
+  // scan through the entire file:
+  if((rc = fs.OpenScan(fh, INT, 4, 0, NO_OP, NULL))){
+    return (rc);
+  }
+  RM_Record rec;
+  while(fs.GetNextRec(rec) != RM_EOF){
+    char *pData;
+    RID rid;
+    if((rc = rec.GetData(pData) || (rc = rec.GetRid(rid))))
+      return (rc);
+    if((rc = ih.InsertEntry(pData+ aEntry->offset, rid)))
+      return (rc);
+  }
+  if((rc = fs.CloseScan()) || (rc = rmm.CloseFile(fh)) || (rc = ixm.CloseIndex(ih)))
     return (rc);
   
   // rewrite entry:
-  aEntry->indexNo = rEntry->indexCount;
+  aEntry->indexNo = rEntry->indexCurrNum;
+  rEntry->indexCurrNum++;
   rEntry->indexCount++;
 
   // write both back
@@ -311,23 +352,25 @@ RC SM_Manager::FindAttr(const char *relName, const char *attrName, RM_Record &at
   if((rc = GetRelEntry(relName, relRec, rEntry)))
     return (rc);
   
-  RID attrRID(rEntry->attrPage, rEntry->attrSlot);
+  SM_AttrIterator attrIt;
+  if((rc = attrIt.OpenIterator(attrcatFH, const_cast<char*>(relName))))
+    return (rc);
   bool notFound = true;
   while(notFound){
-    if((rc = GetAttrEntry(attrRID, attrRec, entry)))
-      return (rc);
+    if((RM_EOF == attrIt.GetNextAttr(attrRec, entry))){
+      break;
+    }
     if(strncmp(entry->attrName, attrName, MAXNAME + 1) == 0){
       notFound = false;
       break;
     }
-    if(entry->nextPage == INVALID_PAGE && entry->nextSlot == INVALID_SLOT)
-      break;
-    RID nextRID(entry->nextPage, entry->nextSlot);
-    attrRID = nextRID;
   }
+  if((rc = attrIt.CloseIterator()))
+    return (rc);
+
   if(notFound == true)
     return (SM_INVALIDATTR);
-  return (0);
+  return (rc);
 
 }
 
@@ -369,13 +412,130 @@ RC SM_Manager::DropIndex(const char *relName,
   return (0);
 }
 
+RC SM_Manager::PrepareAttr(RelCatEntry *rEntry, Attr* attributes){
+  RC rc = 0; 
+  SM_AttrIterator attrIt;
+  if((rc = attrIt.OpenIterator(attrcatFH, rEntry->relName)))
+    return (rc);
+  RM_Record attrRec;
+  AttrCatEntry *aEntry;
+  for(int i = 0; i < rEntry->attrCount; i++){
+    if((rc = attrIt.GetNextAttr(attrRec, aEntry)))
+      return (rc);
+    int slot = aEntry->attrNum;
+    attributes[slot].offset = aEntry->offset;
+    attributes[slot].type = aEntry->attrType;
+    attributes[slot].length = aEntry->attrLength;
+    attributes[slot].indexNo = aEntry->indexNo;
+    // prepare index:
+    if((aEntry->indexNo != NO_INDEXES)){
+      if((rc = ixm.OpenIndex(rEntry->relName, aEntry->indexNo, attributes[slot].ih)))
+        return (rc);
+    }
+
+
+    if(aEntry->attrType == INT){
+      //printf("setting parser pointer\n");
+      attributes[slot].recInsert = &recInsert_int;
+    }
+    else if(aEntry->attrType == FLOAT)
+      attributes[slot].recInsert = &recInsert_float;
+    else
+      attributes[slot].recInsert = &recInsert_string;
+  }
+  if((rc = attrIt.CloseIterator()))
+    return (rc);
+  return (0);
+}
+
 RC SM_Manager::Load(const char *relName,
                     const char *fileName)
 {
     cout << "Load\n"
          << "   relName =" << relName << "\n"
          << "   fileName=" << fileName << "\n";
-    return (0);
+
+  RC rc = 0;
+  RM_Record relRec;
+  RelCatEntry *rEntry;
+  if((rc = GetRelEntry(relName, relRec, rEntry)))
+    return (rc);
+
+  Attr* attributes = (Attr *)malloc(sizeof(Attr)*rEntry->attrCount);
+  if((rc = PrepareAttr(rEntry, attributes)))
+    return (rc);
+
+  RM_FileHandle relFH;
+  if((rc = rmm.OpenFile(relName, relFH)))
+    return (rc);
+
+  rc = OpenAndLoadFile(relFH, fileName, attributes, rEntry->attrCount,
+    rEntry->tupleLength);
+  if((rc = CleanUpAttr(attributes, rEntry->attrCount)))
+    return (rc);
+
+  if((rc = rmm.CloseFile(relFH)))
+    return (rc);
+  return (rc);
+}
+
+RC SM_Manager::OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr* attributes, int attrCount, 
+  int recLength){
+  RC rc = 0;
+  char* record = (char *)malloc(recLength);
+
+  ifstream f(fileName);
+  if(f.fail()){
+    cout << "cannot open file :( " << endl;
+    return (SM_BADLOADFILE);
+  }
+
+  string line, token;
+  string delimiter = ",";
+  while (getline(f, line)) {
+    for(int i=0; i <attrCount; i++){
+      if(line.size() == 0){
+        free(record);
+        printf("RAWR\n");
+        return (SM_BADLOADFILE);
+      }
+      size_t pos = line.find(delimiter);
+      if(pos == string::npos)
+        pos = line.size();
+      token = line.substr(0, pos);
+      cout << token << endl;
+      line.erase(0, pos + delimiter.length());
+      attributes[i].recInsert(record + attributes[i].offset, token, attributes[i].length);
+    }
+    RID recRID;
+    if((rc = relFH.InsertRec(record, recRID))){
+      free(record);
+      return (rc);
+    }
+    for(int i=0; i < attrCount; i++){
+      if(attributes[i].indexNo != NO_INDEXES){
+        if((rc = attributes[i].ih.InsertEntry(record + attributes[i].offset, recRID)))
+          return (rc);
+      }
+    }
+    //printf("record : %d, %d\n", *(int*)record, *(int*)(record+4));
+  }
+
+  free(record);
+
+  return (0);
+}
+
+RC SM_Manager::CleanUpAttr(Attr* attributes, int attrCount){
+  RC rc = 0;
+  for(int i=0; i < attrCount; i++){
+    if(attributes[i].indexNo != NO_INDEXES){
+      if((rc = ixm.CloseIndex(attributes[i].ih)))
+        return (rc);
+    }
+  }
+  free(attributes);
+  return (rc);
 }
 
 RC SM_Manager::Print(const char *relName)
@@ -398,10 +558,8 @@ RC SM_Manager::Print(const char *relName)
 
   // open file:
   RM_FileHandle fh;
-  if((rc = rmm.OpenFile(relName, fh)))
-    return (rc);
   RM_FileScan fs;
-  if((rc = fs.OpenScan(fh, INT, 4, 0, NO_OP, NULL)))
+  if((rc = rmm.OpenFile(relName, fh)) || (rc = fs.OpenScan(fh, INT, 4, 0, NO_OP, NULL)))
     return (rc);
 
   RM_Record rec;
@@ -411,7 +569,6 @@ RC SM_Manager::Print(const char *relName)
       return (rc);
     printer.Print(cout, pData);
   }
-
   fs.CloseScan();
 
   printer.PrintFooter(cout);
@@ -422,25 +579,30 @@ RC SM_Manager::Print(const char *relName)
 
 RC SM_Manager::SetUpPrint(RelCatEntry* rEntry, DataAttrInfo *attributes){
   RC rc = 0;
-  RID attrRID(rEntry->attrPage, rEntry->attrSlot);
+  RID attrRID;
   RM_Record attrRec;
   AttrCatEntry *aEntry;
 
+  SM_AttrIterator attrIt;
+  if((rc = attrIt.OpenIterator(attrcatFH, rEntry->relName)))
+    return (rc);
+
   for(int i=0; i < rEntry->attrCount; i++){
-    if((rc = GetAttrEntry(attrRID, attrRec, aEntry))){
+    if((rc = attrIt.GetNextAttr(attrRec, aEntry))){
       return (rc);
     }
-    RID nextRID(aEntry->nextPage, aEntry->nextSlot);
+    int slot = aEntry->attrNum;
 
-    memcpy(attributes[i].relName, aEntry->relName, MAXNAME + 1);
-    memcpy(attributes[i].attrName, aEntry->attrName, MAXNAME + 1);
-    attributes[i].offset = aEntry->offset;
-    attributes[i].attrType = aEntry->attrType;
-    attributes[i].attrLength = aEntry->attrLength;
-    attributes[i].indexNo = aEntry->indexNo;
-
-    attrRID = nextRID;
+    memcpy(attributes[slot].relName, aEntry->relName, MAXNAME + 1);
+    memcpy(attributes[slot].attrName, aEntry->attrName, MAXNAME + 1);
+    attributes[slot].offset = aEntry->offset;
+    attributes[slot].attrType = aEntry->attrType;
+    attributes[slot].attrLength = aEntry->attrLength;
+    attributes[slot].indexNo = aEntry->indexNo;
   }
+  if((rc = attrIt.CloseIterator()))
+    return (rc);
+
   return (rc);
 }
 
@@ -449,6 +611,12 @@ RC SM_Manager::Set(const char *paramName, const char *value)
     cout << "Set\n"
          << "   paramName=" << paramName << "\n"
          << "   value    =" << value << "\n";
+    if(strncmp(paramName, "printIndex", 10) == 0 && strncmp(value, "true", 4) ==0){
+      printIndex = true;
+    }
+    else
+      printIndex = false;
+
     return (0);
 }
 
@@ -523,7 +691,7 @@ RC SM_Manager::Help(const char *relName)
   // Check that this relation exists:
   
   
-  if((rc = fs.OpenScan(attrcatFH, STRING, MAXNAME+1, 0, EQ_OP, const_cast<char*>(relName))))
+  if((rc = fs.OpenScan(relcatFH, STRING, MAXNAME+1, 0, EQ_OP, const_cast<char*>(relName))))
     return (rc);
 
   if(fs.GetNextRec(rec) == RM_EOF){
@@ -550,9 +718,26 @@ RC SM_Manager::Help(const char *relName)
     printer.Print(cout, pData);
   }
 
-
   if((rc = fs.CloseScan() ))
     return (rc);
+
+  if((rc = fs.OpenScan(attrcatFH, STRING, MAXNAME+1, 0, EQ_OP, const_cast<char*>(relName))))
+    return (rc);
+  while(fs.GetNextRec(rec) != RM_EOF){
+    char *pData;
+    if((rec.GetData(pData)))
+      return (rc);
+    AttrCatEntry *attr = (AttrCatEntry*)pData;
+    if((attr->indexNo != NO_INDEXES)){
+      IX_IndexHandle ih;
+      if((rc = ixm.OpenIndex(relName, attr->indexNo, ih)))
+        return (rc);
+      printf("successfully opens \n");
+      if((rc = ih.PrintIndex()) || (rc = ixm.CloseIndex(ih)))
+        return (rc);
+    }
+  }
+
   printer.PrintFooter(cout);
   free(attributes);
   return (0);

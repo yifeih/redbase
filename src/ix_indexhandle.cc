@@ -13,6 +13,39 @@
 #include <cstdio>
 
 
+
+RC IX_IndexHandle::PrintIndex(){
+  RC rc;
+  PageNum leafPage;
+  PF_PageHandle ph;
+  struct IX_NodeHeader_L *lheader;
+  struct Node_Entry *entries;
+  char *keys;
+  if((rc = GetFirstLeafPage(ph, leafPage) || (rc = pfh.UnpinPage(leafPage))))
+    return (rc);
+  while(leafPage != NO_MORE_PAGES){ // print this page
+    if((rc = pfh.GetThisPage(leafPage, ph)) || (rc = ph.GetData((char *&)lheader)))
+      return (rc);
+    entries = (struct Node_Entry*) ( (char *)lheader + header.entryOffset_N);
+    keys = (char *)lheader + header.keysOffset_N;
+
+    int prev_idx = BEGINNING_OF_SLOTS;
+    int curr_idx = lheader->firstSlotIndex;
+    while(curr_idx != NO_MORE_SLOTS){
+      printer((void *)keys + curr_idx*header.attr_length, header.attr_length);
+      prev_idx = curr_idx;
+      curr_idx = entries[prev_idx].nextSlot;
+    }
+    PageNum nextPage = lheader->nextPage;
+    if(leafPage != header.rootPage){
+      if((rc = pfh.UnpinPage(leafPage)))
+        return (rc);
+    }
+    leafPage = nextPage;
+  }
+  return (0);
+}
+
 IX_IndexHandle::IX_IndexHandle(){
   isOpenHandle = false;       // indexhandle is initially closed
   header_modified = false;

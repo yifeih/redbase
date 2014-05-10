@@ -23,7 +23,8 @@ static char *SM_WarnMsg[] = {
   (char*)"bad attribute",
   (char*)"invalid attribute",
   (char*)"attribute indexed already",
-  (char*)"attribute has no index"
+  (char*)"attribute has no index",
+  (char*)"invalid/bad load file"
 };
 
 static char *SM_ErrorMsg[] = {

@@ -173,12 +173,18 @@ RC IX_Manager::SetUpIH(IX_IndexHandle &ih, PF_FileHandle &fh, struct IX_IndexHea
     return (rc);
   }
 
-  if(ih.header.attr_type == INT) // set up the comparator 
+  if(ih.header.attr_type == INT){ // set up the comparator 
     ih.comparator = compare_int;
-  else if(ih.header.attr_type == FLOAT)
+    ih.printer = print_int;
+  }
+  else if(ih.header.attr_type == FLOAT){
     ih.comparator = compare_float;
-  else
+    ih.printer = print_float;
+  }
+  else{
     ih.comparator = compare_string;
+    ih.printer = print_string;
+  }
 
   ih.header_modified = false;
   ih.pfh = fh;
