@@ -1,0 +1,103 @@
+Company ID,Company,Size(123),Response,Coordinator Last Name,Coordinator First Name,Attendance Date
+830,Cacheon,2,Yes,Bosler,Channing,36586
+868,Impresse Corp,2,Yes,Bosler,Channing,36586
+607,HNC Software,2,Yes,Bosler,Channing,36587
+394,Business Objects,2,Yes,Bosler,Channing,36587
+374,Sapient Corporation,2,Yes,Bosler,Channing,36587
+325,i2 Technologies,2,Yes,Bosler,Channing,36586
+147,PeopleSoft,1,Yes,Bosler,Channing,36586
+41,Lucent Technologies Inc.,1,Yes,Cherry,Mark,36586
+863,DoubleTwist,2,Yes,Cornwall,Douglas,36587
+219,Genentech Inc.,1,Yes,Cornwall,Douglas,36587
+318,Palm Computing,1,Yes,Dosunmu,Ade,36586
+82,3Com Corporation,1,Yes,Dosunmu,Ade,36586
+876,RealNames Corp.,2,Yes,Feinsmith,Jason,36587
+877,Perks,2,Yes,Feinsmith,Jason,36587
+870,Digex Inc.,2,Yes,Feinsmith,Jason,36587
+867,Homestead.com,2,Yes,Feinsmith,Jason,36587
+864,CommerceRoute Inc.,2,Yes,Feinsmith,Jason,36586
+873,Autodaq,2,Yes,Feinsmith,Jason,36587
+872,Keynote Systems,2,Yes,Feinsmith,Jason,36587
+401,HireSystems,2,Yes,Feinsmith,Jason,36586
+652,Gateway Inc.,1,Yes,Feinsmith,Jason,36587
+875,Geocast Network Systems,2,Yes,Feinsmith,Jason,36587
+43,Microsoft Corporation,2,Yes,Feinsmith,Jason,36587
+681,Digital Fountain Inc.,2,Yes,Feinsmith,Jason,36586
+65,Sun Microsystems,1,Yes,Feinsmith,Jason,36586
+871,ePocrates Inc.,2,Yes,Feinsmith,Jason,36586
+832,Chemdex Corp.,1,Yes,Feng,Yi,36586
+834,Buildfolio.com,2,Yes,Feng,Yi,36586
+838,Productopia,2,Yes,Feng,Yi,36587
+660,eGain Communications Corp.,1,Yes,Feng,Yi,36586
+402,idealab!,1,Yes,Feng,Yi,36586
+809,BizBuyer.com,2,Yes,Fullerton,Shannon,36586
+701,Akamai,1,Yes,Fullerton,Shannon,36586
+326,FaceTime Communication,1,Yes,Fullerton,Shannon,36587
+84,Amazon.com,1,Yes,Fullerton,Shannon,36587
+836,eSpoke,2,Yes,Fullerton,Shannon,36586
+862,LiveOffice.com,2,Yes,Fullerton,Shannon,36586
+808,Commerce.TV,1,Yes,Fullerton,Shannon,36587
+839,Izio Corporation,2,Yes,Fullerton,Shannon,36586
+848,Healthshop.com,2,Yes,Fullerton,Shannon,36586
+792,ReleaseNow.com,1,Yes,Fullerton,Shannon,36586
+793,AppStream,1,Yes,Fullerton,Shannon,36587
+698,Xuma Inc.,1,Yes,Fullerton,Shannon,36587
+789,Blue Nile Inc.,2,Yes,Fullerton,Shannon,36586
+25,E*Trade Group Inc.,1,Yes,Gaillard,Rusty,36586
+654,eToys Inc.,1,Yes,Gaillard,Rusty,36587
+704,Ask Jeeves,1,Yes,Gaillard,Rusty,36586
+722,Liquid Audio Inc.,1,Yes,Greenberg,Julie,36586
+685,The AltaVista Company,1,Yes,Greenberg,Julie,36586
+717,Google.com,1,Yes,Greenberg,Julie,36586
+709,Critical Path,1,Yes,Greenberg,Julie,36586
+721,Liberate Technologies,1,Yes,Holden,Bob,36586
+208,Ariba Inc.,1,Yes,Holden,Bob,36587
+305,Spyglass Inc.,1,Yes,Holden,Bob,36586
+257,eBay,1,Yes,Holden,Bob,36587
+696,Reactivity Inc.,2,Yes,Holden,Bob,36586
+787,Onset Ventures,1,Yes,Hopeman,Wei,36587
+786,Garage.com,1,Yes,Hopeman,Wei,36586
+764,Saba,1,Yes,Kao,Liz,36586
+811,Salesforce.com,2,Yes,Kao,Liz,36587
+182,Informatica Corp.,2,Yes,Kao,Liz,36586
+769,Cutting Edge Strategies,2,Yes,Kao,Liz,36586
+359,E.piphany Software,1,Yes,Kao,Liz,36586
+104,Jetstream Communications Inc.,1,Yes,Karadogan,Baris,36587
+861,Pensare,2,Yes,Kawaja,Andrew,36587
+702,AllAdvantage.com,1,Yes,Linderoth,Jill,36586
+845,Adventureseek.com,2,Yes,Linderoth,Jill,36586
+843,Homestore.com,2,Yes,Linderoth,Jill,36587
+710,Dialpad.com Inc.,1,Yes,Linderoth,Jill,36586
+727,Tellme Networks,1,Yes,Linderoth,Jill,36587
+200,Inktomi,1,Yes,Martins,Pedro,36587
+706,BestOffer.com,1,Yes,Martins,Pedro,36587
+97,Excite@Home,1,Yes,Martins,Pedro,36586
+794,Live365.com,1,Yes,Martins,Pedro,36586
+803,Esurance Inc.,1,Yes,Martins,Pedro,36587
+689,Digital Impact Inc.,1,Yes,Martins,Pedro,36586
+152,BroadVision Inc.,1,Yes,Oliveri,Tom,36587
+771,Octane Software,2,Yes,Oliveri,Tom,36586
+759,MediaOne Group,1,Yes,Oliveri,Tom,36586
+860,HomePage.com,1,Yes,Peir,Jay,36587
+643,Vertical Networks,2,Yes,Rahman,Naveed,36586
+70,Hewlett Packard,1,Yes,Rahman,Naveed,36587
+10,Applied Materials,2,Yes,Rahman,Naveed,36586
+9,Apple Computer,2,Yes,Rahman,Naveed,36586
+858,Infineon,2,Yes,Rahman,Naveed,36587
+621,Juniper Networks Inc.,1,Yes,Rahman,Naveed,36587
+692,IBM,1,Yes,Rahman,Naveed,36586
+382,Support.com (Tioga Systems Inc.),1,Yes,Richmond,Brian,36586
+385,NONSTOP Solutions Inc.,1,Yes,Richmond,Brian,36586
+38,Legato Systems Inc.,2,Yes,Richmond,Brian,36586
+780,Ciena,1,Yes,Srigley,Jill,36586
+854,EMC Corporation,2,Yes,Srigley,Jill,36587
+853,micronpc.com,2,Yes,Srigley,Jill,36587
+674,mySimon Inc.,1,Yes,Wilder,Lisa,36586
+720,Lavastorm,1,Yes,Wilder,Lisa,36587
+713,Echo Online Networks,1,Yes,Wolf,Alex,36586
+842,Creative Planet,1,Yes,Wolf,Alex,36587
+718,govWorks Inc.,1,Yes,Wolf,Alex,36586
+395,Webvan Group Inc.,1,Yes,Wolf,Alex,36586
+840,Snowball.com,1,Yes,Wolf,Alex,36587
+851,Tularik Inc.,2,Yes,Zhang,Fan,36587
+852,PlanetRx.com,2,Yes,Zhang,Fan,36586

@@ -1,0 +1,4 @@
+create table movies(mid i, year i, name s250);
+load movies("/afs/ir.stanford.edu/class/cs346/redbase/data/netflix/movie_titles.txt");
+create table ratings(mid i,uid i,rating i, date s20);
+load ratings("/afs/ir.stanford.edu/class/cs346/redbase/data/netflix/ratings_big.txt");

@@ -162,10 +162,12 @@ RC RM_FileHandle::GetRec (const RID &rid, RM_Record &rec) const {
  */
 RC RM_FileHandle::InsertRec (const char *pData, RID &rid) {
   // only proceed if this filehandle is associated with an open file
+
   if (!isValidFH())
     return (RM_INVALIDFILE);
 
   RC rc = 0;
+
   if(pData == NULL) // invalid record input
     return RM_INVALIDRECORD;
   
@@ -213,6 +215,8 @@ RC RM_FileHandle::InsertRec (const char *pData, RID &rid) {
   RC rc2;
   if((rc2 = pfh.MarkDirty(page) ) || (rc2 = pfh.UnpinPage(page)))
     return (rc2);
+
+    
   return (rc); 
 }
 

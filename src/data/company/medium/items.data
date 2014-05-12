@@ -1,0 +1,1500 @@
+0,Laptop,2313.5
+1,Cruise package,551.5
+2,Luxury car,2916.8
+3,Apartment,1890.6
+4,soft toy,3005.5
+5,PS1,1733.8
+6,Plane tickets,920.5
+7,Luxury car,2871.1
+8,Laptop,561.2
+9,Luxury car,625.6
+10,electronic game,335.3
+11,Nintendo 64 Gamecube,1228.3
+12,Car,2839.1
+13,electronic game,1682.7
+14,Speakers,1746.1
+15,Apartment,1470.6
+16,Laptop,2328.2
+17,Cruise package,119.1
+18,Plane tickets,2598.2
+19,Apartment,1827.9
+20,Microsoft XBOX,1324.8
+21,Cruise package,837.9
+22,Car,2509.5
+23,electronic game,1508.4
+24,Computer,656.2
+25,PS2,908.1
+26,Apartment,1619
+27,Car,994.1
+28,soft toy,1101
+29,GameBoy,1123.3
+30,Nintendo 64 Gamecube,1802.8
+31,Luxury car,1924.4
+32,Sega Dreamcast,1124.1
+33,Luxury car,766
+34,electronic game,927.1
+35,Car,18.8
+36,Car,754.7
+37,Car,1793.9
+38,Cruise package,3075.3
+39,Plane tickets,525.6
+40,PS2,1778.3
+41,board game,2784.8
+42,iPod,2151.3
+43,Laptop,494.7
+44,PS1,965.8
+45,Microsoft XBOX,2303.3
+46,Speakers,1117.5
+47,Cruise package,130.4
+48,soft toy,2553.1
+49,House,1857.8
+50,Apartment,1333
+51,electronic game,628.9
+52,GameBoy,820.7
+53,Microsoft XBOX,1893.8
+54,Sega Dreamcast,1311.6
+55,board game,1605
+56,soft toy,1584.4
+57,electronic game,654.7
+58,iPod,1624.2
+59,Microsoft XBOX,1386.8
+60,soft toy,679.2
+61,Barbie dolls,2463.6
+62,Sega Dreamcast,2838.3
+63,Computer,177.3
+64,Apartment,1353.7
+65,soft toy,2657.7
+66,House,3047.2
+67,PS2,2806.1
+68,Speakers,1765.2
+69,Car,1604
+70,Sega Dreamcast,1543.9
+71,Apartment,1411.3
+72,Computer,1724.9
+73,Sega Dreamcast,1921.9
+74,Car,2085
+75,electronic game,309.8
+76,iPod,2480.3
+77,Barbie dolls,2019.5
+78,PS1,2637.9
+79,PS2,1136.5
+80,Car,2811.4
+81,electronic game,2326.5
+82,House,1102.4
+83,electronic game,681
+84,Sega Dreamcast,1270.7
+85,PS1,1288.4
+86,Barbie dolls,622.6
+87,Sega Dreamcast,1422.3
+88,GameBoy,1290.1
+89,Luxury car,780.9
+90,Speakers,1382.4
+91,Barbie dolls,1992.4
+92,Nintendo 64 Gamecube,2771.5
+93,PS2,1283.6
+94,Car,1821.1
+95,iPod,338.2
+96,PS2,3098.3
+97,Cruise package,3199.4
+98,Plane tickets,2717
+99,electronic game,3027.1
+100,Car,1013.1
+101,Car,1208.8
+102,Apartment,1030.2
+103,PS2,1374.6
+104,Speakers,87.2
+105,Nintendo 64 Gamecube,1153.9
+106,Apartment,2997.3
+107,soft toy,2869
+108,Car,1948.9
+109,soft toy,466.4
+110,Cruise package,771.2
+111,PS1,3202.6
+112,Barbie dolls,2379.9
+113,Apartment,955.5
+114,PS1,1080.7
+115,Plane tickets,493.2
+116,House,108.5
+117,Barbie dolls,1524.3
+118,Apartment,1050.6
+119,Speakers,2541.2
+120,PS1,1917.1
+121,board game,307.4
+122,Car,2935.2
+123,GameBoy,909.9
+124,Apartment,1125.3
+125,Apartment,2952.7
+126,electronic game,2226.6
+127,Sega Dreamcast,301.5
+128,PS1,1538.6
+129,Luxury car,1002.2
+130,iPod,1568.6
+131,Cruise package,1648
+132,Luxury car,1666.4
+133,House,2291.6
+134,electronic game,1323.1
+135,Barbie dolls,1177.1
+136,Sega Dreamcast,1466.9
+137,Microsoft XBOX,1959
+138,Apartment,2833.7
+139,board game,2175.3
+140,Cruise package,2130.1
+141,Nintendo 64 Gamecube,2194.5
+142,Computer,1450.4
+143,Cruise package,127.1
+144,Microsoft XBOX,2173.7
+145,Computer,2090.5
+146,House,2080.8
+147,GameBoy,212.5
+148,Luxury car,2959.6
+149,board game,188.5
+150,Speakers,1565.2
+151,Laptop,1627.2
+152,Apartment,694.3
+153,Plane tickets,3170.3
+154,iPod,132.1
+155,iPod,1153.9
+156,Computer,956.4
+157,Luxury car,1371.8
+158,House,2614.6
+159,Microsoft XBOX,2876.8
+160,Cruise package,47.6
+161,Luxury car,2869.4
+162,board game,2872.4
+163,Car,1273.7
+164,Nintendo 64 Gamecube,1977.8
+165,Barbie dolls,1620.4
+166,Speakers,573
+167,Computer,3218.8
+168,Sega Dreamcast,2273.6
+169,GameBoy,900.5
+170,Microsoft XBOX,1178.4
+171,Nintendo 64 Gamecube,424
+172,iPod,867.1
+173,GameBoy,285.4
+174,PS1,2416.1
+175,Car,453.9
+176,GameBoy,1469.7
+177,Apartment,1885.1
+178,Apartment,0.3
+179,Luxury car,1624.6
+180,soft toy,704.2
+181,Car,3060.3
+182,Luxury car,2774.4
+183,soft toy,261.3
+184,Plane tickets,3042.4
+185,Apartment,1836.8
+186,House,1568.5
+187,Microsoft XBOX,823.3
+188,Plane tickets,2565.7
+189,House,1910.5
+190,board game,3183.6
+191,Sega Dreamcast,2681.6
+192,Speakers,359.5
+193,Cruise package,858.5
+194,Sega Dreamcast,1706.8
+195,Barbie dolls,2870.6
+196,Luxury car,1838.7
+197,board game,878.4
+198,board game,1845.4
+199,Barbie dolls,1707.6
+200,Sega Dreamcast,555.2
+201,Speakers,2733.5
+202,Computer,2530.4
+203,Speakers,1448.7
+204,Nintendo 64 Gamecube,918.3
+205,Cruise package,2566.3
+206,Nintendo 64 Gamecube,3047.6
+207,Barbie dolls,1258.3
+208,board game,1183.1
+209,Apartment,1408.1
+210,Luxury car,2205.6
+211,Sega Dreamcast,1599.8
+212,House,2244.5
+213,GameBoy,1173.2
+214,PS2,370.9
+215,soft toy,1662.5
+216,PS2,2913.6
+217,Cruise package,242.8
+218,PS2,1093.8
+219,Nintendo 64 Gamecube,2932.8
+220,GameBoy,1338.7
+221,board game,1746.3
+222,electronic game,2493.6
+223,PS1,2525.6
+224,PS2,2570.4
+225,iPod,1772.9
+226,soft toy,1342.2
+227,iPod,2489.9
+228,Cruise package,2778.5
+229,GameBoy,110.3
+230,Luxury car,14
+231,Apartment,2320.4
+232,Cruise package,2551.8
+233,Apartment,744.6
+234,Cruise package,3197
+235,PS1,890.9
+236,soft toy,126.9
+237,Luxury car,2118.7
+238,Barbie dolls,1085.7
+239,Microsoft XBOX,1253.9
+240,GameBoy,590.7
+241,board game,89.8
+242,Car,1317.4
+243,PS2,1923.9
+244,Apartment,1737.4
+245,iPod,306.5
+246,electronic game,1516.4
+247,Plane tickets,858.1
+248,Car,2451.7
+249,Cruise package,686
+250,Barbie dolls,749.7
+251,Sega Dreamcast,2304.6
+252,Nintendo 64 Gamecube,853.1
+253,PS2,2972.1
+254,Microsoft XBOX,743
+255,electronic game,303.2
+256,Luxury car,1861
+257,House,946.8
+258,Cruise package,133.7
+259,soft toy,1097.9
+260,Cruise package,1411.6
+261,Nintendo 64 Gamecube,999.4
+262,Plane tickets,1421.2
+263,Computer,2542
+264,board game,3034.6
+265,PS2,2965.6
+266,Sega Dreamcast,1123.8
+267,PS1,2584.3
+268,PS2,1251.2
+269,iPod,216.3
+270,Plane tickets,2463.1
+271,Luxury car,792.7
+272,PS2,607.6
+273,Car,2275.9
+274,Sega Dreamcast,1425.4
+275,PS2,2743.9
+276,Luxury car,1531.6
+277,PS2,1324.2
+278,electronic game,1903.7
+279,Laptop,1067.2
+280,Speakers,2162.3
+281,Nintendo 64 Gamecube,548.8
+282,PS1,939.3
+283,House,1953.2
+284,electronic game,3048.1
+285,Nintendo 64 Gamecube,2765.5
+286,PS1,3045.3
+287,board game,2100.8
+288,PS1,1604.2
+289,GameBoy,1906.7
+290,Speakers,1351.8
+291,PS2,1299.5
+292,Cruise package,2544.6
+293,House,313.7
+294,Luxury car,940.6
+295,Barbie dolls,1495.5
+296,iPod,1690
+297,Barbie dolls,2683
+298,Barbie dolls,2448.3
+299,Cruise package,2170.5
+300,PS2,2134.5
+301,Laptop,3047.9
+302,Apartment,1643.9
+303,Car,1865
+304,Cruise package,510.8
+305,Microsoft XBOX,843.2
+306,Laptop,1704
+307,Nintendo 64 Gamecube,2568.7
+308,Microsoft XBOX,2337.7
+309,Luxury car,175.1
+310,Car,2140.8
+311,Barbie dolls,594
+312,iPod,912.8
+313,electronic game,2128.8
+314,House,427.6
+315,Microsoft XBOX,3254.6
+316,GameBoy,1670.9
+317,board game,3219.3
+318,iPod,3045.4
+319,Luxury car,2535.9
+320,Cruise package,257.6
+321,Apartment,3263.8
+322,Microsoft XBOX,74.9
+323,Nintendo 64 Gamecube,784.3
+324,board game,2791.7
+325,soft toy,3013.2
+326,Computer,1637.8
+327,Apartment,3219.4
+328,iPod,3119.6
+329,Computer,1375.1
+330,Microsoft XBOX,1839.4
+331,Nintendo 64 Gamecube,206.3
+332,Car,2258.3
+333,soft toy,2056.6
+334,Laptop,1284.1
+335,House,1546.1
+336,Speakers,1215.3
+337,Cruise package,137.2
+338,Cruise package,2966
+339,Sega Dreamcast,1545.4
+340,Speakers,3227.5
+341,iPod,1000
+342,Luxury car,1197.2
+343,Sega Dreamcast,2657.5
+344,electronic game,2485.4
+345,Apartment,2808.3
+346,Speakers,2894.4
+347,iPod,2669.6
+348,Speakers,1937.5
+349,Car,1511.1
+350,Luxury car,2580.1
+351,board game,1141.4
+352,PS2,1194
+353,Apartment,1990.8
+354,Computer,2850.1
+355,Nintendo 64 Gamecube,2157
+356,Speakers,405.8
+357,House,2589
+358,Speakers,1663.1
+359,PS1,283.3
+360,GameBoy,456.1
+361,Barbie dolls,2158.9
+362,GameBoy,2157.9
+363,board game,2163.7
+364,Nintendo 64 Gamecube,2742.8
+365,iPod,154.6
+366,Apartment,2401.3
+367,PS1,1826.4
+368,Nintendo 64 Gamecube,1997.9
+369,iPod,2865.3
+370,Computer,1108.9
+371,Sega Dreamcast,1459.8
+372,Plane tickets,1634.7
+373,Microsoft XBOX,3024.4
+374,Barbie dolls,2957.8
+375,soft toy,2285
+376,PS1,2470.6
+377,PS1,1608.3
+378,GameBoy,550.9
+379,iPod,1574.1
+380,Cruise package,871.8
+381,House,3010.4
+382,Luxury car,1847.7
+383,Nintendo 64 Gamecube,2365.3
+384,Laptop,2871
+385,Nintendo 64 Gamecube,3252.6
+386,Microsoft XBOX,1479.1
+387,Nintendo 64 Gamecube,3107.4
+388,electronic game,1831.7
+389,board game,724.4
+390,electronic game,805.4
+391,PS2,2.4
+392,Nintendo 64 Gamecube,1578
+393,Sega Dreamcast,3235.8
+394,Apartment,1349.4
+395,GameBoy,2045.8
+396,PS2,3069.4
+397,Microsoft XBOX,1892.1
+398,electronic game,1097.8
+399,House,3057.9
+400,Cruise package,497.2
+401,board game,265.7
+402,Car,222.4
+403,House,2458.9
+404,Nintendo 64 Gamecube,3184.8
+405,Luxury car,558.8
+406,Nintendo 64 Gamecube,3115.4
+407,House,2695.7
+408,GameBoy,1374
+409,Barbie dolls,2464.6
+410,Microsoft XBOX,354.1
+411,Barbie dolls,2982.6
+412,Luxury car,413.1
+413,Computer,1618.1
+414,board game,2685.2
+415,soft toy,2463.5
+416,Speakers,2107.7
+417,GameBoy,745.2
+418,House,2509.1
+419,Microsoft XBOX,2963.3
+420,Computer,2045.3
+421,Plane tickets,741
+422,House,491.8
+423,Cruise package,1499.9
+424,PS2,2894.8
+425,Nintendo 64 Gamecube,1169.1
+426,PS1,2274.7
+427,Sega Dreamcast,2047.9
+428,Barbie dolls,1081.4
+429,Luxury car,350.8
+430,Luxury car,1668.1
+431,PS2,677.4
+432,Apartment,2543.4
+433,House,1599.2
+434,Apartment,2757.7
+435,Laptop,3051.6
+436,Speakers,2034.8
+437,Plane tickets,2659.2
+438,House,2278
+439,Nintendo 64 Gamecube,2193.5
+440,Luxury car,1339.6
+441,electronic game,1121.2
+442,Laptop,1068.6
+443,PS2,1717.5
+444,Computer,862.2
+445,Plane tickets,2703.7
+446,PS2,2014
+447,PS1,2607.4
+448,soft toy,638.6
+449,GameBoy,2910.2
+450,Nintendo 64 Gamecube,1018.5
+451,Plane tickets,2691.1
+452,Apartment,938
+453,Laptop,1045.2
+454,PS1,511.3
+455,Cruise package,2260.5
+456,Computer,2454.7
+457,electronic game,713.9
+458,Nintendo 64 Gamecube,2879.3
+459,Car,2726.7
+460,PS1,2814
+461,soft toy,81
+462,Sega Dreamcast,214.6
+463,soft toy,1590.4
+464,electronic game,2498.2
+465,Speakers,1381.2
+466,Barbie dolls,2974
+467,Microsoft XBOX,108.3
+468,Sega Dreamcast,533.3
+469,Car,359.1
+470,Computer,2691.9
+471,GameBoy,720.9
+472,Nintendo 64 Gamecube,2872.9
+473,House,1514.3
+474,Sega Dreamcast,3097.7
+475,Speakers,793.2
+476,Cruise package,881.5
+477,Sega Dreamcast,168.2
+478,Sega Dreamcast,1670.9
+479,Apartment,2329.6
+480,Apartment,1836.5
+481,soft toy,166.7
+482,board game,277.7
+483,Speakers,1619
+484,Speakers,39.2
+485,Barbie dolls,1681.7
+486,Laptop,2290.9
+487,Nintendo 64 Gamecube,1407.5
+488,Luxury car,3220.7
+489,Apartment,1710.4
+490,board game,2747.3
+491,Sega Dreamcast,3000.8
+492,electronic game,2833.5
+493,iPod,718.1
+494,House,1031.7
+495,Cruise package,1233.8
+496,Laptop,2915.1
+497,iPod,2318.7
+498,Laptop,45.6
+499,Barbie dolls,1968.1
+500,House,2667.6
+501,Computer,2714.7
+502,Microsoft XBOX,1688.4
+503,Nintendo 64 Gamecube,3135.5
+504,PS2,1564.4
+505,Microsoft XBOX,2664.5
+506,Speakers,1929.4
+507,Apartment,1585.6
+508,PS1,771.7
+509,Barbie dolls,2657.8
+510,House,1854.5
+511,House,2801.4
+512,Computer,882.1
+513,Apartment,956.4
+514,Laptop,1918.6
+515,Barbie dolls,713.2
+516,board game,2516.9
+517,board game,1057.1
+518,Speakers,2342.7
+519,PS1,2979.3
+520,iPod,3240.9
+521,board game,2360
+522,Cruise package,3101
+523,Luxury car,150
+524,Microsoft XBOX,621.6
+525,Nintendo 64 Gamecube,258.7
+526,Computer,221.7
+527,Laptop,3236.3
+528,Cruise package,1432.7
+529,Car,2203.8
+530,iPod,1339
+531,Cruise package,2224.7
+532,electronic game,956
+533,Laptop,759.4
+534,Nintendo 64 Gamecube,1513.9
+535,board game,2826.1
+536,board game,1196.5
+537,Microsoft XBOX,1954.3
+538,Computer,1243.7
+539,Microsoft XBOX,555.6
+540,Computer,2472.1
+541,PS1,796.6
+542,PS1,1124.6
+543,electronic game,278.7
+544,Computer,1148.4
+545,Speakers,2252.1
+546,Luxury car,2658.1
+547,Microsoft XBOX,2578.6
+548,Luxury car,70.5
+549,Speakers,2492.7
+550,Sega Dreamcast,2093.9
+551,board game,2822.2
+552,House,2201.7
+553,Cruise package,2502.8
+554,Computer,247.8
+555,PS1,2923.2
+556,GameBoy,575.1
+557,electronic game,1614.9
+558,House,2079.2
+559,Microsoft XBOX,3034.9
+560,Nintendo 64 Gamecube,604.4
+561,Laptop,466.9
+562,Apartment,2751.8
+563,Luxury car,2663.7
+564,Car,2662.7
+565,board game,272.4
+566,Car,2776.3
+567,GameBoy,1373.4
+568,Luxury car,636.4
+569,Laptop,1681.3
+570,Car,3082.1
+571,Luxury car,2356
+572,PS1,3006.7
+573,Microsoft XBOX,3231
+574,Sega Dreamcast,2956.5
+575,Speakers,2486.4
+576,House,1092.8
+577,PS2,2665
+578,Barbie dolls,851.4
+579,Cruise package,1628
+580,PS2,2421.4
+581,Plane tickets,1118.4
+582,PS1,1333.2
+583,PS2,1698
+584,Microsoft XBOX,1427.8
+585,soft toy,340.3
+586,Speakers,1963.5
+587,soft toy,2046.8
+588,Microsoft XBOX,2175.6
+589,PS1,2783.4
+590,Speakers,2706.4
+591,Speakers,981.4
+592,iPod,1345.5
+593,Speakers,1453.6
+594,board game,1820
+595,Microsoft XBOX,155.5
+596,GameBoy,305.9
+597,Cruise package,2117.9
+598,Microsoft XBOX,1168.6
+599,Barbie dolls,1996.7
+600,Plane tickets,389.6
+601,GameBoy,2504.6
+602,Sega Dreamcast,1294.3
+603,Apartment,170.8
+604,Laptop,1037.8
+605,Plane tickets,584.9
+606,soft toy,2633.4
+607,Barbie dolls,2403.8
+608,Apartment,811.3
+609,Laptop,2444.6
+610,board game,3045.6
+611,board game,466.2
+612,Speakers,1268.9
+613,Microsoft XBOX,255.6
+614,Nintendo 64 Gamecube,1488
+615,Plane tickets,2006.5
+616,House,605.7
+617,Car,2266.3
+618,Cruise package,1278.6
+619,electronic game,2992.7
+620,Sega Dreamcast,3266.2
+621,Car,122.7
+622,Computer,3120.9
+623,Nintendo 64 Gamecube,2343.1
+624,Speakers,2932.7
+625,Microsoft XBOX,1317.4
+626,Plane tickets,994.7
+627,PS1,3039.2
+628,Microsoft XBOX,1149.7
+629,Luxury car,2244.5
+630,Speakers,575.4
+631,Sega Dreamcast,3000
+632,Nintendo 64 Gamecube,2600.2
+633,board game,168.4
+634,Barbie dolls,1198.7
+635,iPod,1929.5
+636,GameBoy,143.2
+637,PS2,1504.9
+638,electronic game,353.7
+639,iPod,1201.8
+640,GameBoy,2038.5
+641,Speakers,202.3
+642,Nintendo 64 Gamecube,1042.5
+643,Cruise package,59.5
+644,Plane tickets,3057.8
+645,House,1587.7
+646,board game,2346.9
+647,Luxury car,1232.5
+648,soft toy,1060.2
+649,Nintendo 64 Gamecube,3205.4
+650,PS2,2692.3
+651,PS2,3041.1
+652,Apartment,51.8
+653,GameBoy,1460.1
+654,GameBoy,2702.1
+655,Speakers,918.4
+656,Plane tickets,3004.6
+657,Sega Dreamcast,1127.2
+658,Nintendo 64 Gamecube,1088.8
+659,Apartment,1631.7
+660,Sega Dreamcast,989.2
+661,Speakers,1516.3
+662,Plane tickets,3243.2
+663,House,1048.9
+664,Sega Dreamcast,1220.2
+665,Plane tickets,1885.3
+666,Apartment,3198.5
+667,board game,816.2
+668,Apartment,2261.9
+669,Barbie dolls,3168.3
+670,PS1,1230.9
+671,House,1690.3
+672,Apartment,1593.4
+673,Car,2741
+674,Apartment,1389.1
+675,Cruise package,3012.8
+676,electronic game,2764
+677,Barbie dolls,1882.5
+678,Car,2060.3
+679,Apartment,1776.2
+680,iPod,2477.7
+681,Laptop,2997.7
+682,GameBoy,2511.7
+683,Car,1110.2
+684,Car,206
+685,Plane tickets,3153.7
+686,PS2,2467.4
+687,Microsoft XBOX,1974.4
+688,soft toy,837.8
+689,Cruise package,313.4
+690,electronic game,1276.7
+691,Nintendo 64 Gamecube,995.4
+692,electronic game,535
+693,Barbie dolls,2435.7
+694,Sega Dreamcast,3226.3
+695,Cruise package,1000.9
+696,iPod,1670.4
+697,Apartment,122.5
+698,Speakers,2781.6
+699,Plane tickets,1483.7
+700,Barbie dolls,1141.2
+701,PS2,1114.6
+702,House,2186.7
+703,GameBoy,1763.5
+704,Barbie dolls,1210.5
+705,Barbie dolls,2118.6
+706,Plane tickets,2440.6
+707,Barbie dolls,462.1
+708,iPod,278.9
+709,Apartment,2823.2
+710,Nintendo 64 Gamecube,417.2
+711,Microsoft XBOX,1122.2
+712,soft toy,2906.2
+713,board game,3121.5
+714,Computer,1959.3
+715,Sega Dreamcast,1033.6
+716,PS1,3210.4
+717,Sega Dreamcast,3200.6
+718,Car,1796.1
+719,electronic game,2586.4
+720,Laptop,624.4
+721,Cruise package,3221.5
+722,soft toy,2371.2
+723,Speakers,1277.5
+724,Speakers,2135.7
+725,Cruise package,2589.8
+726,soft toy,2771.3
+727,Car,2798.5
+728,Speakers,1179.5
+729,Microsoft XBOX,2093
+730,Sega Dreamcast,351.3
+731,Apartment,392.8
+732,PS1,1997
+733,Barbie dolls,2351.7
+734,Laptop,1781.1
+735,Car,954.3
+736,Apartment,985.8
+737,Car,1861.4
+738,Laptop,914
+739,PS2,1565.7
+740,Microsoft XBOX,408.7
+741,iPod,1178
+742,Microsoft XBOX,2121.4
+743,Speakers,1670.6
+744,PS1,2032
+745,Speakers,140.2
+746,iPod,619.1
+747,Microsoft XBOX,1729.9
+748,Microsoft XBOX,354.6
+749,Microsoft XBOX,1235.8
+750,iPod,1705.7
+751,Car,1468
+752,Nintendo 64 Gamecube,1641.2
+753,electronic game,2728.5
+754,Sega Dreamcast,269.8
+755,Luxury car,986.7
+756,House,3225
+757,Laptop,1204.4
+758,Microsoft XBOX,2486
+759,Speakers,1468.9
+760,PS2,1891.6
+761,Barbie dolls,263.8
+762,soft toy,1226
+763,Apartment,2196.2
+764,Sega Dreamcast,1853.4
+765,House,2418.7
+766,Car,212.4
+767,GameBoy,433.9
+768,PS2,2653.7
+769,GameBoy,580.5
+770,PS1,1717.9
+771,Microsoft XBOX,736.5
+772,Speakers,3044.6
+773,Computer,1906.7
+774,Speakers,408.2
+775,Sega Dreamcast,906.2
+776,Microsoft XBOX,1180
+777,Luxury car,2085.6
+778,Speakers,2990.3
+779,Microsoft XBOX,478.9
+780,electronic game,950.5
+781,Cruise package,1809.8
+782,Barbie dolls,1575.6
+783,GameBoy,2248
+784,iPod,1526.5
+785,soft toy,3179.8
+786,Apartment,2339
+787,Plane tickets,270.4
+788,Microsoft XBOX,2874.8
+789,PS1,2420.1
+790,PS2,1340.1
+791,House,231.3
+792,Cruise package,1035.5
+793,Nintendo 64 Gamecube,1847.8
+794,iPod,2532
+795,Barbie dolls,78
+796,Luxury car,2649.6
+797,Barbie dolls,1770.1
+798,House,2594.4
+799,Car,3011.9
+800,GameBoy,3033.3
+801,Speakers,1802.4
+802,Computer,1569.2
+803,Microsoft XBOX,579.4
+804,GameBoy,3162.8
+805,House,1777.4
+806,Speakers,3258.4
+807,Cruise package,1228.9
+808,electronic game,36.6
+809,iPod,2244.2
+810,PS2,2103.2
+811,Laptop,2752.7
+812,Laptop,2841.4
+813,Sega Dreamcast,1281
+814,Computer,2423.2
+815,Speakers,363.1
+816,Plane tickets,2834
+817,Plane tickets,729.1
+818,Barbie dolls,1199.6
+819,Microsoft XBOX,913.9
+820,Barbie dolls,1795.7
+821,Sega Dreamcast,2185.7
+822,Plane tickets,3218.3
+823,PS1,666.4
+824,Luxury car,755.2
+825,Barbie dolls,2589
+826,iPod,3034.3
+827,soft toy,1967.8
+828,electronic game,1409.6
+829,Barbie dolls,2498.7
+830,soft toy,2571.7
+831,Sega Dreamcast,29
+832,Sega Dreamcast,582.3
+833,iPod,861.4
+834,Nintendo 64 Gamecube,2099.9
+835,soft toy,2060.5
+836,PS1,654.3
+837,Plane tickets,2473.2
+838,Luxury car,630.3
+839,PS2,123.7
+840,Computer,3203.3
+841,PS2,2094.3
+842,Plane tickets,2457.2
+843,Car,2554.5
+844,Cruise package,2232
+845,Speakers,923
+846,Plane tickets,351
+847,House,2719.1
+848,Plane tickets,3202.1
+849,PS2,2998.7
+850,Speakers,941.2
+851,soft toy,3064.7
+852,Sega Dreamcast,2336.3
+853,Barbie dolls,1365.4
+854,PS1,536.8
+855,Computer,2716.7
+856,Laptop,1556.2
+857,Laptop,3146.5
+858,House,3135.9
+859,board game,1049.5
+860,Computer,72.6
+861,House,1782
+862,Luxury car,1981.2
+863,Cruise package,848.5
+864,Computer,1950.3
+865,Computer,1284.1
+866,Sega Dreamcast,26.7
+867,board game,1231.3
+868,PS2,325.6
+869,Computer,762.3
+870,electronic game,504.9
+871,Apartment,3267.2
+872,Apartment,536.2
+873,soft toy,1476
+874,board game,359.3
+875,Plane tickets,2079.4
+876,Luxury car,242.5
+877,Car,370.9
+878,Plane tickets,2930.2
+879,Nintendo 64 Gamecube,1475.8
+880,Apartment,1907.6
+881,PS1,2865.5
+882,GameBoy,738.1
+883,GameBoy,1954.7
+884,Sega Dreamcast,1930.3
+885,House,2461.4
+886,Microsoft XBOX,457
+887,Cruise package,1409.4
+888,Nintendo 64 Gamecube,2305.8
+889,Luxury car,2541.3
+890,Speakers,1601.7
+891,soft toy,1976.1
+892,Nintendo 64 Gamecube,2216.1
+893,Laptop,1712.9
+894,GameBoy,1021.2
+895,PS2,88
+896,Computer,2318
+897,GameBoy,1681.5
+898,iPod,258.6
+899,GameBoy,2334.8
+900,Laptop,2067.9
+901,board game,1604.5
+902,House,2670.7
+903,Plane tickets,1590.6
+904,Microsoft XBOX,3190.5
+905,Plane tickets,1867.8
+906,Speakers,308.7
+907,Microsoft XBOX,1884.3
+908,Apartment,2907.9
+909,Sega Dreamcast,898.4
+910,House,2986.3
+911,board game,262
+912,Plane tickets,3142.4
+913,Barbie dolls,1398.3
+914,Cruise package,1403.2
+915,Cruise package,1007.8
+916,PS2,2926.4
+917,electronic game,3061
+918,Laptop,1948.6
+919,Plane tickets,3240.5
+920,Luxury car,232.8
+921,Sega Dreamcast,1432.4
+922,electronic game,2111.6
+923,PS2,1208.2
+924,board game,3225.8
+925,Apartment,2745.8
+926,Nintendo 64 Gamecube,1528.6
+927,Sega Dreamcast,557
+928,Laptop,1781.5
+929,Laptop,2303.3
+930,Cruise package,2789
+931,Apartment,1422.3
+932,Barbie dolls,857.1
+933,soft toy,1767.9
+934,Luxury car,2001.6
+935,Plane tickets,770.9
+936,Luxury car,1022.2
+937,Speakers,3109.4
+938,electronic game,1889.6
+939,House,887.6
+940,Computer,1517.9
+941,Cruise package,2140.7
+942,Barbie dolls,1537
+943,PS2,1068.3
+944,Car,2906.6
+945,Computer,1304.3
+946,Sega Dreamcast,2110.9
+947,GameBoy,2009.7
+948,Computer,2758.4
+949,PS2,2389.8
+950,Laptop,2342.7
+951,Luxury car,3237.1
+952,iPod,757.9
+953,Sega Dreamcast,2117.4
+954,Computer,153.8
+955,Plane tickets,121.9
+956,Barbie dolls,125.7
+957,Nintendo 64 Gamecube,419.9
+958,Speakers,425
+959,Microsoft XBOX,150.1
+960,Car,2075.2
+961,Car,1760.7
+962,Cruise package,2696.3
+963,Speakers,2737
+964,Sega Dreamcast,3138.2
+965,Apartment,2935.6
+966,GameBoy,1563.1
+967,GameBoy,1569.5
+968,Car,1909.6
+969,Luxury car,125.9
+970,Sega Dreamcast,3047.4
+971,House,2922.9
+972,Nintendo 64 Gamecube,2107.7
+973,Luxury car,2094.6
+974,soft toy,1238.3
+975,Luxury car,969.7
+976,PS2,2115.4
+977,iPod,375.5
+978,Sega Dreamcast,397.2
+979,Luxury car,1830.7
+980,iPod,498.1
+981,electronic game,1311.8
+982,Cruise package,609.1
+983,PS2,1341.7
+984,Nintendo 64 Gamecube,1110.1
+985,PS1,1978.9
+986,PS1,2684.9
+987,GameBoy,1731.5
+988,Luxury car,1408.6
+989,Car,1743.1
+990,Apartment,2824
+991,Plane tickets,1676.7
+992,Computer,18.3
+993,Microsoft XBOX,303.2
+994,Microsoft XBOX,3251.1
+995,Car,2330
+996,Microsoft XBOX,610.2
+997,Laptop,1875.8
+998,board game,2782.3
+999,Laptop,3109.7
+1000,Sega Dreamcast,2262.5
+1001,soft toy,2587.5
+1002,Barbie dolls,89.4
+1003,iPod,355
+1004,board game,2520.4
+1005,PS2,395.2
+1006,Speakers,3107.8
+1007,Cruise package,1956.7
+1008,Microsoft XBOX,45.6
+1009,GameBoy,1319
+1010,Sega Dreamcast,1990
+1011,Car,2256.6
+1012,Plane tickets,132.8
+1013,Plane tickets,2329.3
+1014,Plane tickets,632.4
+1015,GameBoy,2411.9
+1016,Cruise package,156.4
+1017,Apartment,37.5
+1018,Apartment,1916.2
+1019,PS2,859.6
+1020,Speakers,821.6
+1021,Car,2254.8
+1022,House,2370.4
+1023,Speakers,3031.3
+1024,iPod,622
+1025,House,3095.7
+1026,Plane tickets,2808.4
+1027,board game,1167.9
+1028,PS1,2994.7
+1029,House,271.5
+1030,Microsoft XBOX,2171.3
+1031,Apartment,2876.3
+1032,Barbie dolls,128.7
+1033,PS2,2142.4
+1034,Speakers,791.6
+1035,electronic game,294.2
+1036,Apartment,2237.7
+1037,PS1,1593
+1038,Car,3247.8
+1039,Laptop,1104.5
+1040,soft toy,889.1
+1041,Plane tickets,1926.9
+1042,Car,1148.7
+1043,board game,157.6
+1044,Plane tickets,734.4
+1045,iPod,3029.6
+1046,Sega Dreamcast,1382.3
+1047,soft toy,3113.3
+1048,board game,1679.3
+1049,Cruise package,229.3
+1050,Car,1527.6
+1051,soft toy,520.4
+1052,Barbie dolls,304
+1053,Microsoft XBOX,2409.1
+1054,PS1,900.9
+1055,Nintendo 64 Gamecube,469.8
+1056,iPod,705.4
+1057,Barbie dolls,557.4
+1058,Computer,1361.9
+1059,Barbie dolls,1855.3
+1060,GameBoy,1991.1
+1061,Microsoft XBOX,1444.4
+1062,Computer,1157.3
+1063,Apartment,3269.2
+1064,Microsoft XBOX,1748.2
+1065,PS1,1907.1
+1066,House,1461.1
+1067,Speakers,1659
+1068,soft toy,2379.6
+1069,board game,2046.4
+1070,Plane tickets,2676
+1071,Microsoft XBOX,403.4
+1072,Barbie dolls,646
+1073,Cruise package,1629.6
+1074,Laptop,324.2
+1075,Computer,596.2
+1076,House,3013.5
+1077,Microsoft XBOX,2638.3
+1078,GameBoy,189.9
+1079,Speakers,1749.8
+1080,iPod,1269.1
+1081,Barbie dolls,1575.1
+1082,Nintendo 64 Gamecube,284
+1083,Plane tickets,2090
+1084,Microsoft XBOX,156.6
+1085,Computer,1022.3
+1086,Laptop,1890.8
+1087,Nintendo 64 Gamecube,1717.2
+1088,Plane tickets,2003
+1089,electronic game,1129.9
+1090,soft toy,543.6
+1091,Apartment,2081.9
+1092,Car,767.2
+1093,soft toy,524
+1094,iPod,2805.8
+1095,Plane tickets,1773.4
+1096,iPod,1892.4
+1097,Computer,83.5
+1098,iPod,43.6
+1099,Cruise package,1729.4
+1100,Sega Dreamcast,2427.7
+1101,PS1,3028.9
+1102,PS1,771.6
+1103,Car,205.5
+1104,board game,231.5
+1105,soft toy,1495.9
+1106,Luxury car,329.6
+1107,PS1,442.7
+1108,Microsoft XBOX,2765.1
+1109,House,2019.3
+1110,Plane tickets,2578.6
+1111,PS1,1540.7
+1112,soft toy,2708.4
+1113,Plane tickets,1457.2
+1114,board game,1865.5
+1115,Cruise package,2029.1
+1116,Luxury car,2318.5
+1117,Nintendo 64 Gamecube,1825.5
+1118,Plane tickets,623.3
+1119,iPod,3029.3
+1120,board game,1334
+1121,iPod,1785.9
+1122,Speakers,347.1
+1123,House,1175.6
+1124,Luxury car,852.7
+1125,Car,832.1
+1126,Plane tickets,1990.5
+1127,Nintendo 64 Gamecube,788.7
+1128,Cruise package,247.5
+1129,Nintendo 64 Gamecube,3065
+1130,Cruise package,2676.7
+1131,House,2700.5
+1132,Laptop,225.1
+1133,Car,899.1
+1134,Microsoft XBOX,1829
+1135,House,2501.2
+1136,soft toy,2199.2
+1137,Luxury car,956.1
+1138,Plane tickets,339.1
+1139,Car,1482.9
+1140,House,699.7
+1141,electronic game,398.3
+1142,GameBoy,2602.6
+1143,House,790
+1144,PS1,1587.4
+1145,Luxury car,2173.4
+1146,Luxury car,1759.8
+1147,PS1,1713.9
+1148,board game,537.1
+1149,Nintendo 64 Gamecube,357.8
+1150,Apartment,573.5
+1151,Apartment,2300.5
+1152,Microsoft XBOX,432.7
+1153,Sega Dreamcast,1136.7
+1154,Speakers,2404.3
+1155,Sega Dreamcast,102.9
+1156,GameBoy,2138.8
+1157,Apartment,774.9
+1158,Plane tickets,1777
+1159,PS1,1076.7
+1160,Barbie dolls,1415.2
+1161,Speakers,2499.8
+1162,Cruise package,752.4
+1163,Barbie dolls,1852.4
+1164,Apartment,1807.1
+1165,Speakers,207.2
+1166,Laptop,1950.5
+1167,Speakers,1088.9
+1168,Plane tickets,910.6
+1169,Sega Dreamcast,1079.1
+1170,iPod,1165.7
+1171,PS2,587
+1172,Nintendo 64 Gamecube,2442.8
+1173,Sega Dreamcast,1916.1
+1174,House,2508.4
+1175,iPod,2716.9
+1176,electronic game,1688.6
+1177,Plane tickets,1105.9
+1178,House,370.4
+1179,PS1,881.8
+1180,GameBoy,28.2
+1181,Cruise package,350.5
+1182,board game,301.6
+1183,Microsoft XBOX,2340.6
+1184,board game,2672.1
+1185,Sega Dreamcast,2708.7
+1186,iPod,155.3
+1187,Laptop,1468.6
+1188,Barbie dolls,2878.2
+1189,Apartment,397.3
+1190,Laptop,315.7
+1191,Car,1760.8
+1192,House,1805.1
+1193,Car,1504.4
+1194,Plane tickets,408.2
+1195,Sega Dreamcast,1380.3
+1196,Microsoft XBOX,1740.1
+1197,Speakers,588.5
+1198,House,2153.9
+1199,Cruise package,1235.7
+1200,Nintendo 64 Gamecube,2196.2
+1201,Luxury car,1295.3
+1202,Apartment,1983.6
+1203,Car,2817.5
+1204,Nintendo 64 Gamecube,2151.4
+1205,Luxury car,2521.5
+1206,Cruise package,2903.9
+1207,Apartment,2348.5
+1208,Luxury car,1879.1
+1209,electronic game,552.3
+1210,Barbie dolls,3015.5
+1211,Plane tickets,908.9
+1212,Microsoft XBOX,1092.7
+1213,Luxury car,619.6
+1214,Nintendo 64 Gamecube,5.8
+1215,Car,1043.8
+1216,Computer,3232.8
+1217,Nintendo 64 Gamecube,1836.3
+1218,Computer,1785.7
+1219,Nintendo 64 Gamecube,2962.3
+1220,Plane tickets,2962.3
+1221,Sega Dreamcast,1382.5
+1222,soft toy,672.2
+1223,iPod,325.6
+1224,Apartment,2741.9
+1225,Microsoft XBOX,1557.5
+1226,Barbie dolls,2866.7
+1227,Luxury car,1841
+1228,GameBoy,2782.5
+1229,board game,39.7
+1230,House,1818.1
+1231,electronic game,16.9
+1232,PS2,417.6
+1233,Plane tickets,2673.4
+1234,PS2,328.8
+1235,Nintendo 64 Gamecube,1768
+1236,board game,2174.1
+1237,board game,3078.5
+1238,Nintendo 64 Gamecube,2758.8
+1239,Laptop,2904.1
+1240,PS2,2664.6
+1241,PS2,1172
+1242,Luxury car,268
+1243,electronic game,1532.7
+1244,Microsoft XBOX,2392.9
+1245,GameBoy,1619.4
+1246,Laptop,1523
+1247,Computer,1219.8
+1248,PS1,2210.8
+1249,Laptop,2045.8
+1250,soft toy,735.4
+1251,Car,635.2
+1252,GameBoy,643.7
+1253,iPod,498.4
+1254,PS2,996.8
+1255,GameBoy,2448
+1256,Cruise package,635.3
+1257,Computer,2498.9
+1258,Plane tickets,1158.1
+1259,Sega Dreamcast,2152.8
+1260,Speakers,2777.5
+1261,Barbie dolls,1473
+1262,electronic game,1961
+1263,Microsoft XBOX,2699.7
+1264,House,1405.2
+1265,Cruise package,1367.2
+1266,Barbie dolls,1929.5
+1267,Sega Dreamcast,2500.8
+1268,Cruise package,3221.4
+1269,House,2812.6
+1270,iPod,2681.2
+1271,Sega Dreamcast,2687.7
+1272,Cruise package,2912.4
+1273,Laptop,1985.6
+1274,PS2,723.1
+1275,Speakers,852.6
+1276,GameBoy,952.9
+1277,Sega Dreamcast,2166
+1278,Car,1774.7
+1279,Sega Dreamcast,763
+1280,PS1,1340.7
+1281,Laptop,1948.6
+1282,Microsoft XBOX,1913.3
+1283,Cruise package,2007.2
+1284,GameBoy,2367.2
+1285,electronic game,2705.1
+1286,Laptop,1078.4
+1287,Car,2336
+1288,board game,86.9
+1289,Sega Dreamcast,2530.4
+1290,iPod,3058.4
+1291,Barbie dolls,2872.7
+1292,Barbie dolls,1206.6
+1293,Laptop,2885
+1294,Luxury car,1961.7
+1295,GameBoy,3082.5
+1296,board game,2797.3
+1297,board game,1722.1
+1298,PS1,1044.7
+1299,Apartment,1886.4
+1300,Nintendo 64 Gamecube,1088.4
+1301,Cruise package,2587.9
+1302,Plane tickets,1640.4
+1303,iPod,1641.7
+1304,Speakers,3127.8
+1305,Computer,375.6
+1306,Microsoft XBOX,1507.2
+1307,Laptop,1882.8
+1308,Computer,1988.7
+1309,Speakers,2713.8
+1310,board game,2597.8
+1311,Sega Dreamcast,2483
+1312,Cruise package,718.3
+1313,board game,1794.1
+1314,Barbie dolls,2036.2
+1315,Barbie dolls,3129.6
+1316,Luxury car,3109
+1317,PS1,1493.8
+1318,Speakers,2344.2
+1319,Luxury car,2389.5
+1320,Plane tickets,783.1
+1321,Laptop,1491.7
+1322,iPod,1598.2
+1323,Plane tickets,2918.9
+1324,Sega Dreamcast,2466.7
+1325,Computer,634.2
+1326,PS2,2837.7
+1327,Car,3155.7
+1328,House,594.1
+1329,House,3168.5
+1330,Nintendo 64 Gamecube,125.7
+1331,GameBoy,1710.4
+1332,Plane tickets,3039.3
+1333,soft toy,1630
+1334,board game,244.7
+1335,House,1346.8
+1336,GameBoy,2178.3
+1337,Laptop,1916.4
+1338,Microsoft XBOX,1385
+1339,soft toy,2722.5
+1340,PS2,2524.3
+1341,Speakers,2078.8
+1342,GameBoy,913.9
+1343,Luxury car,997.3
+1344,PS1,2078.1
+1345,Speakers,193.5
+1346,Car,2736.1
+1347,Plane tickets,1692
+1348,Laptop,2760.1
+1349,iPod,1824.5
+1350,Luxury car,1306.1
+1351,Plane tickets,93.5
+1352,Speakers,771.8
+1353,iPod,861.5
+1354,Luxury car,1276.5
+1355,Barbie dolls,2848.2
+1356,Apartment,2762.5
+1357,Sega Dreamcast,2547.7
+1358,Sega Dreamcast,691.5
+1359,House,3271.2
+1360,board game,2264.1
+1361,soft toy,221.8
+1362,Apartment,3262
+1363,Nintendo 64 Gamecube,2120
+1364,GameBoy,1592.3
+1365,Luxury car,802.8
+1366,Laptop,740.3
+1367,Luxury car,1745.5
+1368,Barbie dolls,569.3
+1369,electronic game,713.5
+1370,GameBoy,759.8
+1371,Computer,3109.5
+1372,Laptop,1222.1
+1373,Apartment,715.3
+1374,Plane tickets,1836.6
+1375,PS1,2392.4
+1376,Luxury car,2239.3
+1377,soft toy,673.4
+1378,soft toy,729.8
+1379,Computer,299.1
+1380,Plane tickets,2850.2
+1381,Laptop,465.1
+1382,House,2668.2
+1383,Car,1124.6
+1384,iPod,3016.4
+1385,Laptop,479.6
+1386,Barbie dolls,1677.4
+1387,electronic game,1579.2
+1388,Plane tickets,3214.2
+1389,electronic game,1707.2
+1390,Apartment,3094.2
+1391,Nintendo 64 Gamecube,2142.7
+1392,Microsoft XBOX,530.8
+1393,Apartment,2142.6
+1394,iPod,3074.6
+1395,Computer,1623.9
+1396,House,734.7
+1397,PS2,2608.9
+1398,PS1,458.6
+1399,Sega Dreamcast,1141.8
+1400,board game,444.9
+1401,soft toy,2341.4
+1402,electronic game,1673.2
+1403,House,1142.8
+1404,Laptop,1659.6
+1405,Car,716.3
+1406,Plane tickets,2287.5
+1407,Nintendo 64 Gamecube,1285.9
+1408,Luxury car,2936.3
+1409,Speakers,1844.8
+1410,Apartment,926
+1411,Luxury car,3194.3
+1412,PS2,3270.5
+1413,electronic game,2375.7
+1414,Plane tickets,2942.5
+1415,board game,2967.6
+1416,PS1,2287.9
+1417,Apartment,1824.5
+1418,Plane tickets,746.5
+1419,board game,2945.3
+1420,Apartment,26.4
+1421,House,2663.2
+1422,PS2,2871.6
+1423,PS1,122.1
+1424,House,2862.9
+1425,PS2,169.4
+1426,Sega Dreamcast,376.1
+1427,soft toy,369.4
+1428,Laptop,2815.2
+1429,PS1,1358.5
+1430,GameBoy,1645.7
+1431,Microsoft XBOX,2754.9
+1432,Plane tickets,2310.7
+1433,electronic game,905.7
+1434,Plane tickets,1251.6
+1435,Microsoft XBOX,3113.8
+1436,electronic game,2499.3
+1437,soft toy,2536
+1438,Computer,826.5
+1439,GameBoy,487.4
+1440,board game,988.2
+1441,PS1,680.6
+1442,Nintendo 64 Gamecube,41.6
+1443,Barbie dolls,3151.8
+1444,Sega Dreamcast,2273.7
+1445,House,1047.5
+1446,Microsoft XBOX,279.4
+1447,Sega Dreamcast,1469.1
+1448,electronic game,1549.5
+1449,Plane tickets,1459.4
+1450,Cruise package,1344.5
+1451,Microsoft XBOX,2588.2
+1452,Luxury car,872.8
+1453,PS2,1773.8
+1454,Luxury car,1041.1
+1455,Car,2476.8
+1456,Luxury car,1983.5
+1457,electronic game,286.2
+1458,PS1,894.6
+1459,Sega Dreamcast,142.1
+1460,iPod,1990.8
+1461,Computer,2830.8
+1462,Speakers,1633.1
+1463,Cruise package,1611.9
+1464,soft toy,1757.1
+1465,Laptop,1980.8
+1466,Microsoft XBOX,1536.5
+1467,iPod,567.8
+1468,iPod,765.2
+1469,Speakers,1713.6
+1470,Microsoft XBOX,928.9
+1471,Laptop,1168
+1472,Laptop,1406.3
+1473,Laptop,2345.5
+1474,GameBoy,2985.4
+1475,Cruise package,1138.1
+1476,Speakers,3028
+1477,electronic game,1440.5
+1478,Speakers,1021.2
+1479,Nintendo 64 Gamecube,667.3
+1480,House,2126.2
+1481,Sega Dreamcast,862.7
+1482,Laptop,1417.1
+1483,Luxury car,1064.7
+1484,GameBoy,1958.2
+1485,Cruise package,312.9
+1486,Car,258.8
+1487,soft toy,3005
+1488,Plane tickets,2084.7
+1489,soft toy,285
+1490,Computer,2166
+1491,Laptop,1089.2
+1492,Cruise package,610.1
+1493,Luxury car,1336.4
+1494,soft toy,2667
+1495,Apartment,932.1
+1496,board game,2566.4
+1497,Computer,2949.1
+1498,soft toy,2931.2
+1499,GameBoy,3073.1

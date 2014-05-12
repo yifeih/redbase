@@ -1,0 +1,66 @@
+/*TEST 1: INSERTING DUPLICATE ATTRIBUTES FOR SAME RELATION */
+
+create table soaps(soapid  i, sname  c28, sname c24, network  c4, rating  f);
+/* attrcat and relcat should be empty, because the call to create table should
+ * have failed and rolled back any changes made to the file */
+help;
+
+ /*TEST 2: INSERTING 2 ATTRIBUTES OF SAME NAME FOR 2 DIFFERENT RELATIONS */
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+create table stars(starid  i, sname  c28, plays  c12, soapid  i);\
+
+/* attrcat and relcat should have entries for soaps and stars */
+help;
+
+drop table soaps;
+drop table stars; 
+
+/* attrcat and relcat should be empty*/
+help;
+
+/*TEST 3: INSERTING DUPLICATE RELATIONS */
+
+create table stars(starid  i, stname  c20, plays  c12, soapid  i);
+create table stars(bogus1  i, bogus2  c20, bogus3  c12, bogus4  i);
+
+/* attrcal and relcat should only have entries for stars*/
+help;
+
+drop table stars; 
+
+/*attrcat and relcat should now be empty */
+help;
+
+/*TEST 4: INSERTING MORE THAN 40 ATTRIBUTES */ 
+create table more_than_40(a i, b i, c i, d i, e i, aa i, g i, h i, j i, k i, l i, m i, n i, o i, p i, q i, r i, s i, t i, u i, v i, w i, x i, y i, z i, bb i, cc i, dd i, ee i, gg i, hh i, jj i, kk i, ll i, mm i, nn i, oo i, pp i, qq i, rr i, ss i, tt i, uu i, vv i, ww i, xx i, yy i, zz i, abc i); 
+
+
+/* attrcat and relcate should be empty! */
+help;
+
+/*TEST 5: INSERTING STRING OF SIZE LARGER THAN MAXNAME */
+create table string_exceeds_maxlen (string c300);
+
+/*attrcat and relcat should be empty! */
+help;
+
+
+/*TEST 6: INSERTING NEGATIVE STRING LENGTH */
+/*create table neg_stringlen (string c-100); 
+ * derp this syntax errors
+ */
+
+/*attrcat and relcat should be empty! */
+help;
+
+/*Test 7: INSERTING RELNAME/ATTRIBUTE WITH LEN LARGER THAN MAXNAME */
+create table relname_toolong_111111111111111111111111(bogus i); 
+create table relname_okay (attrname_too_long_muahahaha i);
+
+/* attrcat and relcat should be empty! */
+help;
+
+/* should only see attrcat and relcat in the directory! */
+!ls;
+ 
+exit;       

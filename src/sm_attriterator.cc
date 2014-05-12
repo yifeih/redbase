@@ -16,6 +16,7 @@ SM_AttrIterator::SM_AttrIterator(){
 }
 
 
+// Closes the scan if there is one
 SM_AttrIterator::~SM_AttrIterator(){
   if(validIterator == true){
     fs.CloseScan();
@@ -24,6 +25,10 @@ SM_AttrIterator::~SM_AttrIterator(){
 
 }
 
+/*
+ * Creates a scan for attributes related to a specified relation. Must
+ * ba passed in the filehandle to attrCat
+ */
 RC SM_AttrIterator::OpenIterator(RM_FileHandle &fh, char *relName){
   RC rc = 0;
   validIterator = true;
@@ -32,6 +37,11 @@ RC SM_AttrIterator::OpenIterator(RM_FileHandle &fh, char *relName){
 
   return (0);
 }
+
+/*
+ * Returns the next attribute that it finds that is associated with
+ * specified relation
+ */
 RC SM_AttrIterator::GetNextAttr(RM_Record &attrRec, AttrCatEntry *&entry){
   RC rc = 0;
   if((rc = fs.GetNextRec(attrRec)))
@@ -40,6 +50,10 @@ RC SM_AttrIterator::GetNextAttr(RM_Record &attrRec, AttrCatEntry *&entry){
     return (rc);
   return (0);
 }
+
+/*
+ * Close the scan associated with this
+ */
 RC SM_AttrIterator::CloseIterator(){
   RC rc = 0;
   if((rc = fs.CloseScan()))

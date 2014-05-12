@@ -32,9 +32,40 @@ RC IX_IndexHandle::PrintIndex(){
     int prev_idx = BEGINNING_OF_SLOTS;
     int curr_idx = lheader->firstSlotIndex;
     while(curr_idx != NO_MORE_SLOTS){
+      printf("\n");
       printer((void *)keys + curr_idx*header.attr_length, header.attr_length);
+      if(entries[curr_idx].isValid == OCCUPIED_DUP){
+        //printf("is a duplicate\n");
+        PageNum bucketPage = entries[curr_idx].page;
+        PF_PageHandle bucketPH;
+        struct IX_BucketHeader *bheader;
+        struct Bucket_Entry *bEntries;
+        while(bucketPage != NO_MORE_PAGES){
+          if((rc = pfh.GetThisPage(bucketPage, bucketPH)) || (rc = bucketPH.GetData((char *&)bheader))) {
+            return (rc);
+          }
+          bEntries = (struct Bucket_Entry *) ((char *)bheader + header.entryOffset_B); 
+          int currIdx = bheader->firstSlotIndex;
+          int prevIdx = BEGINNING_OF_SLOTS;
+          while(currIdx != NO_MORE_SLOTS){
+            //printf("currIdx: %d ", currIdx);
+            printf("rid: %d, page %d | ", bEntries[currIdx].page, bEntries[currIdx].slot);
+            prevIdx = currIdx;
+            currIdx = bEntries[prevIdx].nextSlot;
+          }
+          PageNum nextBucketPage = bheader->nextBucket;
+          if((rc = pfh.UnpinPage(bucketPage)))
+            return (rc);
+          bucketPage = nextBucketPage;
+        }
+
+      }
+      else{
+        printf("rid: %d, page %d | ", entries[curr_idx].page, entries[curr_idx].slot);
+      }
       prev_idx = curr_idx;
       curr_idx = entries[prev_idx].nextSlot;
+
     }
     PageNum nextPage = lheader->nextPage;
     if(leafPage != header.rootPage){
@@ -60,6 +91,9 @@ IX_IndexHandle::~IX_IndexHandle(){
  * Index. If the entry already exists, return IX_DUPLICATEENTRY
  */
 RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
+  if(isOpenHandle == false){
+  }
+
   // only insert if this is a valid, open indexHandle
   if(! isValidIndexHeader() || isOpenHandle == false)
     return (IX_INVALIDINDEXHANDLE);
@@ -76,8 +110,9 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
     PageNum newRootPage;
     char *newRootData;
     PF_PageHandle newRootPH;
-    if((rc = CreateNewNode(newRootPH, newRootPage, newRootData, false)))
+    if((rc = CreateNewNode(newRootPH, newRootPage, newRootData, false))){
       return (rc);
+    }
     struct IX_NodeHeader_I *newRootHeader = (struct IX_NodeHeader_I *)newRootData;
     newRootHeader->isEmpty = false;
     newRootHeader->firstPage = header.rootPage; // update the root node
@@ -105,8 +140,9 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid){
       return (rc);
   }
   else{ // If root is not full, insert into it
-    if((rc = InsertIntoNonFullNode(rHeader, header.rootPage, pData, rid)))
+    if((rc = InsertIntoNonFullNode(rHeader, header.rootPage, pData, rid))){
       return (rc);
+    }
   }
 
   // Mark the root node as dirty
@@ -945,15 +981,18 @@ RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
  */
 bool IX_IndexHandle::isValidIndexHeader() const{
   if(header.maxKeys_N <= 0 || header.maxKeys_B <= 0){
+    printf("error 1");
     return false;
   }
   if(header.entryOffset_N != sizeof(struct IX_NodeHeader) || 
     header.entryOffset_B != sizeof(struct IX_BucketHeader)){
+    printf("error 2");
     return false;
   }
 
   int attrLength2 = (header.keysOffset_N - header.entryOffset_N)/(header.maxKeys_N);
   if(attrLength2 != sizeof(struct Node_Entry)){
+    printf("error 3");
     return false;
   }
   if((header.entryOffset_B + header.maxKeys_B * sizeof(Bucket_Entry) > PF_PAGE_SIZE) ||

@@ -1,0 +1,19 @@
+
+1. Title: Car Evaluation Database
+
+2. URL: ftp://ftp.ics.uci.edu/pub/machine-learning-databases/car/
+(More information is available from the web-site.)
+
+3. Number of tuples: 1728
+
+4. Number of Attributes: 7
+
+5. Attribute Values:
+
+   buying       v-high, high, med, low
+   maint        v-high, high, med, low
+   doors        2, 3, 4, 5-more
+   persons      2, 4, more
+   lug_boot     small, med, big
+   safety       low, med, high
+   decision     unaccm, acc, good,  v-good

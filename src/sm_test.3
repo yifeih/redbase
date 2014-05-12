@@ -1,0 +1,136 @@
+/*
+ * sm_test.3: Index tests for SM component
+ * Author: Yifei Huang (yifei@stanford.edu)
+ */
+
+ /* PASS: create relations */
+ create table soaps(soapid i, sname c28, network c4, rating f);
+ create table stars(starid  i, stname  c20, plays  c12, soapid  i);
+
+ /* FAIL: create/drop index on table that's not there. */
+ create index stars(sname);
+ create index moon(moonid);
+ drop index soaps(starid);
+ drop index moon(starid);
+ drop index soaps(soapid);
+
+ /* CHECK: 
+  * Output should just be soaps, stars, and no indices on any table
+  */
+!ls;
+help;
+help stars;
+help soaps;
+
+ /* PASS: create all valid indices */
+create index soaps(rating);
+create index soaps(network);
+create index soaps(sname);
+create index soaps(soapid);
+
+/* CHECK: Files should include:
+ * soaps, 4 indices on soaps
+ */
+!ls;
+help;
+help soaps;
+
+/* FAIL: Create another index on the same attribute */
+create index soaps(rating);
+
+/* CHECK: Files should include:
+ * soaps, stars, 4 indices on soaps
+ */
+!ls;
+help;
+help soaps;
+
+/* PASS: drop all indices */
+drop index soaps(rating);
+drop index soaps(network);
+drop index soaps(soapid);
+drop index soaps(sname);
+
+/* CHECK: 
+ * Output should be: soaps, stars, no indices on either */
+!ls;
+help;
+help soaps;
+
+/* FAIL: drop on a preexising table that's not there */
+drop index soaps(rating);
+
+/* Repeatedly add/drop index: */
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+drop index soaps(rating);
+create index soaps(rating);
+
+/* Check:
+ * Output should be: soaps, stars, and one index on rating */
+!ls;
+help;
+help soaps;
+
+/* PASS: Recreate on all indices, and load soaps file */
+create index soaps(network);
+create index soaps(soapid);
+create index soaps(sname);
+load soaps("../data/soaps.data");
+
+/* Check: soaps and 4 index on soaps*/
+!ls;
+print soaps;
+help soaps;
+
+/* PASS: Load stars file, then create indices on it */
+load stars("../data/stars.data");
+create index stars(starid);
+create index stars(stname);
+create index stars(plays);
+create index stars(soapid);
+
+/* Check: 4 indices on soaps, 4 on stars*/
+!ls;
+help;
+help stars;
+help soaps;
+print stars;
+
+/* FAIL: create index on non-existant attribute, and duplicate index */
+create index stars(stars);
+create index stars(plays);
+
+/* Check: */
+!ls;
+help;
+help stars;
+print stars;
+
+
+
+
+
+
+

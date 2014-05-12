@@ -1,0 +1,44 @@
+insert into customers values ( 1, 'Chris', 24 );
+insert into customers values ( 2, 'Mike', 50 );
+insert into customers values ( 3, 'Mary', 60 );
+insert into customers values ( 4, 'Jack', 43 );
+insert into customers values ( 5, 'Paco', 35 );
+insert into customers values ( 6, 'Sophie', 3 );
+insert into customers values ( 7, 'Alex', 30 );
+insert into customers values ( 8, 'John', 19 );
+insert into customers values ( 9, 'Luis', 43 );
+insert into customers values ( 10, 'Chris', 25 );
+insert into customers values ( 11, 'Jack', 43 );
+insert into customers values ( 12, 'John', 42 );
+insert into customers values ( 13, 'Eve', 100 );
+insert into customers values ( 14, 'Q', 33 );
+insert into customers values ( 15, 'Elizabeth', 22 );
+
+insert into items values ( 100, 'milk', 'food' );
+insert into items values ( 101, 'bread', 'food' );
+insert into items values ( 102, 'light bulb', 'household' );
+insert into items values ( 103, 'USA Today', 'entertainment' );
+insert into items values ( 104, 'apples', 'food' );
+insert into items values ( 105, 'batteries', 'household' );
+insert into items values ( 106, 'bandaids', 'medical' );
+insert into items values ( 107, 'Advil', 'medical' );
+insert into items values ( 108, 'jacket', 'clothing' );
+insert into items values ( 109, 'socks', 'clothing' );
+insert into items values ( 110, 'Tylenol', 'medical' );
+insert into items values ( 111, 'alvocados', 'food' );
+insert into items values ( 112, 'microwave', 'household' );
+insert into items values ( 113, 'CD-Rs', 'computers' );
+insert into items values ( 114, 'cable modem', 'computers' );
+insert into items values ( 115, 'ketchup', 'food' );
+insert into items values ( 116, 'floor lamp', 'household' );
+insert into items values ( 117, 'network cable', 'computers' );
+insert into items values ( 118, 'network card', 'computers' );
+insert into items values ( 119, 'coke', 'food' );
+insert into items values ( 120, 'pepsi', 'food' );
+
+insert into stores values ( 'San Francisco', 'M', 120876.8 );
+insert into stores values ( 'Stanford', 'S', 50000 );
+insert into stores values ( 'Mountain View', 'M', 10123 );
+insert into stores values ( 'Oakland', 'L', 200000 );
+insert into stores values ( 'Palo Alto', 'S', 20280 );
+

@@ -1,0 +1,206 @@
+/*
+ * sm_test.1: tests load and print
+ */
+
+/* TEST 1 : CREATE AND DROP SAME TABLE 10 TIMES */
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+drop table soaps; 
+
+/* if started with an empty database, should see empty relcat */
+help; 
+
+
+/* TEST 2: CREATE AND DROP 14 DIFFERENT TABLES 3 TIMES */
+
+/*../data/ */
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+create table stars(starid  i, stname  c20, plays  c12, soapid  i);
+create table student (studentid i, sname c24, school c4, gpa f, extra c3);
+
+/* ../data/retaildata */
+create table customers (clubcardnum i, name c24, age i);
+create table purchases (customerclubcard i, itemid i, storecity c20, quantity i, purchaseid i);
+create table items (itemid i, name c15, category c20); 
+create table stores (city c20, storetype c1, squarefootage f);    
+
+/* ../data/nursery */
+create table nursery (parents c11, has_nurs c11, form c10, children c4, housing c10, finance c10, social c14, health c11, decision c10);
+
+/* ../data/netflix2 */
+create table movies (mid i, year i, name s250); 
+create table ratings (mid i, uid i, rating i, date s20);  
+
+/* ../data/MoreData */
+create table class (id i, name c24, dept c3, extra c4);
+create table company (name c24, id c10, street c30, city c30, state c3, cash f);
+create table dealer (id i, name c50, number i, street c50, city c50, state c3, cash f, company c50);   
+create table enroll (id i, id2 i, season c10, year i, grade c2, extra c3); 
+
+
+/* delete them all */
+drop table soaps;
+drop table stars;
+drop table student;
+drop table customers;
+drop table purchases;
+drop table items;
+drop table stores;
+drop table nursery;
+drop table movies;
+drop table ratings;
+drop table class;
+drop table company;
+drop table dealer;
+drop table enroll;
+
+/*../data/ */
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+create table stars(starid  i, stname  c20, plays  c12, soapid  i);
+create table student (studentid i, sname c24, school c4, gpa f, extra c3);
+
+/* ../data/retaildata */
+create table customers (clubcardnum i, name c24, age i);
+create table purchases (customerclubcard i, itemid i, storecity c20, quantity i, purchaseid i);
+create table items (itemid i, name c15, category c20); 
+create table stores (city c20, storetype c1, squarefootage f);    
+
+/* ../data/nursery */
+create table nursery (parents c11, has_nurs c11, form c10, children c4, housing c10, finance c10, social c14, health c11, decision c10);
+
+/* ../data/netflix2 */
+create table movies (mid i, year i, name s250); 
+create table ratings (mid i, uid i, rating i, date s20);  
+
+/* ../data/MoreData */
+create table class (id i, name c24, dept c3, extra c4);
+create table company (name c24, id c10, street c30, city c30, state c3, cash f);
+create table dealer (id i, name c50, number i, street c50, city c50, state c3, cash f, company c50);   
+create table enroll (id i, id2 i, season c10, year i, grade c2, extra c3); 
+
+/* delete them all */
+drop table soaps;
+drop table stars;
+drop table student;
+drop table customers;
+drop table purchases;
+drop table items;
+drop table stores;
+drop table nursery;
+drop table movies;
+drop table ratings;
+drop table class;
+drop table company;
+drop table dealer;
+drop table enroll;
+
+/*../data/ */
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+create table stars(starid  i, stname  c20, plays  c12, soapid  i);
+create table student (studentid i, sname c24, school c4, gpa f, extra c3);
+
+/* ../data/retaildata */
+create table customers (clubcardnum i, name c24, age i);
+create table purchases (customerclubcard i, itemid i, storecity c20, quantity i, purchaseid i);
+create table items (itemid i, name c15, category c20); 
+create table stores (city c20, storetype c1, squarefootage f);    
+
+/* ../data/nursery */
+create table nursery (parents c11, has_nurs c11, form c10, children c4, housing c10, finance c10, social c14, health c11, decision c10);
+
+/* ../data/netflix2 */
+create table movies (mid i, year i, name s250); 
+create table ratings (mid i, uid i, rating i, date s20);  
+
+/* ../data/MoreData */
+create table class (id i, name c24, dept c3, extra c4);
+create table company (name c24, id c10, street c30, city c30, state c3, cash f);
+create table dealer (id i, name c50, number i, street c50, city c50, state c3, cash f, company c50);   
+create table enroll (id i, id2 i, season c10, year i, grade c2, extra c3); 
+
+/* delete them all */
+drop table soaps;
+drop table stars;
+drop table student;
+drop table customers;
+drop table purchases;
+drop table items;
+drop table stores;
+drop table nursery;
+drop table movies;
+drop table ratings;
+drop table class;
+drop table company;
+drop table dealer;
+drop table enroll;
+
+/* if started with empty database, should see empty relcat and empty attrcat */
+help;
+
+
+/* TEST 3: DROP TABLE WITH INDEXES ON ALL ATTRIBUTES */
+ create table nursery (parents c11, has_nurs c11, form c10, children c4, housing c10, finance c10, social c14, health c11, decision c10);
+
+ create index nursery(parents); 
+ create index nursery(has_nurs); 
+ create index nursery(form); 
+ create index nursery(children); 
+ create index nursery(housing); 
+ create index nursery(finance); 
+ create index nursery(social); 
+ create index nursery(health); 
+ create index nursery(decision); 
+
+ drop table nursery;
+
+/* NEED to check that no files besides relcat and attrcat exist! 
+   if database was empty at start of Test 1, then this is true. also relcat and
+attrcat should be empty!*/
+!ls; 
+help;
+
+
+/* TEST 4: DROP TABLE WITH INDEXES ON SOME ATTRIBUTES */
+ 
+ create table nursery (parents c11, has_nurs c11, form c10, children c4, housing c10, finance c10, social c14, health c11, decision c10);
+
+ create index nursery(parents); 
+ create index nursery(form); 
+ create index nursery(housing); 
+ create index nursery(social); 
+ create index nursery(decision); 
+
+ drop table nursery;
+
+/* NEED to check that no files besides relcat and attrcat exist! 
+   if database was empty at start of Test 1, then this is true. also relcat and
+attrcat should be empty!*/
+!ls; 
+help;
+
+/* TEST 5: DROP NONEXISTENT TABLE */
+/* relcat and attrcat should be empty! */
+help nursery; 
+drop table nursery; 
+help;
+
+!ls;
+
+exit;

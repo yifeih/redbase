@@ -1,0 +1,131 @@
+/*
+ * sm_test.5: Load tests for SM component
+ */
+
+ /* TEST 1: Loading incorrect path name files */
+ create table soaps(soapid i, sname c28, network c4, rating f);
+ create table stars(starid  i, stname  c20, plays  c12, soapid  i);
+
+ /* fail: create/drop index on table that's not there. */
+ load soaps("../data/soapsbadfile.data");
+ 
+/* END TEST 1: Printing soaps should be empty */
+print soaps;
+
+
+
+
+
+
+/* TEST 2: Loading file with too-long character strings */
+
+/* First, load file into soaps */
+load soaps("../data/soaps.data");
+
+/* Create a table to hold only the first character of the soap names */
+create table soaps_truncated(soapid i, sname c1, network c4, rating f);
+load soaps_truncated("../data/soaps.data");
+
+/* END TEST 2: Make sure that soaps_truncated's sname attribute contains all
+ * the first characters of the snames in soaps
+ */
+print soaps;
+print soaps_truncated;
+drop table soaps_truncated;
+drop table soaps;
+
+
+
+
+
+/* TEST 3: Load file with a non-int value in an int slot */
+/* This should return an error! */
+create table soaps(soapid i, sname c28, network c4, rating f);
+load soaps("../data/soaps.badint1.data");
+drop table soaps;
+
+
+
+
+
+/* TEST 4: Load file with a NULL value in an int slot */
+/* This should return an error! */
+create table soaps(soapid i, sname c28, network c4, rating f);
+load soaps("../data/soaps.badint2.data");
+drop table soaps;
+
+
+
+
+/* TEST 5: Load file with a non-float value in a float slot */
+/* This should return an error! */
+create table soaps(soapid i, sname c28, network c4, rating f);
+load soaps("../data/soaps.badfloat1.data");
+drop table soaps;
+
+
+
+
+
+/* TEST 6: Load file with a NULL value in a float slot */
+/* This should return an error! */
+create table soaps(soapid i, sname c28, network c4, rating f);
+load soaps("../data/soaps.badfloat2.data");
+drop table soaps;
+
+
+
+
+/* TEST 7: Load file with a NULL value in a string slot */
+/* This should pass */
+create table soaps(soapid i, sname c28, network c4, rating f);
+load soaps("../data/soaps.nullstring.data");
+
+/* end test 7: This should print out the original contents, but with
+ * 4 additional tuples with NULL values for sname and network 
+ */
+print soaps;
+drop table soaps;
+
+
+
+
+/* TEST 8: Load file with more tuples than there are.  */
+/* This should pass and just truncate*/
+create table soaps(soapid i, sname c28, network c4, rating f);
+create table soaps_extra(soapid i, sname c28, network c4, rating f);
+load soaps("../data/soaps.data");
+load soaps_extra("../data/soaps.extra.data");
+
+/* end test 8: These two should print the same values */
+print soaps;
+print soaps_extra;
+drop table soaps;
+drop table soaps_extra;
+
+
+
+
+/* TEST 9: Load file with less tuples than there are. Missing
+ * tuple is a float  */
+/* This should fail */
+create table soaps(soapid i, sname c28, network c4, rating f);
+load soaps("../data/missingfloat.data");
+drop table soaps;
+
+
+/* TEST 9: Load file with less tuples than there are. Missing
+ * tuple is a int  */
+/* This should fail */
+create table soaps(sname c28, network c4, rating f, soapid i);
+load soaps("../data/missingint.data");
+drop table soaps;
+
+
+/* TEST 10: Load file with less tuples than there are. Missing
+ * tuple is a string  */
+/* This should fail */
+create table soaps(soapid i, network c4, rating f, sname c28);
+load soaps("../data/missingstring.data");
+drop table soaps;
+

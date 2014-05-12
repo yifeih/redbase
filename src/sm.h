@@ -19,6 +19,7 @@
 
 #define MAX_DB_NAME 255
 
+// Define the catalog entry for a relation
 typedef struct RelCatEntry{
   char relName[MAXNAME + 1];
   int tupleLength;
@@ -27,6 +28,7 @@ typedef struct RelCatEntry{
   int indexCurrNum;
 } RelCatEntry;
 
+// Define catalog entry for an attribute
 typedef struct AttrCatEntry{
   char relName[MAXNAME + 1];
   char attrName[MAXNAME +1];
@@ -37,6 +39,8 @@ typedef struct AttrCatEntry{
   int attrNum;
 } AttrCatEntry;
 
+// This is used to specify information about an attribute
+// during bulk loading time
 typedef struct Attr{
   int offset;
   int type;
@@ -81,31 +85,48 @@ public:
                    const char *value);            //   value
 
 private:
+  // Returns true if given attribute has valid/matching type and length
   bool isValidAttrType(AttrInfo attribute);
-  RC InsertRelCat(const char *relName, int attrCount, int recSize);
-  RC InsertAttrCat(const char *relName, AttrInfo attr, int offset, int attrNum);
-  RC GetRelEntry(const char *relName, RM_Record &relRec, RelCatEntry *&entry);
-  RC GetAttrEntry(RM_FileScan& fs, RM_Record &attrRec, AttrCatEntry *&entry);
 
+  // Inserts an entry about specified relName relation into relcat
+  RC InsertRelCat(const char *relName, int attrCount, int recSize);
+
+  // Insert an entry about specified attribute into attrcat
+  RC InsertAttrCat(const char *relName, AttrInfo attr, int offset, int attrNum);
+  // Retrieve the record and data associated with a relation entry. Return
+  // error if one doesnt' exist
+  RC GetRelEntry(const char *relName, RM_Record &relRec, RelCatEntry *&entry);
+
+  // Finds the entry associated with a particular attribute
   RC FindAttr(const char *relName, const char *attrName, RM_Record &attrRec, AttrCatEntry *&entry);
+  
+  // Sets up print for DataAttrInfo from a file, printing relcat and printing attrcat
   RC SetUpPrint(RelCatEntry* rEntry, DataAttrInfo *attributes);
   RC SetUpRelCatAttributes(DataAttrInfo *attributes);
   RC SetUpAttrCatAttributes(DataAttrInfo *attributes);
 
+  // Prepares the Attr array, which helps with loading
   RC PrepareAttr(RelCatEntry *rEntry, Attr* attributes);
+
+  // Opens a file and loads it
   RC OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr* attributes, 
     int attrCount, int recLength);
+  // Cleans up the Attr array after loading
   RC CleanUpAttr(Attr* attributes, int attrCount);
 
-  RM_Manager &rmm;
   IX_Manager &ixm;
+  RM_Manager &rmm;
 
   RM_FileHandle relcatFH;
   RM_FileHandle attrcatFH;
-  bool printIndex;
+  bool printIndex; // Whether to print the index or not when
+                   // help is called on a specific table
 
 };
 
+/*
+ *
+ */
 class SM_AttrIterator{
   friend class SM_Manager;
 public:

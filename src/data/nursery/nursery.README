@@ -1,0 +1,24 @@
+
+1. Title: Nursery Database
+
+2. URL: ftp://ftp.ics.uci.edu/pub/machine-learning-databases/nursery/
+(More information is available at the website.)
+
+3. Number of tuples: 12960
+   (instances completely cover the attribute space)
+
+4. Number of Attributes: 9
+
+5. Attribute Values:
+
+   parents        usual, pretentious, great_pret
+   has_nurs       proper, less_proper, improper, critical, very_crit
+   form           complete, completed, incomplete, foster
+   children       1, 2, 3, more
+   housing        convenient, less_conv, critical
+   finance        convenient, inconv
+   social         non-prob, slightly_prob, problematic
+   health         recommended, priority, not_recom
+   decision       not_recom, recommend, very_recom, priority, spec_prior
+
+

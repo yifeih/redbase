@@ -28,8 +28,8 @@ static int compare_float(void *value1, void* value2, int attrLength){
 
 static bool print_string(void *value, int attrLength){
   char * str = (char *)malloc(attrLength + 1);
-  memcpy(str, value, attrLength);
-  str[attrLength-1] = '\0';
+  memcpy(str, value, attrLength+1);
+  str[attrLength] = '\0';
   printf("%s ", str);
   free(str);
   return true;
