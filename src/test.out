@@ -550,3 +550,345 @@ stars.0
 stars.1
 
 REDBASE >> Bye.
+running test # 5 ****************
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> create table stars (starid = i, stname = c20, plays = c12, soapid = i);
+CreateTable
+   relName     =stars
+   attrCount   =4
+   attributes[0].attrName=starid   attrType=INT   attrLength=4
+   attributes[1].attrName=stname   attrType=STRING   attrLength=20
+   attributes[2].attrName=plays   attrType=STRING   attrLength=12
+   attributes[3].attrName=soapid   attrType=INT   attrLength=4
+
+REDBASE >> load soaps("../data/soapsbadfile.data");
+Load
+   relName =soaps
+   fileName=../data/soapsbadfile.data
+cannot open file :( 
+SM warning: invalid/bad load file
+
+REDBASE >> print soaps;
+Print
+   relName=soaps
+soapid      sname                       network rating      
+------------------------------------------------------------
+
+0 tuple(s).
+
+REDBASE >> load soaps("../data/soaps.data");
+Load
+   relName =soaps
+   fileName=../data/soaps.data
+
+REDBASE >> create table soaps_truncated (soapid = i, sname = c1, network = c4, rating = f);
+CreateTable
+   relName     =soaps_truncated
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=1
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> load soaps_truncated("../data/soaps.data");
+Load
+   relName =soaps_truncated
+   fileName=../data/soaps.data
+
+REDBASE >> print soaps;
+Print
+   relName=soaps
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           Days of Our Lives           NBC     7.020000    
+1           General Hospital            ABC     9.810000    
+2           Guiding Light               CBS     4.020000    
+3           One Life to Live            ABC     2.310000    
+4           Santa Barbara               NBC     6.440000    
+5           The Young and the Restless  CBS     5.500000    
+6           As the World Turns          CBS     7.000000    
+7           Another World               NBC     1.970000    
+8           All My Children             ABC     8.820000    
+
+9 tuple(s).
+
+REDBASE >> print soaps_truncated;
+Print
+   relName=soaps_truncated
+soapid      sname network rating      
+--------------------------------------
+0           D     NBC     7.020000    
+1           G     ABC     9.810000    
+2           G     CBS     4.020000    
+3           O     ABC     2.310000    
+4           S     NBC     6.440000    
+5           T     CBS     5.500000    
+6           A     CBS     7.000000    
+7           A     NBC     1.970000    
+8           A     ABC     8.820000    
+
+9 tuple(s).
+
+REDBASE >> drop table soaps_truncated;
+DropTable
+   relName=soaps_truncated
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> load soaps("../data/soaps.badint1.data");
+Load
+   relName =soaps
+   fileName=../data/soaps.badint1.data
+bad insert
+SM warning: invalid/bad load file
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> load soaps("../data/soaps.badint2.data");
+Load
+   relName =soaps
+   fileName=../data/soaps.badint2.data
+bad insert
+SM warning: invalid/bad load file
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> load soaps("../data/soaps.badfloat1.data");
+Load
+   relName =soaps
+   fileName=../data/soaps.badfloat1.data
+bad insert
+SM warning: invalid/bad load file
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> load soaps("../data/soaps.badfloat2.data");
+Load
+   relName =soaps
+   fileName=../data/soaps.badfloat2.data
+SM warning: invalid/bad load file
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> load soaps("../data/soaps.nullstring.data");
+Load
+   relName =soaps
+   fileName=../data/soaps.nullstring.data
+
+REDBASE >> print soaps;
+Print
+   relName=soaps
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           Days of Our Lives           NBC     7.020000    
+1           General Hospital            ABC     9.810000    
+2           Guiding Light               CBS     4.020000    
+3           One Life to Live            ABC     2.310000    
+4           Santa Barbara               NBC     6.440000    
+5           The Young and the Restless  CBS     5.500000    
+6           As the World Turns          CBS     7.000000    
+7           Another World               NBC     1.970000    
+8           All My Children             ABC     8.820000    
+9                                               9.000000    
+10                                              10.000000   
+11                                              11.000000   
+12          hi sophia :D                        12.000000   
+
+13 tuple(s).
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> create table soaps_extra (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps_extra
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> load soaps("../data/soaps.data");
+Load
+   relName =soaps
+   fileName=../data/soaps.data
+
+REDBASE >> load soaps_extra("../data/soaps.extra.data");
+Load
+   relName =soaps_extra
+   fileName=../data/soaps.extra.data
+
+REDBASE >> print soaps;
+Print
+   relName=soaps
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           Days of Our Lives           NBC     7.020000    
+1           General Hospital            ABC     9.810000    
+2           Guiding Light               CBS     4.020000    
+3           One Life to Live            ABC     2.310000    
+4           Santa Barbara               NBC     6.440000    
+5           The Young and the Restless  CBS     5.500000    
+6           As the World Turns          CBS     7.000000    
+7           Another World               NBC     1.970000    
+8           All My Children             ABC     8.820000    
+
+9 tuple(s).
+
+REDBASE >> print soaps_extra;
+Print
+   relName=soaps_extra
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           Days of Our Lives           NBC     7.020000    
+1           General Hospital            ABC     9.810000    
+2           Guiding Light               CBS     4.020000    
+3           One Life to Live            ABC     2.310000    
+4           Santa Barbara               NBC     6.440000    
+5           The Young and the Restless  CBS     5.500000    
+6           As the World Turns          CBS     7.000000    
+7           Another World               NBC     1.970000    
+8           All My Children             ABC     8.820000    
+
+9 tuple(s).
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> drop table soaps_extra;
+DropTable
+   relName=soaps_extra
+
+REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=sname   attrType=STRING   attrLength=28
+   attributes[2].attrName=network   attrType=STRING   attrLength=4
+   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
+
+REDBASE >> load soaps("../data/missingfloat.data");
+Load
+   relName =soaps
+   fileName=../data/missingfloat.data
+SM warning: invalid/bad load file
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> create table soaps (sname = c28, network = c4, rating = f, soapid = i);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=sname   attrType=STRING   attrLength=28
+   attributes[1].attrName=network   attrType=STRING   attrLength=4
+   attributes[2].attrName=rating   attrType=FLOAT   attrLength=4
+   attributes[3].attrName=soapid   attrType=INT   attrLength=4
+
+REDBASE >> load soaps("../data/missingint.data");
+Load
+   relName =soaps
+   fileName=../data/missingint.data
+SM warning: invalid/bad load file
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> create table soaps (soapid = i, network = c4, rating = f, sname = c28);
+CreateTable
+   relName     =soaps
+   attrCount   =4
+   attributes[0].attrName=soapid   attrType=INT   attrLength=4
+   attributes[1].attrName=network   attrType=STRING   attrLength=4
+   attributes[2].attrName=rating   attrType=FLOAT   attrLength=4
+   attributes[3].attrName=sname   attrType=STRING   attrLength=28
+
+REDBASE >> load soaps("../data/missingstring.data");
+Load
+   relName =soaps
+   fileName=../data/missingstring.data
+SM warning: invalid/bad load file
+
+REDBASE >> drop table soaps;
+DropTable
+   relName=soaps
+
+REDBASE >> Bye.
