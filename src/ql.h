@@ -84,6 +84,10 @@ private:
   RC SetUpRun(Attr* attributes, RM_FileHandle &relFH);
   RC CleanUpNodes(QL_Node *topNode);
   RC RunPseudoDelete();
+  RC CountNumConditions(int relIndex, int &numConds);
+  RC SetUpFirstNode(QL_Node *&topNode);
+  RC SetUpNodes(QL_Node *&topNode);
+  RC JoinRelation(QL_Node *&topNode, QL_Node *currNode, int relIndex);
 
   RM_Manager &rmm;
   IX_Manager &ixm;
@@ -99,6 +103,9 @@ private:
   AttrCatEntry *attrEntries;
   int nAttrs;
   int nRels;
+  int nConds;
+
+  const Condition *condptr;
   
 
 };

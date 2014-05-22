@@ -14,7 +14,6 @@
 #include "ix.h"
 #include <string>
 #include "ql_node.h"
-#include "node_comps.h"
 
 
 using namespace std;
@@ -28,6 +27,7 @@ QL_NodeJoin::QL_NodeJoin(QL_Manager &qlm, QL_Node &node1, QL_Node &node2) :
   tupleLength = 0;
   condIndex = 0;
   firstNodeSize = 0;
+  gotFirstTuple = false;
 }
 
 QL_NodeJoin::~QL_NodeJoin(){
@@ -80,6 +80,7 @@ RC QL_NodeJoin::SetUpNode(int numConds){
   return (0);
 }
 
+/*
 RC QL_NodeJoin::AddCondition(const Condition condition, int condNum){
   RC rc = 0;
   int index1, index2;
@@ -117,19 +118,24 @@ RC QL_NodeJoin::AddCondition(const Condition condition, int condNum){
 
   return (0);
 }
+*/
 
 RC QL_NodeJoin::OpenIt(){
   RC rc = 0;
   if((rc = node1.OpenIt()) || (rc = node2.OpenIt()))
     return (rc);
-  if((rc = node1.GetNext(buffer)))
-    return (rc);
-
+  gotFirstTuple = false;
+ 
   return (0);
 }
 
 RC QL_NodeJoin::GetNext(char *data){
   RC rc = 0;
+  if(gotFirstTuple == false){
+    if((rc = node1.GetNext(buffer)))
+    return (rc);
+  }
+  gotFirstTuple = true;
   while(true){
     if((rc = node2.GetNext(buffer + firstNodeSize)) && rc == QL_EOI){
       // no more in buffer2, restart it, and get the next node in buf1
@@ -180,6 +186,8 @@ RC QL_NodeJoin::CloseIt(){
   RC rc = 0;
   if((rc = node1.CloseIt()) || (rc = node2.CloseIt()))
     return (rc);
+  gotFirstTuple = false;
+  return (0);
 }
 
 /*
@@ -212,9 +220,5 @@ RC QL_NodeJoin::DeleteNodes(){
   return (0);
 }
 
-RC QL_NodeJoin::GetAttrList(int *attrList, int &attrListSize){
-  attrList = attrsInRec;
-  attrListSize = attrsInRecSize;
-  return (0);
-}
+
 

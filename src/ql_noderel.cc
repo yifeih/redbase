@@ -14,7 +14,7 @@
 #include "ix.h"
 #include <string>
 #include "ql_node.h"
-#include "node_comps.h"
+
 
 using namespace std;
 
@@ -30,6 +30,7 @@ QL_NodeRel::QL_NodeRel(QL_Manager &qlm, RelCatEntry *rEntry) : QL_Node(qlm){
 
   useIndex = false;
   indexNo = 0;
+  indexAttr = 0;
   void *value = NULL;
 }
 
@@ -117,13 +118,24 @@ RC QL_NodeRel::RetrieveNextRec(RM_Record &rec, char *&recData){
 
 
 RC QL_NodeRel::GetNextRec(RM_Record &rec){
-  return (QL_BADCALL);
+  RC rc = 0;
+  char *recData;
+  if((rc = RetrieveNextRec(rec, recData))){
+    if(rc == RM_EOF || rc == IX_EOF)
+      return (QL_EOI);
+    return (rc);
+  }
+  return (0);
+
+  //return (QL_BADCALL);
 }
 
 
-RC QL_NodeRel::UseIndex(int indexNumber, void *data){
+RC QL_NodeRel::UseIndex(int attrNum, int indexNumber, void *data){
   indexNo = indexNumber;
   value = data;
+  useIndex = true;
+  indexAttr = attrNum;
   return (0);
 }
 
@@ -140,6 +152,21 @@ RC QL_NodeRel::SetUpNode(int *attrs, int attrlistSize){
   return (rc);
 }
 
+RC QL_NodeRel::PrintNode(int numTabs){
+  for(int i=0; i < numTabs; i++){
+    cout << "\t";
+  }
+  cout << "- Relation Node: " << relName;
+  if(useIndex){
+    cout << " using index on attribute " << qlm.attrEntries[indexAttr].attrName <<
+      " = " << value << endl;
+  }
+  else{
+    cout << " using filescan." << endl;
+  }
+  return (0);
+}
+
 RC QL_NodeRel::DeleteNodes(){
   if(relNameInitialized == true){
     free(relName);
@@ -152,13 +179,4 @@ RC QL_NodeRel::DeleteNodes(){
   return (0);
 }
 
-RC QL_NodeRel::GetAttrList(int *attrList, int &attrListSize){
-  attrList = attrsInRec;
-  attrListSize = attrsInRecSize;
-  return (0);
-}
 
-RC QL_NodeRel::GetTupleLength(int &tupleLength){
-  tupleLength = this->tupleLength;
-  return (0);
-}

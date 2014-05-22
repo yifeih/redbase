@@ -59,6 +59,7 @@ RC Node_Rel::SetUpRel(int *attrs, int attrlistSize, int numConds){
   return (0);
 }
 
+/*
 RC Node_Rel::AddCondition(const Condition condition){
   RC rc = 0;
   int index1, index2;
@@ -111,7 +112,7 @@ RC Node_Rel::AddCondition(const Condition condition){
 
   return (0);
 
-}
+}*/
 
 RC Node_Rel::OpenIt(){
   RC rc = 0;
@@ -164,6 +165,7 @@ RC Node_Rel::GetNextRec(RM_Record &rec){
   }
   return (0);
 }
+
 
 RC Node_Rel::CheckConditions(char *recData){
   RC rc = 0;
@@ -256,6 +258,7 @@ RC Node_Rel::DeleteNodes(){
   return (0);
 }
 
+/*
 
 RC Node_Rel::GetAttrList(int *attrList, int &attrListSize){
   attrList = attrsInRec;
@@ -267,4 +270,5 @@ RC Node_Rel::GetTupleLength(int &tupleLength){
   tupleLength = this->tupleLength;
   return (0);
 }
+*/
 

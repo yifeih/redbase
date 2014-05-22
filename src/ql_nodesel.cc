@@ -14,7 +14,6 @@
 #include "ix.h"
 #include <string>
 #include "ql_node.h"
-#include "node_comps.h"
 
 using namespace std;
 
@@ -61,6 +60,7 @@ RC QL_NodeSel::SetUpNode(int numConds){
   return (0);
 }
 
+/*
 RC QL_NodeJoin::AddCondition(const Condition condition, int condNum){
   RC rc = 0;
   int index1, index2;
@@ -98,23 +98,94 @@ RC QL_NodeJoin::AddCondition(const Condition condition, int condNum){
 
   return (0);
 }
+*/
 
 
 RC QL_NodeSel::OpenIt(){
-
+  RC rc = 0;
+  if((rc = prevNode.OpenIt()))
+    return (rc);
+  return (0);
 }
 
 RC QL_NodeSel::GetNext(char *data){
+  RC rc = 0;
+  while(true){
+    if((rc = prevNode.GetNext(buffer))){
+      return (rc);
+    }
 
+    RC cond = CheckConditions(buffer);
+    if(cond == 0)
+      break;
+  }
+  memcpy(data, buffer, tupleLength);
+  return (0);
 }
 
 RC QL_NodeSel::CloseIt(){
+  RC rc = 0;
+  if((rc = prevNode.CloseIt()))
+    return (rc);
 
+  return (0);
 }
 
 
 RC QL_NodeSel::GetNextRec(RM_Record &rec){
-  return (QL_BADCALL);
+  RC rc = 0;
+  while(true){
+    if((rc = prevNode.GetNextRec(rec)))
+      return (rc);
+
+    char *pData;
+    if((rc = rec.GetData(pData)))
+      return (rc);
+
+    RC cond = CheckConditions(pData);
+    if(cond ==0)
+      break;
+  }
+
+  //return (QL_BADCALL);
+  return (0);
+}
+
+RC QL_NodeSel::CheckConditions(char *recData){
+  RC rc = 0;
+  for(int i = 0; i < condIndex; i++){
+    int offset1 = condList[i].offset1;
+    if(! condList[i].isValue){
+      int offset2 = condList[i].offset2;
+      bool comp = condList[i].comparator((void *)(recData + offset1), (void *)(recData + offset2), 
+        condList[i].type, condList[i].length);
+      if(comp == false)
+        return (-1);
+    }
+    else{
+      bool comp = condList[i].comparator((void *)(recData + offset1), condList[i].data, 
+        condList[i].type, condList[i].length);
+      if(comp == false)
+        return (-1);
+    }
+
+  }
+
+  return (0);
+}
+
+RC QL_NodeSel::PrintNode(int numTabs){
+  for(int i=0; i < numTabs; i++){
+    cout << "\t";
+  }
+  cout << "-Select Node: ";
+  for(int i = 0; i < condIndex; i++){
+    cout << qlm.condptr[condsInNode[i]];
+  }
+  cout << "\n";
+  prevNode.PrintNode(numTabs + 1);
+
+  return (0);
 }
 
 RC QL_NodeSel::DeleteNodes(){
@@ -126,16 +197,5 @@ RC QL_NodeSel::DeleteNodes(){
     free(condsInNode);
   }
   listsInitialized = false;
-  return (0);
-}
-
-RC QL_NodeSel::GetAttrList(int *attrList, int &attrListSize){
-  attrList = attrsInRec;
-  attrListSize = attrsInRecSize;
-  return (0);
-}
-
-RC QL_NodeSel::GetTupleLength(int &tupleLength){
-  tupleLength = this->tupleLength;
   return (0);
 }

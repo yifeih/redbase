@@ -6,6 +6,7 @@
 #ifndef QL_NODE_H
 #define QL_NODE_H
 
+
 typedef struct Cond{
   int offset1;
   bool (*comparator) (void * , void *, AttrType, int);
@@ -26,10 +27,11 @@ public:
   virtual RC GetNextRec(RM_Record &rec) = 0;
   virtual RC CloseIt() = 0;
   virtual RC DeleteNodes() = 0;
-  virtual RC GetAttrList(int *attrList, int &attrListSize) = 0;
-  virtual RC GetTupleLength(int &tupleLength) = 0;
   virtual RC PrintNode(int numTabs) = 0;
   RC IndexToOffset(int index, int &offset, int &length);
+  RC AddCondition(const Condition conditions, int condNum);
+  RC GetAttrList(int *&attrList, int &attrListSize);
+  RC GetTupleLength(int &tupleLength);
 protected:
   QL_Manager &qlm;
   bool isOpen;
@@ -37,6 +39,10 @@ protected:
   int *attrsInRec;
   int attrsInRecSize;
   bool listsInitialized;
+
+  Cond *condList;
+  int condIndex;
+  int* condsInNode;
 };
 
 
@@ -51,8 +57,6 @@ public:
   RC CloseIt();
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
-  RC GetAttrList(int *attrList, int &attrListSize);
-  RC GetTupleLength(int &tupleLength);
 
   RC AddProj(AttrCatEntry * attr);
 private:
@@ -71,17 +75,15 @@ public:
   RC CloseIt();
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
-  RC GetAttrList(int *attrList, int &attrListSize);
-  RC GetTupleLength(int &tupleLength);
+  RC PrintNode(int numTabs);
 
   RC AddCondition(const Condition conditions, int condNum);
   RC SetUpNode(int numConds);
+  RC CheckConditions(char *recData);
 private:
   //RC IndexToOffset(int index, int &offset, int &length);
   QL_Node& prevNode;
-  Cond *condList;
-  int condIndex;
-  int* condsInNode;
+
   char *buffer;
 };
 
@@ -95,12 +97,10 @@ public:
   RC CloseIt();
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
-  RC GetAttrList(int *attrList, int &attrListSize);
-  RC GetTupleLength(int &tupleLength);
+  RC PrintNode(int numTabs);
 
   RC AddCondition(const Condition conditions, int condNum);
   RC SetUpNode(int numConds);
-
 private:
   //RC IndexToOffset(int index, int &offset, int &length);
   RC CheckConditions(char *recData);
@@ -110,9 +110,8 @@ private:
   //char *buffer1;
   //char *buffer2;
   char * buffer;
-  Cond *condList;
-  int condIndex;
-  int* condsInNode;
+
+  bool gotFirstTuple;
 };
 
 
@@ -126,11 +125,10 @@ public:
   RC CloseIt();
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
-  RC GetAttrList(int *attrList, int &attrListSize);
-  RC GetTupleLength(int &tupleLength);
+  RC PrintNode(int numTabs);
 
   RC SetUpNode(int *attrs, int attrlistSize);
-  RC UseIndex(int indexNumber, void *data);
+  RC UseIndex(int attrNum, int indexNumber, void *data);
 private:
   //RC IndexToOffset(int index, int &offset, int &length);
   RC RetrieveNextRec(RM_Record &rec, char *&recData);
@@ -140,6 +138,7 @@ private:
   bool useIndex;
   int indexNo;
   void *value;
+  int indexAttr;
 
   RM_FileHandle fh;
   IX_IndexHandle ih;
@@ -164,8 +163,6 @@ public:
   RC CloseIt();
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
-  RC GetAttrList(int *attrList, int &attrListSize);
-  RC GetTupleLength(int &tupleLength);
   RC PrintNode(int numTabs);
 
   RC SetUpRel(int *attrs, int attrlistSize, int numConds);

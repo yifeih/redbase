@@ -16,6 +16,7 @@
 #include "ql_node.h"
 #include "node_comps.h"
 
+
 using namespace std;
 
 QL_NodeProj::QL_NodeProj(QL_Manager &qlm, QL_Node &prevNode) : QL_Node(qlm), prevNode(prevNode) {
@@ -45,12 +46,4 @@ RC QL_NodeProj::GetNextRec(RM_Record &rec){
 
 RC QL_NodeProj::DeleteNodes(){
 
-}
-
-RC QL_NodeProj::GetAttrList(int *attrList, int &attrListSize){
-
-}
-
-RC QL_NodeProj::GetTupleLength(int &tupleLength){
-  
 }

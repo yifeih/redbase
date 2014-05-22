@@ -21,7 +21,10 @@ static char *QL_WarnMsg[] = {
   (char*)"duplicate relation",
   (char*)"bad select attribute",
   (char*)"attribute not found",
-  (char*)"bad select condition"
+  (char*)"bad select condition",
+  (char*)"bad call",
+  (char*)"condition not met",
+  (char*)"end of iterator"
 };
 
 static char *QL_ErrorMsg[] = {
