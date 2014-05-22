@@ -8,6 +8,10 @@
 #ifndef QL_H
 #define QL_H
 
+
+#include <string>
+#include <set>
+#include <map>
 #include <stdlib.h>
 #include <string.h>
 #include "redbase.h"
@@ -15,11 +19,18 @@
 #include "rm.h"
 #include "ix.h"
 #include "sm.h"
+#include "ql_node.h"
 
 //
 // QL_Manager: query language (DML)
 //
 class QL_Manager {
+    friend class QL_Node;
+    friend class Node_Rel;
+    friend class QL_NodeJoin;
+    friend class QL_NodeRel;
+    friend class QL_NodeSel;
+    friend class QL_NodeProj;
 public:
     QL_Manager (SM_Manager &smm, IX_Manager &ixm, RM_Manager &rmm);
     ~QL_Manager();                       // Destructor
@@ -48,11 +59,67 @@ public:
         const Condition conditions[]);   // conditions in where clause
 
 private:
+  RC Reset();
+  bool IsValidAttr(const RelAttr attr);
+  RC ParseRelNoDup(int nRelations, const char * const relations[]);
+  RC InsertIntoRelation(const char *relName, int tupleLength, int nValues, const Value values[]);
+  RC InsertIntoIndex(char *recbuf, RID recRID);
+  RC CreateRecord(char *recbuf, AttrCatEntry *aEntries, int nValues, const Value values[]);
+  RC ParseSelectAttrs(int nSelAttrs, const RelAttr selAttrs[]);
+  RC GetAttrCatEntry(const RelAttr attr, AttrCatEntry *&entry);
+  RC GetAttrCatEntryPos(const RelAttr attr, int &index);
+  RC ParseConditions(int nConditions, const Condition conditions[]);
+  RC SetUpOneRelation(const char *relName);
+  RC CreateRelNode(QL_Node *&topNode, int relIndex, int nConditions, const Condition conditions[]);
+  RC CheckUpdateAttrs(const RelAttr &updAttr,
+                      const int bIsValue,
+                      const RelAttr &rhsRelAttr,
+                      const Value &rhsValue);
+  RC RunDelete(QL_Node *topNode);
+  RC RunUpdate(QL_Node *topNode, const RelAttr &updAttr,
+                      const int bIsValue,
+                      const RelAttr &rhsRelAttr,
+                      const Value &rhsValue);
+  RC CleanUpRun(Attr* attributes, RM_FileHandle &relFH);
+  RC SetUpRun(Attr* attributes, RM_FileHandle &relFH);
+  RC CleanUpNodes(QL_Node *topNode);
+  RC RunPseudoDelete();
+
+  RM_Manager &rmm;
+  IX_Manager &ixm;
+  SM_Manager &smm;
+
+  // helpers for select
+  std::map<std::string, int> relToInt;
+  std::map<std::string, std::set<std::string> > attrToRel;
+  std::map<std::string, int> relToAttrIndex;
+  std::map<int, int> conditionToRel;
+
+  RelCatEntry *relEntries;
+  AttrCatEntry *attrEntries;
+  int nAttrs;
+  int nRels;
+  
+
 };
 
 //
 // Print-error function
 //
 void QL_PrintError(RC rc);
+
+#define QL_BADINSERT            (START_QL_WARN + 0) // invalid RID
+#define QL_DUPRELATION          (START_QL_WARN + 1)
+#define QL_BADSELECTATTR        (START_QL_WARN + 2)
+#define QL_ATTRNOTFOUND         (START_QL_WARN + 3)
+#define QL_BADCOND              (START_QL_WARN + 4)
+#define QL_BADCALL              (START_QL_WARN + 5)
+#define QL_LASTWARN             QL_BADCALL
+
+#define QL_INVALIDDB            (START_QL_ERR - 0)
+#define QL_ERROR                (START_QL_ERR - 1) // error
+#define QL_LASTERROR            QL_ERROR
+
+
 
 #endif

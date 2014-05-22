@@ -9,6 +9,7 @@
 #include "pf.h"
 #include "rm_internal.h"
 #include <math.h>
+#include <cstdio>
 
 /*
  * Constructor for RM_FileHandle

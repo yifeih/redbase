@@ -40,10 +40,10 @@ RM_SOURCES     = rm_manager.cc rm_filehandle.cc rm_record.cc \
                  rm_filescan.cc rm_error.cc rm_rid.cc
 IX_SOURCES     = ix_manager.cc ix_indexhandle.cc ix_indexscan.cc ix_error.cc
 SM_SOURCES     = sm_manager.cc printer.cc sm_error.cc sm_attriterator.cc
-QL_SOURCES     = ql_manager_stub.cc
+QL_SOURCES     = ql_error.cc ql_manager.cc node_rel.cc ql_node.cc ql_nodeproj.cc ql_noderel.cc ql_nodejoin.cc ql_nodesel.cc
 UTILS_SOURCES  = dbcreate.cc dbdestroy.cc redbase.cc
 PARSER_SOURCES = scan.c parse.c nodes.c interp.c
-TESTER_SOURCES = rm_test_sm.cc parser_test.cc ix_testkpg_2.cc ix_testpark.cc ix_testjl.cc ix_tester.cc ix_test_simple.cc ix_test.cc rm_testrecsizes.cc rm_testshnFIXED.cc rm_testyh_random.cc rm_test.cc rm_testgmf.cc rm_testkpg.cc #rm_testjl.cc #rm_test.cc #ix_test.cc parser_test.cc
+TESTER_SOURCES = rm_testkpg.cc parser_test.cc ix_testkpg_2.cc ix_testpark.cc ix_testjl.cc ix_tester.cc ix_test_simple.cc ix_test.cc rm_testrecsizes.cc rm_testshnFIXED.cc rm_testyh_random.cc rm_test.cc rm_testgmf.cc rm_testkpg.cc #rm_testjl.cc #rm_test.cc #ix_test.cc parser_test.cc
 
 PF_OBJECTS     = $(addprefix $(BUILD_DIR), $(PF_SOURCES:.cc=.o))
 RM_OBJECTS     = $(addprefix $(BUILD_DIR), $(RM_SOURCES:.cc=.o))

@@ -16,6 +16,9 @@
 #include "ix.h"
 #include "printer.h"
 #include "rm_rid.h"
+#include <map>
+#include <string>
+#include <set>
 
 #define MAX_DB_NAME 255
 
@@ -107,6 +110,9 @@ private:
 
   // Prepares the Attr array, which helps with loading
   RC PrepareAttr(RelCatEntry *rEntry, Attr* attributes);
+  RC GetAttrForRel(RelCatEntry *relEntry, AttrCatEntry *aEntry, std::map<std::string, std::set<std::string> > &attrToRel);
+  RC GetAllRels(RelCatEntry *relEntries, int nRelations, const char * const relations[], 
+    int &attrCount, std::map<std::string, int> &relToInt);
 
   // Opens a file and loads it
   RC OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr* attributes, 

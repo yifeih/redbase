@@ -1,5 +1,5 @@
 //
-// File:        SM component stubs
+// File:        SM component
 // Description: Print parameters of all SM_Manager methods
 // Authors:     Yifei Huang (yifei@stanford.edu)
 //
@@ -45,7 +45,7 @@ bool recInsert_float(char *location, string value, int length){
 }
 
 bool recInsert_string(char *location, string value, int length){
-  if(value.length() > length){
+  if(value.length() >= length){
     memcpy(location, value.c_str(), length);
     return true;
   }
@@ -330,6 +330,58 @@ RC SM_Manager::GetRelEntry(const char *relName, RM_Record &relRec, RelCatEntry *
     return (rc);
 
   if((rc = relRec.GetData((char *&)entry))) // retrieve its data contents
+    return (rc);
+
+  return (0);
+}
+
+RC SM_Manager::GetAllRels(RelCatEntry *relEntries, int nRelations, const char * const relations[],
+  int &attrCount, map<string, int> &relToInt){
+  RC rc = 0;
+  for(int i=0; i < nRelations; i++){
+    RelCatEntry *rEntry;
+    RM_Record rec;
+    if((rc = GetRelEntry(relations[i], rec, rEntry)))
+      return (rc);
+    *(relEntries + i) = (RelCatEntry) {"\0", 0, 0, 0, 0};
+    memcpy((char *)(relEntries + i), (char *)rEntry, sizeof(RelCatEntry));
+    attrCount += relEntries[i].attrCount;
+
+    // create a map from relation name to # in order
+    string relString(relEntries[i].relName);
+    relToInt.insert({relString, i});
+  }
+  return (rc);
+}
+
+RC SM_Manager::GetAttrForRel(RelCatEntry *relEntry, AttrCatEntry *aEntry, std::map<std::string, std::set<std::string> > &attrToRel){
+  RC rc = 0;
+  SM_AttrIterator attrIt;
+  if((rc = attrIt.OpenIterator(attrcatFH, (relEntry->relName))))
+    return (rc);
+  RM_Record attrRec;
+  AttrCatEntry *attrEntry;
+  for(int i = 0; i < relEntry->attrCount; i++){
+    if((rc = attrIt.GetNextAttr(attrRec, attrEntry)))
+      return (rc);
+    
+    int slot = attrEntry->attrNum;
+    *(aEntry + slot) = (AttrCatEntry) {"\0", "\0", 0, INT, 0, 0, 0};
+    memcpy((char *)(aEntry + slot), (char *)attrEntry, sizeof(AttrCatEntry));
+
+    string attrString(aEntry[slot].attrName);
+    string relString(relEntry->relName);
+    map<string, set<string> >::iterator it = attrToRel.find(attrString);
+    if(it == attrToRel.end()){
+      set<string> relNames;
+      relNames.insert(relString);
+      attrToRel.insert({attrString, relNames});
+    }
+    else{
+      attrToRel[attrString].insert(relString);
+    }
+  }
+  if((rc = attrIt.CloseIterator())) // Done with search!
     return (rc);
 
   return (0);

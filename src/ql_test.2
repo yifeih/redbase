@@ -1,0 +1,58 @@
+Don’t know how to set up the file so here it is for now:
+/* TESTING SELECT/DELETE/UPDATE Parser/Validator */
+
+
+!ls
+create table student(no i, name c20, dept c4, GPA f, comment c3);
+load student("/usr/class/cs346/redbase/data/student.data");
+!ls
+
+print student;
+/* TEST1: relations in selAttrs don't show up in the relations array */
+select religion, ethnicity from student;
+
+
+/* TEST2: relations in relations array don't show up in relcat */
+select name, dept
+from student, teacher;
+
+
+/* TEST3: duplicate relations in relations array */
+select name
+from student, student;
+
+create table teacher(no i, name c20, dept c4, reviews c3);
+
+
+/* TEST4: NULL.attr not unique */
+select name
+from student, teacher;
+
+
+/* TEST5: R.attr --> R not in relations array */
+select pig.name
+from student;
+
+
+/* TEST 6: R.attr --> R is in relations array but not in relcat*/
+select pig.name
+from pig;
+
+
+/* TEST 7: Trying to compare ints and floats 2attrs, 1 attr 1 value */
+select teacher.no, student.no
+from student, teacher
+where student.no = 2.0 and teacher.no = student.gpa;
+
+
+/* TEST 8: Trying to compare strings and ints 2attrs, 1 attr 1 value */
+select teacher.no, student.no
+from student, teacher
+where student.no = "cat" and teacher.no = student.name;
+
+
+/* TEST 9: Trying to compare strings and floats 2attrs, 1 attr 1 value */
+select student.GPA
+from student, teacher
+where student.GPA = "cat" and student.GPA = teacher.name;
+
