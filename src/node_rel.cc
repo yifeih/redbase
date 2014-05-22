@@ -16,10 +16,11 @@
 #include "ql_node.h"
 #include "node_comps.h"
 
+
 using namespace std;
 
 
-Node_Rel::Node_Rel(QL_Manager &qlm, RelCatEntry* rEntry) : qlm(qlm) {
+Node_Rel::Node_Rel(QL_Manager &qlm, RelCatEntry* rEntry) : QL_Node(qlm) {
   relName = (char *)malloc(MAXNAME+1);
   memset((void *)relName, 0, sizeof(relName));
   memcpy(this->relName, rEntry->relName, strlen(rEntry->relName) + 1);
@@ -63,14 +64,14 @@ RC Node_Rel::AddCondition(const Condition condition){
   int index1, index2;
   int offset1, offset2;
   int length1, length2;
-  if((rc = qlm.GetAttrCatEntryPos(condition.lhsAttr, index1) ) || (rc = IndexToOffset(index1, offset1, length1)))
+  if((rc = qlm.GetAttrCatEntryPos(condition.lhsAttr, index1) ) || (rc = QL_Node::IndexToOffset(index1, offset1, length1)))
     return (rc);
   condList[condIndex].offset1 = offset1;
   condList[condIndex].length = length1;
   condList[condIndex].type = qlm.attrEntries[index1].attrType;
 
   if(condition.bRhsIsAttr){
-    if((rc = qlm.GetAttrCatEntryPos(condition.rhsAttr, index2)) || (rc = IndexToOffset(index2, offset2, length2)))
+    if((rc = qlm.GetAttrCatEntryPos(condition.rhsAttr, index2)) || (rc = QL_Node::IndexToOffset(index2, offset2, length2)))
       return (rc);
     condList[condIndex].offset2 = offset2;
     condList[condIndex].isValue = false;
@@ -146,7 +147,7 @@ RC Node_Rel::GetNext(char * data){
       break;
   }
 
-  memcpy(recData, data, tupleLength);
+  memcpy(data, recData, tupleLength);
   return (0);
 }
 
@@ -223,6 +224,11 @@ RC Node_Rel::GetNextRecData(RM_Record &rec, char *&recData){
   return (0);
 }
 
+RC Node_Rel::PrintNode(int numTabs){
+  return (0);
+}
+
+/*
 RC Node_Rel::IndexToOffset(int index, int &offset, int &length){
   offset = 0;
   for(int i=0; i < attrsInRecSize; i++){
@@ -234,6 +240,7 @@ RC Node_Rel::IndexToOffset(int index, int &offset, int &length){
   }
   return (QL_ATTRNOTFOUND);
 }
+*/
 
 RC Node_Rel::DeleteNodes(){
   // This relation has nothing to destroy
