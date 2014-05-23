@@ -7,6 +7,8 @@
 #define QL_NODE_H
 
 
+
+
 typedef struct Cond{
   int offset1;
   bool (*comparator) (void * , void *, AttrType, int);
@@ -28,6 +30,7 @@ public:
   virtual RC CloseIt() = 0;
   virtual RC DeleteNodes() = 0;
   virtual RC PrintNode(int numTabs) = 0;
+  RC PrintCondition(const Condition condition);
   RC IndexToOffset(int index, int &offset, int &length);
   RC AddCondition(const Condition conditions, int condNum);
   RC GetAttrList(int *&attrList, int &attrListSize);
@@ -57,10 +60,17 @@ public:
   RC CloseIt();
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
+  RC PrintNode(int numTabs);
 
-  RC AddProj(AttrCatEntry * attr);
+  RC AddProj(int attrIndex);
+  RC ReconstructRec(char *data);
+  RC SetUpNode(int numAttrToKeep);
 private:
   QL_Node &prevNode;
+  //int *attrsToKeep;
+  int numAttrsToKeep;
+  //int attrsListIdx;
+  char *buffer;
 };
 
 

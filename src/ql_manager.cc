@@ -84,11 +84,11 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
   // Parse - relations have no duplicates
   if((rc = ParseRelNoDup(nRelations, relations)))
     return (rc);
-  condptr = conditions;
-  nConds = nConditions;
 
   Reset();
   nRels = nRelations;
+  nConds = nConditions;
+  condptr = conditions;
 
   // retrieve all relations
   relEntries = (RelCatEntry *)malloc(sizeof(RelCatEntry)*nRelations);
@@ -124,15 +124,125 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
   }
 
   QL_Node *topNode;
-  if((rc = SetUpNodes(topNode)))
+  if((rc = SetUpNodes(topNode, nSelAttrs, selAttrs)))
     return (rc);
   //QL_Node *topNode;
   //CreateNodes(topNode);
+
+  if(bQueryPlans){
+    cout << "PRINTING QUERY PLAN" <<endl;
+    topNode->PrintNode(0);
+  }
+
+  // run
+  if((rc = RunSelect(topNode)))
+    return (rc);
+
+  if((rc = CleanUpNodes(topNode)))
+    return (rc);
 
   free(relEntries);
   free(attrEntries);
 
   return (rc);
+}
+
+
+RC QL_Manager::RunSelect(QL_Node *topNode){
+  RC rc = 0;
+  int finalTupLength;
+  topNode->GetTupleLength(finalTupLength);
+  int *attrList;
+  int attrListSize;
+  if((rc = topNode->GetAttrList(attrList, attrListSize)))
+    return (rc);
+
+  RM_FileHandle tempFH;
+  if((rc = rmm.CreateFile("tempFile", finalTupLength)) || (rc = rmm.OpenFile("tempFile", tempFH)))
+    return (rc);
+
+  if((rc = topNode->OpenIt()))
+    return (rc);
+  RC it_rc = 0;
+  char *buffer = (char *)malloc(finalTupLength);
+  it_rc = topNode->GetNext(buffer);
+  while(it_rc == 0){
+    RID rid;
+    //printf("inserting tuple\n");
+    //printf("%d %d, %d %d \n", *(int*)buffer, *(int*)(buffer + 4), *(int*)(buffer + 12), *(int*)(buffer + 16));
+    if((rc = tempFH.InsertRec(buffer, rid))){
+      free(buffer);
+      return (rc);
+    }
+    it_rc = topNode->GetNext(buffer);
+  }
+
+  free(buffer);
+  if((rc = topNode->CloseIt()))
+    return (rc);
+
+  DataAttrInfo * attributes = (DataAttrInfo *)malloc(attrListSize* sizeof(DataAttrInfo));
+  if((rc = SetUpPrinter(topNode, attributes)))
+    return (rc);
+  Printer printer(attributes, attrListSize);
+  printer.PrintHeader(cout);
+
+  RM_FileScan fs;
+  if((rc = fs.OpenScan(tempFH, INT, 4, 0, NO_OP, NULL))){
+    free(attributes);
+    return (rc);
+  }
+
+  RM_Record rec;
+  while(fs.GetNextRec(rec) != RM_EOF){
+    char *pData;
+    if((rec.GetData(pData))){
+      free(attributes);
+      return (rc);
+    }
+    //printf("%d %d, %d %d \n", *(int*)pData, *(int*)(pData + 4), *(int*)(pData + 12), *(int*)(pData + 16));
+    printer.Print(cout, pData);
+  }
+  fs.CloseScan();
+  printer.PrintFooter(cout);
+
+  free(attributes);
+
+  if((rc = rmm.CloseFile(tempFH)) || (rc = rmm.DestroyFile("tempFile")))
+    return (rc);
+  // retrieve appropriate size from top node
+  // create file of appropriate size;
+  
+  // run and insert
+  // retrieve appropriate relations and create print
+
+  // run print;
+  // delete file
+
+  return (0);
+}
+
+RC QL_Manager::SetUpPrinter(QL_Node *topNode, DataAttrInfo *attributes){
+  RC rc = 0;
+  int *attrList;
+  int attrListSize;
+  if((rc = topNode->GetAttrList(attrList, attrListSize)))
+    return (rc);
+  
+  for(int i=0; i < attrListSize; i++){
+    int index = attrList[i];
+    memcpy(attributes[i].relName, attrEntries[index].relName, MAXNAME + 1);
+    memcpy(attributes[i].attrName, attrEntries[index].attrName, MAXNAME + 1);
+    attributes[i].attrType = attrEntries[index].attrType;
+    attributes[i].attrLength = attrEntries[index].attrLength;
+    attributes[i].indexNo = attrEntries[index].indexNo;
+    int offset, length;
+    if((rc = topNode->IndexToOffset(index, offset, length)))
+      return (rc);
+    attributes[i].offset = offset;
+  }
+
+  return (0);
 }
 
 bool QL_Manager::IsValidAttr(const RelAttr attr){
@@ -162,7 +272,7 @@ bool QL_Manager::IsValidAttr(const RelAttr attr){
   }
 }
 
-RC QL_Manager::SetUpNodes(QL_Node *&topNode){
+RC QL_Manager::SetUpNodes(QL_Node *&topNode, int nSelAttrs, const RelAttr selAttrs[]){
   RC rc = 0;
   // Set up node 1:
   if((rc = SetUpFirstNode(topNode)))
@@ -170,18 +280,34 @@ RC QL_Manager::SetUpNodes(QL_Node *&topNode){
 
   QL_Node* currNode;
   currNode = topNode;
-  for(int i = 0; i < nRels; i++){
+  for(int i = 1; i < nRels; i++){
     if((rc = JoinRelation(topNode, currNode, i)))
       return (rc);
+    currNode = topNode;
   }
+
+  // add project nodes:
+  if((nSelAttrs == 1 && strncmp(selAttrs[0].attrName, "*", strlen(selAttrs[0].attrName)) == 0))
+    return (0);
+  QL_NodeProj *projNode = new QL_NodeProj(*this, *currNode);
+  projNode->SetUpNode(nSelAttrs);
+  for(int i= 0 ; i < nSelAttrs; i++){
+    int attrIndex = 0;
+    if((rc = GetAttrCatEntryPos(selAttrs[i], attrIndex)))
+      return (rc);
+    if((rc = projNode->AddProj(attrIndex)))
+      return (rc);
+  }
+  topNode = projNode;
 
   return (rc);
 }
 
 RC QL_Manager::JoinRelation(QL_Node *&topNode, QL_Node *currNode, int relIndex){
   RC rc = 0;
-  QL_NodeRel *relNode = new QL_NodeRel(*this, relEntries);
-  topNode = relNode;
+  bool useIndex = false;
+  // create new relation node
+  QL_NodeRel *relNode = new QL_NodeRel(*this, relEntries + relIndex);
   int *attrList = (int *)malloc(relEntries[relIndex].attrCount * sizeof(int));
   memset((void *)attrList, 0, sizeof(attrList));
   for(int i = 0;  i < relEntries[relIndex].attrCount ; i++){
@@ -192,9 +318,39 @@ RC QL_Manager::JoinRelation(QL_Node *&topNode, QL_Node *currNode, int relIndex){
   for(int i = 0;  i < relEntries[relIndex].attrCount ; i++){
     attrList[i] = start + i;
   }
+  relNode->SetUpNode(attrList, relEntries[relIndex].attrCount);
+  free(attrList);
+
+  int numConds;
+  CountNumConditions(relIndex, numConds);
 
   
-  
+  // create new join node:
+  QL_NodeJoin *joinNode = new QL_NodeJoin(*this, *currNode, *relNode);
+  if((rc = joinNode->SetUpNode(numConds)))
+    return (rc);
+  topNode = joinNode;
+
+  for(int i = 0; i < nConds; i++){
+    if(conditionToRel[i] == relIndex){
+      bool added = false;
+      if(condptr[i].op == EQ_OP && !condptr[i].bRhsIsAttr && useIndex == false){
+        int index = 0;
+        if((rc = GetAttrCatEntryPos(condptr[i].lhsAttr, index) ))
+          return (rc);
+        if((attrEntries[index].indexNo != -1)){
+          if((rc = relNode->UseIndex(index, attrEntries[index].indexNo, condptr[i].rhsValue.data) ))
+            return (rc);
+          added = true;
+          useIndex = true;
+        }
+      }
+      if(! added){
+        if((rc = topNode->AddCondition(condptr[i], i)))
+          return (rc);
+      }
+    }
+  }
 
   return (rc);
 }
@@ -202,6 +358,7 @@ RC QL_Manager::JoinRelation(QL_Node *&topNode, QL_Node *currNode, int relIndex){
 RC QL_Manager::SetUpFirstNode(QL_Node *&topNode){
   RC rc = 0;
   bool useSelNode = false;
+  bool useIndex = false;
   int relIndex = 0;
 
   QL_NodeRel *relNode = new QL_NodeRel(*this, relEntries);
@@ -216,17 +373,17 @@ RC QL_Manager::SetUpFirstNode(QL_Node *&topNode){
   for(int i = 0;  i < relEntries[relIndex].attrCount ; i++){
     attrList[i] = start + i;
   }
+  relNode->SetUpNode(attrList, relEntries[relIndex].attrCount);
+  free(attrList);
 
   // count the number of conditions associated with this node:
   int numConds;
   CountNumConditions(0, numConds);
 
-  relNode->SetUpNode(attrList, relEntries[relIndex].attrCount);
-  free(attrList);
   for(int i = 0 ; i < nConds; i++){
     if(conditionToRel[i] == 0){
       bool added = false;
-      if(condptr[i].op == EQ_OP && !condptr[i].bRhsIsAttr){
+      if(condptr[i].op == EQ_OP && !condptr[i].bRhsIsAttr && useIndex == false){
         int index = 0;
         if((rc = GetAttrCatEntryPos(condptr[i].lhsAttr, index) ))
           return (rc);
@@ -234,6 +391,7 @@ RC QL_Manager::SetUpFirstNode(QL_Node *&topNode){
           if((rc = relNode->UseIndex(index, attrEntries[index].indexNo, condptr[i].rhsValue.data) ))
             return (rc);
           added = true;
+          useIndex = true;
         }
       }
       if(! added && !useSelNode){
@@ -241,6 +399,7 @@ RC QL_Manager::SetUpFirstNode(QL_Node *&topNode){
         if((rc = selNode->SetUpNode(numConds) ))
           return (rc);
         topNode = selNode;
+        useSelNode = true;
       }
       if(! added){
         if((rc = topNode->AddCondition(condptr[i], i) ))

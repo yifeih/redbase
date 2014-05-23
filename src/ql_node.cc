@@ -15,7 +15,7 @@
 #include <string>
 #include "ql_node.h"
 #include "node_comps.h"
-
+#include "comparators.h"
 
 using namespace std;
 
@@ -25,6 +25,44 @@ QL_Node::QL_Node(QL_Manager &qlm) : qlm(qlm) {
 
 QL_Node::~QL_Node(){
 
+}
+
+
+RC QL_Node::PrintCondition(const Condition condition){
+  RC rc = 0;
+
+  if(condition.lhsAttr.relName == NULL){
+    cout << "NULL";
+  }
+  else
+    cout << condition.lhsAttr.relName;
+  cout << "." << condition.lhsAttr.attrName;
+
+  switch(condition.op){
+    case EQ_OP : cout << "="; break;
+    case LT_OP : cout << "<"; break;
+    case GT_OP : cout << ">"; break;
+    case LE_OP : cout << "<="; break;
+    case GE_OP : cout << ">="; break;
+    case NE_OP : cout << "!="; break;
+    default: return (QL_BADCOND);
+  }
+  if(condition.bRhsIsAttr){
+    cout << condition.rhsAttr.relName << "." << condition.rhsAttr.attrName;
+  }
+  else{
+    if(condition.rhsValue.type == INT){
+      print_int(condition.rhsValue.data, 4);
+    }
+    else if(condition.rhsValue.type == FLOAT){
+      print_float(condition.rhsValue.data, 4);
+    }
+    else{
+      print_float(condition.rhsValue.data, strlen((const char *)condition.rhsValue.data));
+    }
+  }
+
+  return (0);
 }
 
 RC QL_Node::IndexToOffset(int index, int &offset, int &length){
@@ -64,6 +102,7 @@ RC QL_Node::AddCondition(const Condition condition, int condNum){
     condList[condIndex].isValue = true;
     condList[condIndex].data = condition.rhsValue.data;
   }
+
   switch(condition.op){
     case EQ_OP : condList[condIndex].comparator = &nequal; break;
     case LT_OP : condList[condIndex].comparator = &nless_than; break;

@@ -86,8 +86,10 @@ private:
   RC RunPseudoDelete();
   RC CountNumConditions(int relIndex, int &numConds);
   RC SetUpFirstNode(QL_Node *&topNode);
-  RC SetUpNodes(QL_Node *&topNode);
+  RC SetUpNodes(QL_Node *&topNode, int nSelAttrs, const RelAttr selAttrs[]);
   RC JoinRelation(QL_Node *&topNode, QL_Node *currNode, int relIndex);
+  RC RunSelect(QL_Node *topNode);
+  RC SetUpPrinter(QL_Node *topNode, DataAttrInfo *attributes);
 
   RM_Manager &rmm;
   IX_Manager &ixm;

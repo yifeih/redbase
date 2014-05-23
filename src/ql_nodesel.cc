@@ -46,6 +46,7 @@ RC QL_NodeSel::SetUpNode(int numConds){
     attrsInRec[i] = attrListPtr[i];
   }
 
+  printf("Sel node number of conds: %d \n", numConds);
   condList = (Cond *)malloc(numConds * sizeof(Cond));
   for(int i= 0; i < numConds; i++){
     condList[i] = {0, NULL, true, NULL, 0, 0, INT};
@@ -178,11 +179,14 @@ RC QL_NodeSel::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){
     cout << "\t";
   }
-  cout << "-Select Node: ";
+  cout << "-Select Node: " << endl;
   for(int i = 0; i < condIndex; i++){
-    cout << qlm.condptr[condsInNode[i]];
+    for(int j=0; j <numTabs; j++){
+      cout << "\t";
+    }
+    PrintCondition(qlm.condptr[condsInNode[i]]);
+    cout << "\n";
   }
-  cout << "\n";
   prevNode.PrintNode(numTabs + 1);
 
   return (0);
@@ -190,6 +194,7 @@ RC QL_NodeSel::PrintNode(int numTabs){
 
 RC QL_NodeSel::DeleteNodes(){
   prevNode.DeleteNodes();
+  delete &prevNode;
   if(listsInitialized == true){
     free(condList);
     free(attrsInRec);

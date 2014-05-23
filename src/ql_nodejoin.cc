@@ -34,8 +34,6 @@ QL_NodeJoin::~QL_NodeJoin(){
   if(listsInitialized = true){
     free(attrsInRec);
     free(condList);
-    //free(buffer1);
-    //free(buffer2);
     free(buffer);
     free(condsInNode);
   }
@@ -49,6 +47,7 @@ RC QL_NodeJoin::SetUpNode(int numConds){
   int attrListSize2;
   if((rc = node1.GetAttrList(attrList1, attrListSize1)) || 
     (rc = node2.GetAttrList(attrList2, attrListSize2)))
+    return (rc);
   attrsInRecSize = attrListSize1 + attrListSize2;
   
   attrsInRec = (int*)malloc(attrsInRecSize*sizeof(int));
@@ -65,7 +64,8 @@ RC QL_NodeJoin::SetUpNode(int numConds){
     condList[i] = {0, NULL, true, NULL, 0, 0, INT};
   }
   condsInNode = (int*)malloc(numConds * sizeof(int));
-  memset((void*)condsInNode, 0, sizeof(condsInNode));
+
+  //memset((void*)condsInNode, 0, sizeof(condsInNode));
 
   int tupleLength1, tupleLength2;
   node1.GetTupleLength(tupleLength1);
@@ -155,7 +155,7 @@ RC QL_NodeJoin::GetNext(char *data){
   return (0);
 }
 
-RC Node_Rel::CheckConditions(char *recData){
+RC QL_NodeJoin::CheckConditions(char *recData){
   RC rc = 0;
   for(int i = 0; i < condIndex; i++){
     int offset1 = condList[i].offset1;
@@ -163,8 +163,10 @@ RC Node_Rel::CheckConditions(char *recData){
       int offset2 = condList[i].offset2;
       bool comp = condList[i].comparator((void *)(recData + offset1), (void *)(recData + offset2), 
         condList[i].type, condList[i].length);
-      if(comp == false)
+
+      if(comp == false){
         return (QL_CONDNOTMET);
+      }
     }
     else{
       bool comp = condList[i].comparator((void *)(recData + offset1), condList[i].data, 
@@ -190,6 +192,24 @@ RC QL_NodeJoin::CloseIt(){
   return (0);
 }
 
+RC QL_NodeJoin::PrintNode(int numTabs){
+  for(int i=0; i < numTabs; i++){
+    cout << "\t";
+  }
+  cout << "-Join Node with conditions: ";
+  for(int i = 0; i < condIndex; i++){
+    for(int j=0; j <numTabs; j++){
+      cout << "\t";
+    }
+    PrintCondition(qlm.condptr[condsInNode[i]]);
+    cout << "\n";
+  }
+  cout << "\n";
+  node1.PrintNode(numTabs + 1);
+  node2.PrintNode(numTabs + 1);
+  return (0);
+}
+
 /*
 RC QL_NodeJoin::IndexToOffset(int index, int &offset, int &length){
   offset = 0;
@@ -208,6 +228,8 @@ RC QL_NodeJoin::DeleteNodes(){
   // This relation has nothing to destroy
   node1.DeleteNodes();
   node2.DeleteNodes();
+  delete &node1;
+  delete &node2;
   if(listsInitialized == true){
     free(attrsInRec);
     free(condList);
