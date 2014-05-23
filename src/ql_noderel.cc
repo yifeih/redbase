@@ -156,7 +156,7 @@ RC QL_NodeRel::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){
     cout << "\t";
   }
-  cout << "- Relation Node: " << relName;
+  cout << "--REL: " << relName;
   if(useIndex){
     cout << " using index on attribute " << qlm.attrEntries[indexAttr].attrName <<
       " = " << value << endl;

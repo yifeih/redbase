@@ -123,6 +123,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
     return (rc);
   }
 
+  
   QL_Node *topNode;
   if((rc = SetUpNodes(topNode, nSelAttrs, selAttrs)))
     return (rc);
@@ -137,9 +138,10 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
   // run
   if((rc = RunSelect(topNode)))
     return (rc);
-
+  
   if((rc = CleanUpNodes(topNode)))
     return (rc);
+    
 
   free(relEntries);
   free(attrEntries);
@@ -157,9 +159,16 @@ RC QL_Manager::RunSelect(QL_Node *topNode){
   if((rc = topNode->GetAttrList(attrList, attrListSize)))
     return (rc);
 
+  /*
   RM_FileHandle tempFH;
   if((rc = rmm.CreateFile("tempFile", finalTupLength)) || (rc = rmm.OpenFile("tempFile", tempFH)))
     return (rc);
+  */
+  DataAttrInfo * attributes = (DataAttrInfo *)malloc(attrListSize* sizeof(DataAttrInfo));
+  if((rc = SetUpPrinter(topNode, attributes)))
+    return (rc);
+  Printer printer(attributes, attrListSize);
+  printer.PrintHeader(cout);
 
   if((rc = topNode->OpenIt()))
     return (rc);
@@ -167,13 +176,16 @@ RC QL_Manager::RunSelect(QL_Node *topNode){
   char *buffer = (char *)malloc(finalTupLength);
   it_rc = topNode->GetNext(buffer);
   while(it_rc == 0){
-    RID rid;
+    //RID rid;
     //printf("inserting tuple\n");
     //printf("%d %d, %d %d \n", *(int*)buffer, *(int*)(buffer + 4), *(int*)(buffer + 12), *(int*)(buffer + 16));
+    /*
     if((rc = tempFH.InsertRec(buffer, rid))){
       free(buffer);
       return (rc);
     }
+    */
+    printer.Print(cout, buffer);
     it_rc = topNode->GetNext(buffer);
   }
 
@@ -181,12 +193,7 @@ RC QL_Manager::RunSelect(QL_Node *topNode){
   if((rc = topNode->CloseIt()))
     return (rc);
 
-  DataAttrInfo * attributes = (DataAttrInfo *)malloc(attrListSize* sizeof(DataAttrInfo));
-  if((rc = SetUpPrinter(topNode, attributes)))
-    return (rc);
-  Printer printer(attributes, attrListSize);
-  printer.PrintHeader(cout);
-
+ /*
   RM_FileScan fs;
   if((rc = fs.OpenScan(tempFH, INT, 4, 0, NO_OP, NULL))){
     free(attributes);
@@ -204,20 +211,14 @@ RC QL_Manager::RunSelect(QL_Node *topNode){
     printer.Print(cout, pData);
   }
   fs.CloseScan();
+  */
   printer.PrintFooter(cout);
 
   free(attributes);
-
+/*
   if((rc = rmm.CloseFile(tempFH)) || (rc = rmm.DestroyFile("tempFile")))
     return (rc);
-  // retrieve appropriate size from top node
-  // create file of appropriate size;
-  
-  // run and insert
-  // retrieve appropriate relations and create print
-
-  // run print;
-  // delete file
+    */
 
   return (0);
 }
@@ -265,10 +266,12 @@ bool QL_Manager::IsValidAttr(const RelAttr attr){
   else{ // attribute does not specify relation
     string attrString(attr.attrName);
     set<string> relNames = attrToRel[attrString];
-    if(relNames.size() == 1)
+    if(relNames.size() == 1){
       return true;
-    else
+    }
+    else{
       return false;
+    }
   }
 }
 
@@ -442,6 +445,7 @@ RC QL_Manager::GetAttrCatEntryPos(const RelAttr attr, int &index){
     set<string> relNames = attrToRel[attrString];
     set<string>::iterator it = relNames.begin();
     relString = *it;
+    //cout << attrString << " " << relString;
   }
   int relNum = relToInt[relString];
   int numAttrs = relEntries[relNum].attrCount;
@@ -477,8 +481,9 @@ RC QL_Manager::ParseConditions(int nConditions, const Condition conditions[]){
   RC rc = 0;
   for(int i=0; i < nConditions; i++){
     // Check if both are valid attributes:
-    if(!IsValidAttr(conditions[i].lhsAttr))
+    if(!IsValidAttr(conditions[i].lhsAttr)){
       return (QL_ATTRNOTFOUND);
+    }
     if(!conditions[i].bRhsIsAttr){
       // check that types are the same
       AttrCatEntry *entry;
@@ -624,7 +629,6 @@ RC QL_Manager::InsertIntoIndex(char *recbuf, RID recRID){
   RC rc = 0;
   for(int i = 0; i < relEntries->attrCount; i++){
     AttrCatEntry aEntry = attrEntries[i];
-    printf("reaches here \n");
     if(aEntry.indexNo != -1){
       IX_IndexHandle ih;
       if((rc = ixm.OpenIndex(relEntries->relName, aEntry.indexNo, ih)))
@@ -807,84 +811,7 @@ RC QL_Manager::RunDelete(QL_Node *topNode){
   return (0);
 }
 
-/*
-RC QL_Manager::CreateRelNode(QL_Node *&topNode, int relIndex, int nConditions, const Condition conditions[]){
-  RC rc = 0;
-  bool useSelNode = false;
-  
-  QL_NodeRel *relNode = new QL_NodeRel(*this, relEntries + relIndex);
-  topNode = relNode;
 
-  int *attrList = (int *)malloc(relEntries[relIndex].attrCount * sizeof(int));
-  memset((void *)attrList, 0, sizeof(attrList));
-  for(int i = 0;  i < relEntries[relIndex].attrCount ; i++){
-    attrList[i] = 0;
-  }
-  string relString(relEntries[relIndex].relName);
-  int start = relToAttrIndex[relString];
-  for(int i = 0;  i < relEntries[relIndex].attrCount ; i++){
-    attrList[i] = start + i;
-  }
-
-  relNode->SetUpNode(attrList, relEntries[relIndex].attrCount);
-  free(attrList);
-  for(int i = 0 ; i < nConditions; i++){
-    bool added = false;
-    if(conditions[i].op == EQ_OP && !conditions[i].bRhsIsAttr){
-      int index = 0;
-      if((rc = GetAttrCatEntryPos(conditions[i].lhsAttr, index) ))
-        return (rc);
-      if((attrEntries[index].indexNo != -1)){
-        if((rc = relNode->UseIndex(index, attrEntries[index].indexNo, conditions[i].rhsValue.data) ))
-          return (rc);
-        added = true;
-      }
-    }
-    if(! added && !useSelNode){
-      QL_NodeSel *selNode = new QL_NodeSel(*this, *relNode);
-      if((rc = selNode->SetUpNode(nConditions) ))
-        return (rc);
-      topNode = selNode;
-    }
-    if(! added){
-      if((rc = topNode->AddCondition(conditions[i], i) ))
-        return (rc);
-    }
-
-
-  }
-  return (0);
-}
-*/
-/*
-RC QL_Manager::CreateRelNode(QL_Node *&topNode, int relIndex, int nConditions, const Condition conditions[]){
-  RC rc = 0;
-  
-  Node_Rel *relNode = new Node_Rel(*this, relEntries + relIndex);
-  
-  int *attrList = (int *)malloc(relEntries[relIndex].attrCount * sizeof(int));
-  memset((void *)attrList, 0, sizeof(attrList));
-  for(int i = 0;  i < relEntries[relIndex].attrCount ; i++){
-    attrList[i] = 0;
-  }
-
-  
-  string relString(relEntries[relIndex].relName);
-  int start = relToAttrIndex[relString];
-  for(int i = 0;  i < relEntries[relIndex].attrCount ; i++){
-    attrList[i] = start + i;
-  }
-
-  relNode->SetUpRel(attrList, relEntries[relIndex].attrCount, nConditions);
-  free(attrList);
-  for(int i = 0 ; i < nConditions; i++){
-    if((rc = relNode->AddCondition(conditions[i])))
-        return (rc);
-  }
-  topNode = relNode;
-  return (0);
-}
-*/
 
 RC QL_Manager::CleanUpNodes(QL_Node *topNode){
   RC rc = 0;

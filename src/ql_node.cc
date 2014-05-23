@@ -48,7 +48,12 @@ RC QL_Node::PrintCondition(const Condition condition){
     default: return (QL_BADCOND);
   }
   if(condition.bRhsIsAttr){
-    cout << condition.rhsAttr.relName << "." << condition.rhsAttr.attrName;
+    if(condition.rhsAttr.relName == NULL){
+      cout << "NULL";
+    }
+    else
+      cout << condition.rhsAttr.relName;
+    cout << "." << condition.rhsAttr.attrName;
   }
   else{
     if(condition.rhsValue.type == INT){
@@ -58,7 +63,7 @@ RC QL_Node::PrintCondition(const Condition condition){
       print_float(condition.rhsValue.data, 4);
     }
     else{
-      print_float(condition.rhsValue.data, strlen((const char *)condition.rhsValue.data));
+      print_string(condition.rhsValue.data, strlen((const char *)condition.rhsValue.data));
     }
   }
 

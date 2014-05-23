@@ -196,7 +196,7 @@ RC QL_NodeJoin::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){
     cout << "\t";
   }
-  cout << "-Join Node with conditions: ";
+  cout << "--JOIN: \n";
   for(int i = 0; i < condIndex; i++){
     for(int j=0; j <numTabs; j++){
       cout << "\t";
@@ -204,7 +204,6 @@ RC QL_NodeJoin::PrintNode(int numTabs){
     PrintCondition(qlm.condptr[condsInNode[i]]);
     cout << "\n";
   }
-  cout << "\n";
   node1.PrintNode(numTabs + 1);
   node2.PrintNode(numTabs + 1);
   return (0);

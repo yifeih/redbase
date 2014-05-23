@@ -104,11 +104,29 @@ RC QL_NodeProj::AddProj(int attrIndex){
 RC QL_NodeProj::ReconstructRec(char *data){
   RC rc = 0;
   int currIdx = 0;
-  int bufIdx = 0;
   int *attrsInPrevNode;
   int numAttrsInPrevNode;
+  //printf("enter reconstruct rec\n");
   if((rc = prevNode.GetAttrList(attrsInPrevNode, numAttrsInPrevNode)))
     return (rc);
+
+  for(int i = 0; i < attrsInRecSize; i++){
+    int bufIdx = 0;
+    for(int j = 0; j < numAttrsInPrevNode; j++){
+      //printf("buffer index: %d\n", bufIdx);
+      if(attrsInRec[i] == attrsInPrevNode[j]){
+        break;
+      }
+      int prevNodeIdx = attrsInPrevNode[j];
+      bufIdx += qlm.attrEntries[prevNodeIdx].attrLength;
+    }
+    // get offset of index j
+    int attrIdx = attrsInRec[i];
+    memcpy(data + currIdx, buffer + bufIdx, qlm.attrEntries[attrIdx].attrLength);
+    currIdx += qlm.attrEntries[attrIdx].attrLength;
+  }
+
+  /*
   for(int i = 0; i < numAttrsInPrevNode; i++){
     bool toKeep = false;
     for(int j = 0; j < attrsInRecSize; j++){
@@ -116,12 +134,14 @@ RC QL_NodeProj::ReconstructRec(char *data){
         toKeep = true;
     }
     if(toKeep){
+      printf("keeping %d \n", i);
       memcpy(data + currIdx, buffer + bufIdx, qlm.attrEntries[i].attrLength);
       currIdx += qlm.attrEntries[i].attrLength;
     }
     bufIdx += qlm.attrEntries[i].attrLength;
 
   }
+  */
 
   return (0);
 }
@@ -130,7 +150,7 @@ RC QL_NodeProj::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){
     cout << "\t";
   }
-  cout << "-Project Node: ";
+  cout << "--PROJ: \n";
   for(int i = 0; i < attrsInRecSize; i++){
     int index = attrsInRec[i];
     cout << " " << qlm.attrEntries[index].relName << "." << qlm.attrEntries[index].attrName;

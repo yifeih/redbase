@@ -158,45 +158,6 @@ private:
 
 
 
-/*
- * This class is used for Update and Delete since it
- * holds a function GetNextRec that does not
- * return an error.
- */
-class Node_Rel: public QL_Node {
-public:
-  Node_Rel(QL_Manager &qlm, RelCatEntry* rEntry);
-  ~Node_Rel();
-
-  RC OpenIt();
-  RC GetNext(char * data);
-  RC CloseIt();
-  RC GetNextRec(RM_Record &rec);
-  RC DeleteNodes();
-  RC PrintNode(int numTabs);
-
-  RC SetUpRel(int *attrs, int attrlistSize, int numConds);
-  RC AddCondition(const Condition condition);
-private:
-  RC IndexToOffset(int index, int &offset, int &length);
-  RC GetNextRecData(RM_Record &rec, char *&recData);
-  RC CheckConditions(char *recData);
-
-  RM_FileHandle fh;
-  IX_IndexHandle ih;
-  RM_FileScan fs;
-  IX_IndexScan is;
-  bool useIndex;
-  int indexNo;
-  Cond eqCond;
-  Cond *condList;
-  int* condsInNode;
-  int condIndex;
-  //char relName[MAXNAME + 1];
-  char *relName;
-  bool relNameInitialized;
-
-};
 
 
 #endif

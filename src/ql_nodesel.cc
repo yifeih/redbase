@@ -179,7 +179,7 @@ RC QL_NodeSel::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){
     cout << "\t";
   }
-  cout << "-Select Node: " << endl;
+  cout << "--SEL: " << endl;
   for(int i = 0; i < condIndex; i++){
     for(int j=0; j <numTabs; j++){
       cout << "\t";

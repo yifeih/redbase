@@ -70,7 +70,6 @@ private:
   RC GetAttrCatEntryPos(const RelAttr attr, int &index);
   RC ParseConditions(int nConditions, const Condition conditions[]);
   RC SetUpOneRelation(const char *relName);
-  RC CreateRelNode(QL_Node *&topNode, int relIndex, int nConditions, const Condition conditions[]);
   RC CheckUpdateAttrs(const RelAttr &updAttr,
                       const int bIsValue,
                       const RelAttr &rhsRelAttr,
@@ -83,7 +82,6 @@ private:
   RC CleanUpRun(Attr* attributes, RM_FileHandle &relFH);
   RC SetUpRun(Attr* attributes, RM_FileHandle &relFH);
   RC CleanUpNodes(QL_Node *topNode);
-  RC RunPseudoDelete();
   RC CountNumConditions(int relIndex, int &numConds);
   RC SetUpFirstNode(QL_Node *&topNode);
   RC SetUpNodes(QL_Node *&topNode, int nSelAttrs, const RelAttr selAttrs[]);
