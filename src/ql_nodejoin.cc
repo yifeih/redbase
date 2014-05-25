@@ -155,29 +155,6 @@ RC QL_NodeJoin::GetNext(char *data){
   return (0);
 }
 
-RC QL_NodeJoin::CheckConditions(char *recData){
-  RC rc = 0;
-  for(int i = 0; i < condIndex; i++){
-    int offset1 = condList[i].offset1;
-    if(! condList[i].isValue){
-      int offset2 = condList[i].offset2;
-      bool comp = condList[i].comparator((void *)(recData + offset1), (void *)(recData + offset2), 
-        condList[i].type, condList[i].length);
-
-      if(comp == false){
-        return (QL_CONDNOTMET);
-      }
-    }
-    else{
-      bool comp = condList[i].comparator((void *)(recData + offset1), condList[i].data, 
-        condList[i].type, condList[i].length);
-      if(comp == false)
-        return (QL_CONDNOTMET);
-    }
-  }
-
-  return (0);
-}
 
 RC QL_NodeJoin::GetNextRec(RM_Record &rec){
   return (QL_BADCALL);

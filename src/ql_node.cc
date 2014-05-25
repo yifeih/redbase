@@ -100,7 +100,7 @@ RC QL_Node::AddCondition(const Condition condition, int condNum){
       return (rc);
     condList[condIndex].offset2 = offset2;
     condList[condIndex].isValue = false;
-    if(length2 < condList[condIndex].length)
+    if(length2 > condList[condIndex].length)
       condList[condIndex].length = length2;
   }
   else{
@@ -119,6 +119,30 @@ RC QL_Node::AddCondition(const Condition condition, int condNum){
   }
   condsInNode[condIndex] = condNum;
   condIndex++;
+
+  return (0);
+}
+
+RC QL_Node::CheckConditions(char *recData){
+  RC rc = 0;
+  for(int i = 0; i < condIndex; i++){
+    int offset1 = condList[i].offset1;
+    if(! condList[i].isValue){
+      int offset2 = condList[i].offset2;
+      bool comp = condList[i].comparator((void *)(recData + offset1), (void *)(recData + offset2), 
+        condList[i].type, condList[i].length);
+
+      if(comp == false){
+        return (QL_CONDNOTMET);
+      }
+    }
+    else{
+      bool comp = condList[i].comparator((void *)(recData + offset1), condList[i].data, 
+        condList[i].type, condList[i].length);
+      if(comp == false)
+        return (QL_CONDNOTMET);
+    }
+  }
 
   return (0);
 }

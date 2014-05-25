@@ -150,6 +150,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 }
 
 
+
 RC QL_Manager::RunSelect(QL_Node *topNode){
   RC rc = 0;
   int finalTupLength;
@@ -159,11 +160,6 @@ RC QL_Manager::RunSelect(QL_Node *topNode){
   if((rc = topNode->GetAttrList(attrList, attrListSize)))
     return (rc);
 
-  /*
-  RM_FileHandle tempFH;
-  if((rc = rmm.CreateFile("tempFile", finalTupLength)) || (rc = rmm.OpenFile("tempFile", tempFH)))
-    return (rc);
-  */
   DataAttrInfo * attributes = (DataAttrInfo *)malloc(attrListSize* sizeof(DataAttrInfo));
   if((rc = SetUpPrinter(topNode, attributes)))
     return (rc);
@@ -176,15 +172,6 @@ RC QL_Manager::RunSelect(QL_Node *topNode){
   char *buffer = (char *)malloc(finalTupLength);
   it_rc = topNode->GetNext(buffer);
   while(it_rc == 0){
-    //RID rid;
-    //printf("inserting tuple\n");
-    //printf("%d %d, %d %d \n", *(int*)buffer, *(int*)(buffer + 4), *(int*)(buffer + 12), *(int*)(buffer + 16));
-    /*
-    if((rc = tempFH.InsertRec(buffer, rid))){
-      free(buffer);
-      return (rc);
-    }
-    */
     printer.Print(cout, buffer);
     it_rc = topNode->GetNext(buffer);
   }
@@ -193,32 +180,9 @@ RC QL_Manager::RunSelect(QL_Node *topNode){
   if((rc = topNode->CloseIt()))
     return (rc);
 
- /*
-  RM_FileScan fs;
-  if((rc = fs.OpenScan(tempFH, INT, 4, 0, NO_OP, NULL))){
-    free(attributes);
-    return (rc);
-  }
-
-  RM_Record rec;
-  while(fs.GetNextRec(rec) != RM_EOF){
-    char *pData;
-    if((rec.GetData(pData))){
-      free(attributes);
-      return (rc);
-    }
-    //printf("%d %d, %d %d \n", *(int*)pData, *(int*)(pData + 4), *(int*)(pData + 12), *(int*)(pData + 16));
-    printer.Print(cout, pData);
-  }
-  fs.CloseScan();
-  */
   printer.PrintFooter(cout);
 
   free(attributes);
-/*
-  if((rc = rmm.CloseFile(tempFH)) || (rc = rmm.DestroyFile("tempFile")))
-    return (rc);
-    */
 
   return (0);
 }
@@ -579,6 +543,8 @@ RC QL_Manager::Insert(const char *relName,
   for(int i=0; i < nValues; i++){
     if((values[i].type != attrEntries[i].attrType))
       badFormat = true;
+    if(attrEntries[i].attrType == STRING && (strlen((char *) values[i].data) > attrEntries[i].attrLength))
+      badFormat = true;
   }
   if(badFormat){
     free(relEntries);
@@ -768,6 +734,19 @@ RC QL_Manager::CleanUpRun(Attr* attributes, RM_FileHandle &relFH){
 
 RC QL_Manager::RunDelete(QL_Node *topNode){
   RC rc = 0;
+  int finalTupLength, attrListSize;
+  topNode->GetTupleLength(finalTupLength);
+  int *attrList;
+  if((rc = topNode->GetAttrList(attrList, attrListSize)))
+    return (rc);
+
+  DataAttrInfo * printAttributes = (DataAttrInfo *)malloc(attrListSize* sizeof(DataAttrInfo));
+  if((rc = SetUpPrinter(topNode, printAttributes)))
+    return (rc);
+  Printer printer(printAttributes, attrListSize);
+  printer.PrintHeader(cout);
+
+
   RM_FileHandle relFH;
   Attr* attributes = (Attr *)malloc(sizeof(Attr)*relEntries->attrCount);
   if((rc = SetUpRun(attributes, relFH))){
@@ -790,6 +769,7 @@ RC QL_Manager::RunDelete(QL_Node *topNode){
     char *pData;
     if((rc = rec.GetRid(rid)) || (rc = rec.GetData(pData)) )
       return (rc);
+    printer.Print(cout, pData);
     if((rc = relFH.DeleteRec(rid)))
       return (rc);
 
@@ -807,6 +787,10 @@ RC QL_Manager::RunDelete(QL_Node *topNode){
 
   if((rc = CleanUpRun(attributes, relFH)))
     return (rc);
+
+  printer.PrintFooter(cout);
+  free(printAttributes);
+
 
   return (0);
 }
@@ -832,8 +816,13 @@ RC QL_Manager::CheckUpdateAttrs(const RelAttr &updAttr,
     AttrCatEntry *entry;
     if((rc = GetAttrCatEntry(updAttr, entry)))
       return (rc);
-    if(entry->attrType != rhsValue.type)
-      return (QL_BADCOND);
+    if(entry->attrType != rhsValue.type) // check types
+      return (QL_BADUPDATE);
+    if(entry->attrType == STRING){ // check the sizes
+      int newValueSize = strlen((char *)rhsValue.data);
+      if(newValueSize > entry->attrLength)
+        return (QL_BADUPDATE);
+    }
   }
   else{
     if(!IsValidAttr(rhsRelAttr))
@@ -843,7 +832,11 @@ RC QL_Manager::CheckUpdateAttrs(const RelAttr &updAttr,
     if((rc = GetAttrCatEntry(updAttr, entry1)) || (rc = GetAttrCatEntry(rhsRelAttr, entry2)))
       return (rc);
     if(entry1->attrType != entry2->attrType)
-      return (QL_BADCOND);
+      return (QL_BADUPDATE);
+    if(entry1->attrType == STRING){ // check the sizes
+      if(entry2->attrLength > entry1->attrLength)
+        return (QL_BADUPDATE);
+    }
   }
 
   return (rc);
@@ -854,6 +847,20 @@ RC QL_Manager::RunUpdate(QL_Node *topNode, const RelAttr &updAttr,
                       const RelAttr &rhsRelAttr,
                       const Value &rhsValue){
   RC rc = 0;
+  int finalTupLength, attrListSize;
+  topNode->GetTupleLength(finalTupLength);
+  int *attrList;
+  if((rc = topNode->GetAttrList(attrList, attrListSize)))
+    return (rc);
+
+  DataAttrInfo * attributes = (DataAttrInfo *)malloc(attrListSize* sizeof(DataAttrInfo));
+  if((rc = SetUpPrinter(topNode, attributes)))
+    return (rc);
+  Printer printer(attributes, attrListSize);
+  printer.PrintHeader(cout);
+
+
+
   RM_FileHandle relFH;
   if((rc = rmm.OpenFile(relEntries->relName, relFH)))
     return (rc);
@@ -901,6 +908,7 @@ RC QL_Manager::RunUpdate(QL_Node *topNode, const RelAttr &updAttr,
     }
     if((rc = relFH.UpdateRec(rec)))
       return (rc);
+    printer.Print(cout, pData);
     
     if(attrEntries[index1].indexNo != -1){
       if((ih.InsertEntry(pData + attrEntries[index1].offset, rid)))
@@ -917,6 +925,9 @@ RC QL_Manager::RunUpdate(QL_Node *topNode, const RelAttr &updAttr,
   }
   if((rc = rmm.CloseFile(relFH)))
     return (rc);
+
+  printer.PrintFooter(cout);
+  free(attributes);
 
   return (0);
 }

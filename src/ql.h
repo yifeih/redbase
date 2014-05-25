@@ -122,7 +122,8 @@ void QL_PrintError(RC rc);
 #define QL_BADCOND              (START_QL_WARN + 4)
 #define QL_BADCALL              (START_QL_WARN + 5)
 #define QL_CONDNOTMET           (START_QL_WARN + 6)
-#define QL_EOI                  (START_QL_WARN + 7)
+#define QL_BADUPDATE            (START_QL_WARN + 7)
+#define QL_EOI                  (START_QL_WARN + 8)
 #define QL_LASTWARN             QL_EOI
 
 #define QL_INVALIDDB            (START_QL_ERR - 0)

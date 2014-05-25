@@ -33,6 +33,7 @@ public:
   RC PrintCondition(const Condition condition);
   RC IndexToOffset(int index, int &offset, int &length);
   RC AddCondition(const Condition conditions, int condNum);
+  RC CheckConditions(char *recData);
   RC GetAttrList(int *&attrList, int &attrListSize);
   RC GetTupleLength(int &tupleLength);
 protected:
@@ -89,7 +90,7 @@ public:
 
   RC AddCondition(const Condition conditions, int condNum);
   RC SetUpNode(int numConds);
-  RC CheckConditions(char *recData);
+  //RC CheckConditions(char *recData);
 private:
   //RC IndexToOffset(int index, int &offset, int &length);
   QL_Node& prevNode;
@@ -113,7 +114,7 @@ public:
   RC SetUpNode(int numConds);
 private:
   //RC IndexToOffset(int index, int &offset, int &length);
-  RC CheckConditions(char *recData);
+  //RC CheckConditions(char *recData);
   QL_Node &node1;
   QL_Node &node2;
   int firstNodeSize;

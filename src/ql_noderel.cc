@@ -14,6 +14,7 @@
 #include "ix.h"
 #include <string>
 #include "ql_node.h"
+#include "comparators.h"
 
 
 using namespace std;
@@ -159,7 +160,17 @@ RC QL_NodeRel::PrintNode(int numTabs){
   cout << "--REL: " << relName;
   if(useIndex){
     cout << " using index on attribute " << qlm.attrEntries[indexAttr].attrName <<
-      " = " << value << endl;
+      " = ";
+    if(qlm.attrEntries[indexAttr].attrType == INT){
+      print_int(value, 4);
+    }
+    else if(qlm.attrEntries[indexAttr].attrType == FLOAT){
+      print_float(value, 4);
+    }
+    else{
+      print_string(value, strlen((char *)value));
+    }
+    cout << "\n";
   }
   else{
     cout << " using filescan." << endl;

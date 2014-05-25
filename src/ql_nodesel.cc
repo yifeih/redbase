@@ -46,7 +46,7 @@ RC QL_NodeSel::SetUpNode(int numConds){
     attrsInRec[i] = attrListPtr[i];
   }
 
-  printf("Sel node number of conds: %d \n", numConds);
+  //printf("Sel node number of conds: %d \n", numConds);
   condList = (Cond *)malloc(numConds * sizeof(Cond));
   for(int i= 0; i < numConds; i++){
     condList[i] = {0, NULL, true, NULL, 0, 0, INT};
@@ -152,6 +152,7 @@ RC QL_NodeSel::GetNextRec(RM_Record &rec){
   return (0);
 }
 
+/*
 RC QL_NodeSel::CheckConditions(char *recData){
   RC rc = 0;
   for(int i = 0; i < condIndex; i++){
@@ -174,6 +175,7 @@ RC QL_NodeSel::CheckConditions(char *recData){
 
   return (0);
 }
+*/
 
 RC QL_NodeSel::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){

@@ -24,6 +24,7 @@ static char *QL_WarnMsg[] = {
   (char*)"bad select condition",
   (char*)"bad call",
   (char*)"condition not met",
+  (char*)"bad update value",
   (char*)"end of iterator"
 };
 
