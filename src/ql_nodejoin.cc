@@ -18,7 +18,10 @@
 
 using namespace std;
 
-
+/*
+ * Create the node by constructing with the two nodes referring to 
+ * nodes to join.
+ */
 QL_NodeJoin::QL_NodeJoin(QL_Manager &qlm, QL_Node &node1, QL_Node &node2) : 
   QL_Node(qlm), node1(node1), node2(node2){
   isOpen = false;
@@ -30,6 +33,9 @@ QL_NodeJoin::QL_NodeJoin(QL_Manager &qlm, QL_Node &node1, QL_Node &node2) :
   gotFirstTuple = false;
 }
 
+/*
+ * delete all memory
+ */
 QL_NodeJoin::~QL_NodeJoin(){
   if(listsInitialized = true){
     free(attrsInRec);
@@ -39,8 +45,14 @@ QL_NodeJoin::~QL_NodeJoin(){
   }
 }
 
+/*
+ * Set up the node with a max number of conditions that the 
+ * join must meet
+ */
 RC QL_NodeJoin::SetUpNode(int numConds){
   RC rc = 0;
+  // First sets up the attribute list for this node
+  // by retrieving the attribute lists for both the previous nodes
   int *attrList1;
   int *attrList2;
   int attrListSize1;
@@ -59,67 +71,30 @@ RC QL_NodeJoin::SetUpNode(int numConds){
     attrsInRec[attrListSize1+i] = attrList2[i];
   }
 
+  // Malloc the list of conditions to be met
   condList = (Cond *)malloc(numConds * sizeof(Cond));
   for(int i= 0; i < numConds; i++){
     condList[i] = {0, NULL, true, NULL, 0, 0, INT};
   }
   condsInNode = (int*)malloc(numConds * sizeof(int));
 
-  //memset((void*)condsInNode, 0, sizeof(condsInNode));
-
   int tupleLength1, tupleLength2;
   node1.GetTupleLength(tupleLength1);
   node2.GetTupleLength(tupleLength2);
   tupleLength = tupleLength1 + tupleLength2;
   firstNodeSize = tupleLength1;
-  //buffer1 = (char *)malloc(tupleLength1);
-  //buffer2 = (char *)malloc(tupleLength2);
+
+  // Create the buffer to hold the tuples from the previous nodes
   buffer = (char *)malloc(tupleLength);
   memset((void*)buffer, 0, sizeof(buffer));
   listsInitialized = true;
   return (0);
 }
 
+
 /*
-RC QL_NodeJoin::AddCondition(const Condition condition, int condNum){
-  RC rc = 0;
-  int index1, index2;
-  int offset1, offset2;
-  int length1, length2;
-  if((rc = qlm.GetAttrCatEntryPos(condition.lhsAttr, index1) ) || (rc = QL_Node::IndexToOffset(index1, offset1, length1)))
-    return (rc);
-  condList[condIndex].offset1 = offset1;
-  condList[condIndex].length = length1;
-  condList[condIndex].type = qlm.attrEntries[index1].attrType;
-
-  if(condition.bRhsIsAttr){
-    if((rc = qlm.GetAttrCatEntryPos(condition.rhsAttr, index2)) || (rc = QL_Node::IndexToOffset(index2, offset2, length2)))
-      return (rc);
-    condList[condIndex].offset2 = offset2;
-    condList[condIndex].isValue = false;
-    if(length2 < condList[condIndex].length)
-      condList[condIndex].length = length2;
-  }
-  else{
-    condList[condIndex].isValue = true;
-    condList[condIndex].data = condition.rhsValue.data;
-  }
-  switch(condition.op){
-    case EQ_OP : condList[condIndex].comparator = &nequal; break;
-    case LT_OP : condList[condIndex].comparator = &nless_than; break;
-    case GT_OP : condList[condIndex].comparator = &ngreater_than; break;
-    case LE_OP : condList[condIndex].comparator = &nless_than_or_eq_to; break;
-    case GE_OP : condList[condIndex].comparator = &ngreater_than_or_eq_to; break;
-    case NE_OP : condList[condIndex].comparator = &nnot_equal; break;
-    default: return (QL_BADCOND);
-  }
-  condsInNode[condIndex] = condNum;
-  condIndex++;
-
-  return (0);
-}
-*/
-
+ * Open the iterator by opening previous nodes
+ */
 RC QL_NodeJoin::OpenIt(){
   RC rc = 0;
   if((rc = node1.OpenIt()) || (rc = node2.OpenIt()))
@@ -129,8 +104,12 @@ RC QL_NodeJoin::OpenIt(){
   return (0);
 }
 
+/*
+ * Returns the next tuple join that satisfies the conditions
+ */
 RC QL_NodeJoin::GetNext(char *data){
   RC rc = 0;
+  // Retrieve the first tuple, marking the start of the iterator
   if(gotFirstTuple == false){
     if((rc = node1.GetNext(buffer)))
     return (rc);
@@ -146,7 +125,7 @@ RC QL_NodeJoin::GetNext(char *data){
       if((rc = node2.GetNext(buffer + firstNodeSize)))
         return (rc);
     }
-
+    // keep retrieving until condition is met
     RC comp = CheckConditions(buffer);
     if(comp == 0)
       break;
@@ -155,12 +134,16 @@ RC QL_NodeJoin::GetNext(char *data){
   return (0);
 }
 
-
+/*
+ * Don't allow join nodes to retrieve records
+ */
 RC QL_NodeJoin::GetNextRec(RM_Record &rec){
   return (QL_BADCALL);
 }
 
-
+/*
+ * Close the iterator by closing previous nodes
+ */
 RC QL_NodeJoin::CloseIt(){
   RC rc = 0;
   if((rc = node1.CloseIt()) || (rc = node2.CloseIt()))
@@ -169,6 +152,9 @@ RC QL_NodeJoin::CloseIt(){
   return (0);
 }
 
+/*
+ * Print the node, and instruct it to print its previous nodes
+ */
 RC QL_NodeJoin::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){
     cout << "\t";
@@ -187,21 +173,9 @@ RC QL_NodeJoin::PrintNode(int numTabs){
 }
 
 /*
-RC QL_NodeJoin::IndexToOffset(int index, int &offset, int &length){
-  offset = 0;
-  for(int i=0; i < attrsInRecSize; i++){
-    if(attrsInRec[i] == index){
-      length = qlm.attrEntries[attrsInRec[i]].attrLength;
-      return (0);
-    }
-    offset += qlm.attrEntries[attrsInRec[i]].attrLength;
-  }
-  return (QL_ATTRNOTFOUND);
-}
-*/
-
+ * Free all memory associated with this node, and delete the previous node
+ */
 RC QL_NodeJoin::DeleteNodes(){
-  // This relation has nothing to destroy
   node1.DeleteNodes();
   node2.DeleteNodes();
   delete &node1;
@@ -209,8 +183,6 @@ RC QL_NodeJoin::DeleteNodes(){
   if(listsInitialized == true){
     free(attrsInRec);
     free(condList);
-    //free(buffer1);
-    //free(buffer2);
     free(condsInNode);
     free(buffer);
   }

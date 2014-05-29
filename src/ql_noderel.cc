@@ -19,6 +19,10 @@
 
 using namespace std;
 
+/*
+ * Create the relation node given the relation entry of the relation
+ * it refers to
+ */
 QL_NodeRel::QL_NodeRel(QL_Manager &qlm, RelCatEntry *rEntry) : QL_Node(qlm){
   relName = (char *)malloc(MAXNAME+1);
   memset((void *)relName, 0, sizeof(relName));
@@ -35,6 +39,9 @@ QL_NodeRel::QL_NodeRel(QL_Manager &qlm, RelCatEntry *rEntry) : QL_Node(qlm){
   void *value = NULL;
 }
 
+/*
+ * Delete the memory allocated at this node
+ */
 QL_NodeRel::~QL_NodeRel(){
   if(relNameInitialized == true){
     free(relName);
@@ -46,7 +53,9 @@ QL_NodeRel::~QL_NodeRel(){
   listsInitialized = false;
 }
 
-
+/*
+ * Open the iterator and by opening the index or filescan
+ */
 RC QL_NodeRel::OpenIt(){
   RC rc = 0;
   isOpen = true;
@@ -67,6 +76,9 @@ RC QL_NodeRel::OpenIt(){
   return (0);
 }
 
+/*
+ * Retrieve the next record data and copy it to the pointer passed in
+ */
 RC QL_NodeRel::GetNext(char *data){
   RC rc = 0;
   char *recData;
@@ -81,6 +93,9 @@ RC QL_NodeRel::GetNext(char *data){
   return (0);
 }
 
+/*
+ * Close the iterator by closing the filescan or indexscan
+ */
 RC QL_NodeRel::CloseIt(){
   RC rc = 0;
   if(useIndex){
@@ -99,6 +114,9 @@ RC QL_NodeRel::CloseIt(){
   return (rc);
 }
 
+/*
+ * Retrieves the next record by either using the index or the filescan
+ */
 RC QL_NodeRel::RetrieveNextRec(RM_Record &rec, char *&recData){
   RC rc = 0;
   if(useIndex){
@@ -117,7 +135,9 @@ RC QL_NodeRel::RetrieveNextRec(RM_Record &rec, char *&recData){
   return (0);
 }
 
-
+/*
+ * Retrieves the next record from this relation
+ */
 RC QL_NodeRel::GetNextRec(RM_Record &rec){
   RC rc = 0;
   char *recData;
@@ -127,11 +147,14 @@ RC QL_NodeRel::GetNextRec(RM_Record &rec){
     return (rc);
   }
   return (0);
-
-  //return (QL_BADCALL);
 }
 
 
+/*
+ * Tells the relation node to use an index to go through the relation.
+ * It requires the attribute number, the index number, and
+ * the data for the the equality condition in using the index
+ */
 RC QL_NodeRel::UseIndex(int attrNum, int indexNumber, void *data){
   indexNo = indexNumber;
   value = data;
@@ -140,6 +163,10 @@ RC QL_NodeRel::UseIndex(int attrNum, int indexNumber, void *data){
   return (0);
 }
 
+/*
+ * This node requires the list of attributes, and the number
+ * of attributes in the relation to be set up
+ */
 RC QL_NodeRel::SetUpNode(int *attrs, int attrlistSize){
   RC rc = 0;
   attrsInRecSize = attrlistSize;
@@ -153,6 +180,9 @@ RC QL_NodeRel::SetUpNode(int *attrs, int attrlistSize){
   return (rc);
 }
 
+/*
+ * Print the node, and instruct it to print its previous nodes
+ */
 RC QL_NodeRel::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){
     cout << "\t";
@@ -178,6 +208,9 @@ RC QL_NodeRel::PrintNode(int numTabs){
   return (0);
 }
 
+/*
+ * Delete all memory associated with this node
+ */
 RC QL_NodeRel::DeleteNodes(){
   if(relNameInitialized == true){
     free(relName);

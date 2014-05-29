@@ -1,0 +1,26 @@
+/* DELETE VALIDATOR TESTS */
+
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+create table stars(starid  i, stname  c20, plays  c12);
+create table student (studentid i, sname c24, school c4, gpa f, extra c3);
+
+/* CHANGE PATH NAME */ 
+load soaps ("../data/soaps.data");
+load stars ("../data/stars.data");
+load student ("../data/student.data");
+
+/* relName doesn’t exist in relca */
+Delete from troll;
+
+/* Comparisons compare attributes of diff type */
+Delete from soaps where soapid = network;
+Delete from soaps where soapid = "bubbles"; 
+Delete from soaps where soapid = "1.0"; 
+
+/* Comparisons compare attributes that don’t belong to the relation */
+Delete from soaps where belgium = france and waterloo = cats; 
+
+
+drop table soaps;
+drop table stars;
+drop table student;

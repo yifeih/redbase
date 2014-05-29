@@ -1,43 +1,31 @@
-/* SQL Test Commands : SELECT */
+/* INSERT VALIDATOR TESTS */
 
-create table soaps(soapid i, sname c28, network c4, rating f);
-create table stars(starid  i, stname  c20, plays  c12, soapid  i);
-create table student(id i, name c12, major c3, gpa f, extra c3);
-create table enroll (id i, id2 i, season c10, year i, grade c2, extra c3); 
-create table class(id i, name c24, dept c3, extra c3);
-create table department(dept c2, name c24);
+create table soaps(soapid  i, sname  c28, network  c4, rating  f);
+create table stars(starid  i, stname  c20, plays  c12);
+create table student (studentid i, sname c24, school c4, gpa f, extra c3);
 
+/*relName doesn't exist in relcat*/
+Insert into trolls values ("lmao you got owned");
 
-load soaps("../data/soaps.data");
-load stars("../data/stars.data");
-load enroll("../data/MoreData/enroll.data");
-load class("../data/MoreData/class.data");
-load student("../data/MoreData/student.data");
-load department("../data/MoreData/dept.data");
+/*value types do not correspond to types specified during creation*/
+Insert into soaps values ("hihi", "gogo", 44, 20); 
 
-create index soaps(sname);
-create index stars(starid);
-create index soaps(soapid);
-create index class(id);
+/*value names are incorrect: actually I think this is impossible, the parser
+ does this part*/
 
-select * from soaps;
-select * from stars;
+/* order of values as they come in is different from the order specified 
+  on creation */
+Insert into soaps values ("Days of Our lives", 1, "CNN", 9.4);  
 
-select * from soaps, stars;
-select soapid from soaps;
-select rating, network from soaps;
-select sname from soaps where sname="Days of Our Lives";
-select sname from soaps where sname<"B";
-select sname from soaps where sname!="derp";
-select soaps.soapid, stars.soapid, soaps.sname from soaps, stars where stars.soapid=soaps.soapid; 
-select soaps.soapid, stars.soapid, soaps.sname from soaps, stars where stars.soapid=soaps.soapid and sname="S";
-select soaps.soapid, stars.soapid, soaps.sname from soaps, stars where stars.soapid=soaps.soapid and sname="Santa Barbara";
+/* too few values compared to schema */
+Insert into soaps values (1, "Days of Our lives", "CNN");  
 
-select * from soaps, stars where soaps.network=stars.plays;
-select soaps.rating from soaps, stars where soaps.soapid = stars.starid and soaps.sname="One Life to Live";
+/* too many values compared to schema */
+Insert into soaps values (1, "Days of Our lives", "CNN", 10.00, "I like cheese");  
 
+/* a string attribute is too long */
+Insert into soaps values (1, "Days of Our lives", "CNNBCHOL", 10.0);  
 
-select * from department, class where department.dept=class.dept;
-select student.extra from student, enroll, class where student.extra=enroll.extra and student.extra=class.extra and class.id=1;
-select * from student, enroll, class where student.id=enroll.id and class.id=enroll.id2 and class.dept="CS";
-select * from student, enroll, class where student.id=enroll.id and class.id=enroll.id2;
+drop table soaps;
+drop table stars;
+drop table student;

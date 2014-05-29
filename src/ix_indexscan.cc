@@ -85,6 +85,10 @@ IX_IndexScan::IX_IndexScan(){
   endOfIndexReached = true;
   attrLength = 0;
   attrType = INT;
+
+  foundFirstValue = false;
+  foundLastValue = false;
+  useFirstLeaf = false;
 }
 
 IX_IndexScan::~IX_IndexScan(){
@@ -115,13 +119,14 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
     return (IX_INVALIDSCAN);
 
   this->value = NULL;
+  useFirstLeaf = true;
   this->compOp = compOp; // sets up the comparator values, and the comparator
   switch(compOp){
-    case EQ_OP : comparator = &iequal; break;
+    case EQ_OP : comparator = &iequal; useFirstLeaf = false; break;
     case LT_OP : comparator = &iless_than; break;
-    case GT_OP : comparator = &igreater_than; break;
+    case GT_OP : comparator = &igreater_than; useFirstLeaf = false; break;
     case LE_OP : comparator = &iless_than_or_eq_to; break;
-    case GE_OP : comparator = &igreater_than_or_eq_to; break;
+    case GE_OP : comparator = &igreater_than_or_eq_to; useFirstLeaf = false; break;
     case NO_OP : comparator = NULL; break;
     default: return (IX_INVALIDSCAN);
   }
@@ -140,7 +145,34 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
   hasLeafPinned = false;
   scanStarted = false;
   endOfIndexReached = false;
+  foundFirstValue = false;
+  foundLastValue = false;
 
+  return (rc);
+}
+
+RC IX_IndexScan::BeginScan(PF_PageHandle &leafPH, PageNum &pageNum){
+  RC rc = 0;
+  if(useFirstLeaf){
+    if((rc = indexHandle->GetFirstLeafPage(leafPH, pageNum)))
+      return (rc);
+    if((rc = GetFirstEntryInLeaf(currLeafPH))){
+      if(rc == IX_EOF){
+        scanEnded = true;
+      }
+      return (rc);
+    }
+  }
+  else{
+    if((rc = indexHandle->FindRecordPage(leafPH, pageNum, value)))
+      return (rc);
+    if((rc = GetAppropriateEntryInLeaf(currLeafPH))){
+      if(rc == IX_EOF){
+        scanEnded = true;
+      }
+      return (rc);
+    }
+  }
   return (rc);
 }
 
@@ -151,6 +183,8 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
   RC rc = 0;
   if(scanEnded == true && openScan == true) // return end of file if the scan has ended
     return (IX_EOF);
+  if(foundLastValue == true)
+    return (IX_EOF);
 
   if(scanEnded == true || openScan == false) // if the scan is false, then return IX_INVALIDSCAN
     return (IX_INVALIDSCAN);
@@ -159,14 +193,10 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
   while(notFound){
     // In the first iteration of the scan, retrieve the first entry
     if(scanEnded == false && openScan == true && scanStarted == false){
-      if((rc = indexHandle->GetFirstLeafPage(currLeafPH, currLeafNum)))
+      //if((rc = indexHandle->GetFirstLeafPage(currLeafPH, currLeafNum)))
+      //  return (rc);
+      if((rc = BeginScan(currLeafPH, currLeafNum)))
         return (rc);
-      if((rc = GetFirstEntryInLeaf(currLeafPH))){
-        if(rc == IX_EOF){
-          scanEnded = true;
-        }
-        return (rc);
-      }
       currKey = nextNextKey; // store the current key. 
       scanStarted = true; // scan has now started. set the indicator
       SetRID(true);       // Set the current RID
@@ -197,10 +227,15 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
     if(compOp == NO_OP){
       rid = currRID;
       notFound = false;
+      foundFirstValue = true;
     }
     else if((comparator((void *)currKey, value, attrType, attrLength))){
       rid = currRID; 
       notFound = false;
+      foundFirstValue = true;
+    }
+    else if(foundFirstValue == true){
+      foundLastValue = true;
     }
 
   }
@@ -337,6 +372,36 @@ RC IX_IndexScan::GetFirstEntryInLeaf(PF_PageHandle &leafPH){
   }
   else
     return (IX_INVALIDSCAN);
+  if(leafEntries[leafSlot].isValid == OCCUPIED_DUP){ // if it's a duplciate value, go into the bucket
+    currBucketNum = leafEntries[leafSlot].page;      // to retrieve the first entry
+    if((rc = GetFirstBucketEntry(currBucketNum, currBucketPH)))
+      return (rc);
+  }
+  return (0);
+}
+
+RC IX_IndexScan::GetAppropriateEntryInLeaf(PF_PageHandle &leafPH){
+  RC rc = 0;
+  hasLeafPinned = true;
+  if((rc = leafPH.GetData((char *&) leafHeader)))
+    return (rc);
+
+  if(leafHeader->num_keys == 0)
+    return (IX_EOF);
+
+  leafEntries = (struct Node_Entry *)((char *)leafHeader + (indexHandle->header).entryOffset_N);
+  leafKeys = (char *)leafHeader + (indexHandle->header).keysOffset_N;
+  int index = 0;
+  bool isDup = false;
+  if((rc = indexHandle->FindNodeInsertIndex((struct IX_NodeHeader *)leafHeader, value, index, isDup)))
+    return (rc);
+
+  leafSlot = index;
+  if((leafSlot != NO_MORE_SLOTS))
+    nextNextKey = leafKeys + attrLength* leafSlot;
+  else
+    return (IX_INVALIDSCAN);
+
   if(leafEntries[leafSlot].isValid == OCCUPIED_DUP){ // if it's a duplciate value, go into the bucket
     currBucketNum = leafEntries[leafSlot].page;      // to retrieve the first entry
     if((rc = GetFirstBucketEntry(currBucketNum, currBucketPH)))

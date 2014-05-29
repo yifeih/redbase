@@ -19,7 +19,7 @@ using namespace std;
 static char *QL_WarnMsg[] = {
   (char*)"bad insert",
   (char*)"duplicate relation",
-  (char*)"bad select attribute",
+  (char*)"bad attribute",
   (char*)"attribute not found",
   (char*)"bad select condition",
   (char*)"bad call",

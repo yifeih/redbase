@@ -1,0 +1,107 @@
+/* Update and delete tests */
+
+queryplans on;
+create table soaps(soapid i, sname c28, network c4, rating f);
+create table stars(starid  i, stname  c20, plays  c12, soapid  i);
+create table student(id i, name c12, major c3, gpa f, extra c3);
+create table enroll (id i, id2 i, season c10, year i, grade c2, extra c3); 
+create table class(id i, name c24, dept c2, extra c3);
+create table department(dept c2, name c24);
+create table empty(nothing c10);
+create table empty2(nothing c10);
+
+load soaps("../data/soaps.data");
+load stars("../data/stars.data");
+load enroll("../data/MoreData/enroll.data");
+load class("../data/MoreData/class.data");
+load student("../data/MoreData/student.data");
+load department("../data/MoreData/dept.data");
+
+/* UPDATE TESTS */
+
+/* Update where no new tuples are changed */
+update soaps set sname="Bogus" where sname>"Zooey";
+
+/* Update where all tuples are changed */
+update soaps set sname=network where rating > 0.0;
+update soaps set sname="More Bogus";
+
+/* Update some of the tuples */
+update soaps set soapid=100 where soapid < 5;
+
+/* Update on an empty table */
+update empty set nothing="10";
+update empty set nothing="10" where nothing="11";
+
+/* Update on attribute being selected over */
+create index soaps(soapid);
+update soaps set soapid=200 where soapid=100;
+
+
+drop table soaps;
+create table soaps(soapid i, sname c28, network c4, rating f);
+load soaps("../data/soaps.data");
+
+
+
+/* DELETE TESTS */
+/* delete up tuples */
+delete from soaps;
+
+load soaps("../data/soaps.data");
+delete from soaps where rating > 0.0;
+
+load soaps("../data/soaps.data");
+
+
+/* delete none of the tuples */
+delete from soaps where soapid>100;
+
+/* delete from empty table */
+delete from empty;
+delete from empty where nothing="11";
+
+
+
+
+/* Index and update on table */
+
+select * from soaps where soapid < 5;
+create index soaps(soapid);
+select * from soaps where soapid < 5;
+update soaps set soapid = 10 where soapid < 5;
+select * from soaps where soapid = 4;
+drop index soaps(soapid);
+select * from soaps where soapid = 4;
+print soaps;
+
+
+/* Index and insert on table */
+
+create index soaps(soapid);
+insert into soaps values(100, "Zooey", "ABCD", 1.0);
+select * from soaps where soapid=100;
+drop index soaps(soapid);
+select * from soaps where soapid=100;
+print soaps;
+
+
+/* Index and delete on table */
+create index soaps(soapid);
+delete from soaps where soapid=100;
+select * from soaps where soapid=100;
+drop index soaps(soapid);
+select * from soaps where soapid=100;
+print soaps;
+
+
+
+
+drop table soaps;
+drop table stars;
+drop table student;
+drop table enroll;
+drop table class;
+drop table department;
+drop table empty;
+drop table empty2;

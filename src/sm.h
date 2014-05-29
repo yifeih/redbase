@@ -110,7 +110,13 @@ private:
 
   // Prepares the Attr array, which helps with loading
   RC PrepareAttr(RelCatEntry *rEntry, Attr* attributes);
+
+  // Given a RelCatEntry, it populates aEntry with information about all its attribute.
+  // While doing so, it also updates the attribute-to-relation mapping
   RC GetAttrForRel(RelCatEntry *relEntry, AttrCatEntry *aEntry, std::map<std::string, std::set<std::string> > &attrToRel);
+  // Given a list of relations, it retrieves all the relCatEntries associated with them placing
+  // them in the list specified by relEntries. It also returns the total # of attributes in all the
+  // relations combined, and populates the mapping from relation name to index number in relEntries
   RC GetAllRels(RelCatEntry *relEntries, int nRelations, const char * const relations[], 
     int &attrCount, std::map<std::string, int> &relToInt);
 

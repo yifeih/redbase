@@ -975,6 +975,59 @@ RC IX_IndexHandle::GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage){
   return (rc);
 }
 
+RC IX_IndexHandle::FindRecordPage(PF_PageHandle &leafPH, PageNum &leafPage, void *key){
+  RC rc = 0;
+  struct IX_NodeHeader *rHeader;
+  if((rc = rootPH.GetData((char *&) rHeader))){ // retrieve header info
+    return (rc);
+  }
+  // if root node is leaf
+  if(rHeader->isLeafNode == true){
+    leafPH = rootPH;
+    leafPage = header.rootPage;
+    return (0);
+  }
+
+  struct IX_NodeHeader_I *nHeader = (struct IX_NodeHeader_I *)rHeader;
+  int index = BEGINNING_OF_SLOTS;
+  bool isDup = false;
+  PageNum nextPageNum;
+  PF_PageHandle nextPH;
+  if((rc = FindNodeInsertIndex((struct IX_NodeHeader *)nHeader, key, index, isDup)))
+    return (rc);
+  struct Node_Entry *entries = (struct Node_Entry *)((char *)nHeader + header.entryOffset_N);
+  if(index == BEGINNING_OF_SLOTS)
+    nextPageNum = nHeader->firstPage;
+  else
+    nextPageNum = entries[index].page;
+  if(nextPageNum == NO_MORE_PAGES)
+    return (IX_EOF);
+  
+  if((rc = pfh.GetThisPage(nextPageNum, nextPH)) || (rc = nextPH.GetData((char *&)nHeader)))
+    return (rc);
+
+  while(nHeader->isLeafNode == false){
+    if((rc = FindNodeInsertIndex((struct IX_NodeHeader *)nHeader, key, index, isDup)))
+      return (rc);
+    
+    entries = (struct Node_Entry *)((char *)nHeader + header.entryOffset_N);
+    PageNum prevPage = nextPageNum;
+    if(index == BEGINNING_OF_SLOTS)
+      nextPageNum = nHeader->firstPage;
+    else
+      nextPageNum = entries[index].page;
+    //char *keys = (char *)nHeader + header.keysOffset_N; 
+    if((rc = pfh.UnpinPage(prevPage)))
+      return (rc);
+    if((rc = pfh.GetThisPage(nextPageNum, nextPH)) || (rc = nextPH.GetData((char *&)nHeader)))
+      return (rc);
+  }
+  leafPage = nextPageNum;
+  leafPH = nextPH;
+
+  return (rc);
+}
+
 /*
  * This function check that the header is a valid header based on the sizes of the attributes,
  * the number of keys, and the offsets. It returns true if it is, and false if it's not

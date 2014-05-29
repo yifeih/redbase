@@ -94,6 +94,7 @@ private:
     // Returns the first leaf page in leafPH, and its page number in
     // leafPage
     RC GetFirstLeafPage(PF_PageHandle &leafPH, PageNum &leafPage);
+    RC FindRecordPage(PF_PageHandle &leafPH, PageNum &leafPage, void * key);
 
     // Private variables
     bool isOpenHandle;     // Indicator for whether the indexHandle is being used
@@ -133,8 +134,11 @@ public:
     // Close index scan
     RC CloseScan();
 private:
+    RC BeginScan(PF_PageHandle &leafPH, PageNum &pageNum);
     // Sets up the scan private variables to the first entry within the given leaf
     RC GetFirstEntryInLeaf(PF_PageHandle &leafPH);
+    // Sets up the scan private variables to the appropriate entry within the given leaf
+    RC GetAppropriateEntryInLeaf(PF_PageHandle &leafPH);
     // Sets up the scan private variables to the first entry within this bucket
     RC GetFirstBucketEntry(PageNum nextBucket, PF_PageHandle &bucketPH);
     // Sets up the scan private variables to the next entry in the index
@@ -182,6 +186,11 @@ private:
     bool hasLeafPinned;
     bool initializedValue; // Whether value variable has been initialized (malloced)
     bool endOfIndexReached; // Whether the end of the scan has been reached
+
+
+    bool foundFirstValue;
+    bool foundLastValue;
+    bool useFirstLeaf;
 };
 
 //

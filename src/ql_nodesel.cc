@@ -17,6 +17,9 @@
 
 using namespace std;
 
+/*
+ * Initializes the state of the node
+ */
 QL_NodeSel::QL_NodeSel(QL_Manager &qlm, QL_Node &prevNode) : QL_Node(qlm), prevNode(prevNode) {
   isOpen = false;
   listsInitialized = false;
@@ -26,6 +29,9 @@ QL_NodeSel::QL_NodeSel(QL_Manager &qlm, QL_Node &prevNode) : QL_Node(qlm), prevN
   attrsInRecSize = 0;
 }
 
+/*
+ * Cleans up select node
+ */
 QL_NodeSel::~QL_NodeSel(){
   if(listsInitialized == true){
     free(condList);
@@ -36,6 +42,14 @@ QL_NodeSel::~QL_NodeSel(){
   listsInitialized = false;
 }
 
+/*
+ * Given a max number of conditions, it makes the space to hold up to
+ * this number of conditions. It also initializes
+ * the attribute list for this node by copying the attribute list
+ * of the previous node. Finally, it makes space for the
+ * buffer which is where the record data from previous nodes
+ * will be held.
+ */
 RC QL_NodeSel::SetUpNode(int numConds){
   RC rc = 0;
   int *attrListPtr;
@@ -46,7 +60,7 @@ RC QL_NodeSel::SetUpNode(int numConds){
     attrsInRec[i] = attrListPtr[i];
   }
 
-  //printf("Sel node number of conds: %d \n", numConds);
+  // allot space for these conditions
   condList = (Cond *)malloc(numConds * sizeof(Cond));
   for(int i= 0; i < numConds; i++){
     condList[i] = {0, NULL, true, NULL, 0, 0, INT};
@@ -55,53 +69,17 @@ RC QL_NodeSel::SetUpNode(int numConds){
   memset((void*)condsInNode, 0, sizeof(condsInNode));
 
   prevNode.GetTupleLength(tupleLength);
-  buffer = (char *)malloc(tupleLength);
+  buffer = (char *)malloc(tupleLength); // set up buffer
   memset((void*)buffer, 0, sizeof(buffer));
   listsInitialized = true;
   return (0);
 }
 
+
+
 /*
-RC QL_NodeJoin::AddCondition(const Condition condition, int condNum){
-  RC rc = 0;
-  int index1, index2;
-  int offset1, offset2;
-  int length1, length2;
-  if((rc = qlm.GetAttrCatEntryPos(condition.lhsAttr, index1) ) || (rc = QL_Node::IndexToOffset(index1, offset1, length1)))
-    return (rc);
-  condList[condIndex].offset1 = offset1;
-  condList[condIndex].length = length1;
-  condList[condIndex].type = qlm.attrEntries[index1].attrType;
-
-  if(condition.bRhsIsAttr){
-    if((rc = qlm.GetAttrCatEntryPos(condition.rhsAttr, index2)) || (rc = QL_Node::IndexToOffset(index2, offset2, length2)))
-      return (rc);
-    condList[condIndex].offset2 = offset2;
-    condList[condIndex].isValue = false;
-    if(length2 < condList[condIndex].length)
-      condList[condIndex].length = length2;
-  }
-  else{
-    condList[condIndex].isValue = true;
-    condList[condIndex].data = condition.rhsValue.data;
-  }
-  switch(condition.op){
-    case EQ_OP : condList[condIndex].comparator = &nequal; break;
-    case LT_OP : condList[condIndex].comparator = &nless_than; break;
-    case GT_OP : condList[condIndex].comparator = &ngreater_than; break;
-    case LE_OP : condList[condIndex].comparator = &nless_than_or_eq_to; break;
-    case GE_OP : condList[condIndex].comparator = &ngreater_than_or_eq_to; break;
-    case NE_OP : condList[condIndex].comparator = &nnot_equal; break;
-    default: return (QL_BADCOND);
-  }
-  condsInNode[condIndex] = condNum;
-  condIndex++;
-
-  return (0);
-}
-*/
-
-
+ * Open the iterator by opening the previous node
+ */
 RC QL_NodeSel::OpenIt(){
   RC rc = 0;
   if((rc = prevNode.OpenIt()))
@@ -109,13 +87,16 @@ RC QL_NodeSel::OpenIt(){
   return (0);
 }
 
+/*
+ * Get the next record
+ */
 RC QL_NodeSel::GetNext(char *data){
   RC rc = 0;
   while(true){
     if((rc = prevNode.GetNext(buffer))){
       return (rc);
     }
-
+    // keep retrieving records until the conditions are met
     RC cond = CheckConditions(buffer);
     if(cond == 0)
       break;
@@ -124,6 +105,9 @@ RC QL_NodeSel::GetNext(char *data){
   return (0);
 }
 
+/*
+ * Close the iterator by closing the previous node's iterator
+ */
 RC QL_NodeSel::CloseIt(){
   RC rc = 0;
   if((rc = prevNode.CloseIt()))
@@ -132,7 +116,9 @@ RC QL_NodeSel::CloseIt(){
   return (0);
 }
 
-
+/*
+ * Retrieves the next record from the previous node
+ */
 RC QL_NodeSel::GetNextRec(RM_Record &rec){
   RC rc = 0;
   while(true){
@@ -148,35 +134,13 @@ RC QL_NodeSel::GetNextRec(RM_Record &rec){
       break;
   }
 
-  //return (QL_BADCALL);
   return (0);
 }
+
 
 /*
-RC QL_NodeSel::CheckConditions(char *recData){
-  RC rc = 0;
-  for(int i = 0; i < condIndex; i++){
-    int offset1 = condList[i].offset1;
-    if(! condList[i].isValue){
-      int offset2 = condList[i].offset2;
-      bool comp = condList[i].comparator((void *)(recData + offset1), (void *)(recData + offset2), 
-        condList[i].type, condList[i].length);
-      if(comp == false)
-        return (-1);
-    }
-    else{
-      bool comp = condList[i].comparator((void *)(recData + offset1), condList[i].data, 
-        condList[i].type, condList[i].length);
-      if(comp == false)
-        return (-1);
-    }
-
-  }
-
-  return (0);
-}
-*/
-
+ * Print the node, and instruct it to print its previous nodes
+ */
 RC QL_NodeSel::PrintNode(int numTabs){
   for(int i=0; i < numTabs; i++){
     cout << "\t";
@@ -194,6 +158,9 @@ RC QL_NodeSel::PrintNode(int numTabs){
   return (0);
 }
 
+/*
+ * Free all memory associated with this node, and delete the previous node
+ */
 RC QL_NodeSel::DeleteNodes(){
   prevNode.DeleteNodes();
   delete &prevNode;

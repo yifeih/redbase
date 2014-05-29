@@ -3,9 +3,9 @@
 /* create 14 different tables. biggest SQL command will involve all 14 */
 
 queryplans on;
-create table ruby (id i, name c24, rating f); 
-create table soaps(soapid  i, sname  c28, network  c4, rating  f);
-create table stars(starid  i, stname  c20, plays  c12);
+create table ruby(id i, name c4, rating f);  
+create table soaps(id  i, sname  c28, network  c4, rating  f);
+create table stars(starid  i, name  c20, plays  c12);
 create table student (studentid i, sname c24, school c4, gpa f, extra c3);
 create table customers (clubcardnum i, name c24, age i);
 create table purchases (customerclubcard i, itemid i, storecity c20, quantity i, purchaseid i);
@@ -21,38 +21,38 @@ create table enroll (id i, id2 i, season c10, year i, grade c2, extra c3);
 
 
 /* one relation with no conditions, select for 1 attribute */
-select soapid from soaps; 
+select id from soaps; 
 
 /* one relation with no conditions, select for all attributes */
 select * from soaps; 
 
 /* two relations with no conditions, select for 1 attr. each */
-select soaps.soapid, stars.starid from soaps, stars; 
+select soaps.id, stars.starid from soaps, stars; 
 
 /* two relations with 1 condition, select for 1 attr. each */
-select soaps.soapid, stars.starid from soaps, stars where soapid = starid; 
+select soaps.id, stars.starid from soaps, stars where id = starid; 
 
 /*during tree building, one loop through conditions results in exactly 1 new
  * relation being created */
-select * from ruby, stars, soaps, student where ruby.id = stars.starid and stars.stname
+select * from ruby, stars, soaps, student where ruby.id = stars.starid and stars.name
 = soaps.sname; 
 
 /*during tree building, one loop through conditions results in no new relation
  * nodes being created */ 
-select * from ruby, stars, soaps, student where ruby.id = 2 and stars.stname
+select * from ruby, stars, soaps, student where ruby.id = 2 and stars.name
 = soaps.sname; 
 
 /* during tree building, one loop through conditions results in 2 new relatoin
  * nodes being created*/
 select * from ruby, stars, soaps, student where ruby.id = 2 and soaps.sname
-= stars.stname; 
+= stars.name; 
 
 select * from ruby, stars, soaps, student where ruby.id = stars.starid;
 
 select * from ruby, stars where ruby.id = stars.starid and ruby.id = 2; 
 
 select * from ruby, stars, soaps where ruby.id = stars.starid and ruby.name =
-soaps.sname and stars.stname = soaps.sname;  
+soaps.sname;  
 
 /* multiple relations with no conditions*/ 
 select * from ruby, stars, soaps, student;
@@ -64,14 +64,15 @@ select * from ruby where ruby.id = 2;
 select * 
 from soaps, stars, student, customers, purchases, items, stores, nursery, 
      movies, ratings, class, company, dealer, enroll
-where soaps.soapid = stars.starid and soaps.soapid = student.studentid and 
-      stars.starid = customers.clubcardnum and stars.stname =
+where soaps.id = stars.starid and soaps.id = student.studentid and 
+      stars.starid = customers.clubcardnum and stars.name =
       purchases.storecity and 
       customers.clubcardnum = items.itemid and purchases.storecity = stores.city and   
       movies.name = nursery.form and ratings.mid = movies.year and
       company.street = ratings.date;
       
 
+drop table ruby;
 drop table soaps;
 drop table stars;
 drop table student;

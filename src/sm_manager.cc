@@ -335,16 +335,21 @@ RC SM_Manager::GetRelEntry(const char *relName, RM_Record &relRec, RelCatEntry *
   return (0);
 }
 
+/*
+ * Given a list of relations, it retrieves all the relCatEntries associated with them placing
+ * them in the list specified by relEntries. It also returns the total # of attributes in all the
+ * relations combined, and populates the mapping from relation name to index number in relEntries
+ */
 RC SM_Manager::GetAllRels(RelCatEntry *relEntries, int nRelations, const char * const relations[],
   int &attrCount, map<string, int> &relToInt){
   RC rc = 0;
   for(int i=0; i < nRelations; i++){
     RelCatEntry *rEntry;
     RM_Record rec;
-    if((rc = GetRelEntry(relations[i], rec, rEntry)))
+    if((rc = GetRelEntry(relations[i], rec, rEntry))) // retrieve this entry
       return (rc);
     *(relEntries + i) = (RelCatEntry) {"\0", 0, 0, 0, 0};
-    memcpy((char *)(relEntries + i), (char *)rEntry, sizeof(RelCatEntry));
+    memcpy((char *)(relEntries + i), (char *)rEntry, sizeof(RelCatEntry)); // copy it into appropraite spot
     attrCount += relEntries[i].attrCount;
 
     // create a map from relation name to # in order
@@ -354,14 +359,20 @@ RC SM_Manager::GetAllRels(RelCatEntry *relEntries, int nRelations, const char * 
   return (rc);
 }
 
+/*
+ * Given a RelCatEntry, it populates aEntry with information about all its attribute.
+ * While doing so, it also updates the attribute-to-relation mapping
+ */
 RC SM_Manager::GetAttrForRel(RelCatEntry *relEntry, AttrCatEntry *aEntry, std::map<std::string, std::set<std::string> > &attrToRel){
   RC rc = 0;
+  // Iterate through all the attributes in this relation
   SM_AttrIterator attrIt;
   if((rc = attrIt.OpenIterator(attrcatFH, (relEntry->relName))))
     return (rc);
   RM_Record attrRec;
   AttrCatEntry *attrEntry;
   for(int i = 0; i < relEntry->attrCount; i++){
+    // For each attribute, get its AttrCatEntry
     if((rc = attrIt.GetNextAttr(attrRec, attrEntry)))
       return (rc);
     
@@ -369,15 +380,16 @@ RC SM_Manager::GetAttrForRel(RelCatEntry *relEntry, AttrCatEntry *aEntry, std::m
     *(aEntry + slot) = (AttrCatEntry) {"\0", "\0", 0, INT, 0, 0, 0};
     memcpy((char *)(aEntry + slot), (char *)attrEntry, sizeof(AttrCatEntry));
 
+    // add this attribute to the mapping from attribute name to set of relations with this attribute name
     string attrString(aEntry[slot].attrName);
     string relString(relEntry->relName);
     map<string, set<string> >::iterator it = attrToRel.find(attrString);
-    if(it == attrToRel.end()){
+    if(it == attrToRel.end()){ // if there isn't a set already for this attribute, create it
       set<string> relNames;
       relNames.insert(relString);
       attrToRel.insert({attrString, relNames});
     }
-    else{
+    else{ // otherwise, just add it.
       attrToRel[attrString].insert(relString);
     }
   }
@@ -387,17 +399,7 @@ RC SM_Manager::GetAttrForRel(RelCatEntry *relEntry, AttrCatEntry *aEntry, std::m
   return (0);
 }
 
-/*
-RC SM_Manager::GetAttrEntry(RM_FileScan& fs, RM_Record &attrRec, AttrCatEntry *&entry){
-  RC rc = 0;
-  if((rc = fs.GetNextRec(attrRec)))
-    return (rc);
-  if((rc = attrRec.GetData((char *&)entry)))
-    return (rc);
 
-  return (rc);
-}
-*/
 
 /*
  * This creates an index on the relation, and adds all the current

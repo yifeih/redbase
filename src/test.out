@@ -1,4 +1,6 @@
-running test # 5 ****************
+running test # 9 ****************
+
+REDBASE >> Query plan display turned on.
 
 REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
 CreateTable
@@ -18,764 +20,254 @@ CreateTable
    attributes[2].attrName=plays   attrType=STRING   attrLength=12
    attributes[3].attrName=soapid   attrType=INT   attrLength=4
 
-REDBASE >> load soaps("../data/soapsbadfile.data");
-Load
-   relName =soaps
-   fileName=../data/soapsbadfile.data
-cannot open file :( 
-SM warning: invalid/bad load file
+REDBASE >> create table student (id = i, name = c12, major = c3, gpa = f, extra = c3);
+CreateTable
+   relName     =student
+   attrCount   =5
+   attributes[0].attrName=id   attrType=INT   attrLength=4
+   attributes[1].attrName=name   attrType=STRING   attrLength=12
+   attributes[2].attrName=major   attrType=STRING   attrLength=3
+   attributes[3].attrName=gpa   attrType=FLOAT   attrLength=4
+   attributes[4].attrName=extra   attrType=STRING   attrLength=3
 
-REDBASE >> print soaps;
-Print
-   relName=soaps
-soapid      sname                       network rating      
-------------------------------------------------------------
+REDBASE >> create table enroll (id = i, id2 = i, season = c10, year = i, grade = c2, extra = c3);
+CreateTable
+   relName     =enroll
+   attrCount   =6
+   attributes[0].attrName=id   attrType=INT   attrLength=4
+   attributes[1].attrName=id2   attrType=INT   attrLength=4
+   attributes[2].attrName=season   attrType=STRING   attrLength=10
+   attributes[3].attrName=year   attrType=INT   attrLength=4
+   attributes[4].attrName=grade   attrType=STRING   attrLength=2
+   attributes[5].attrName=extra   attrType=STRING   attrLength=3
 
-0 tuple(s).
+REDBASE >> create table class (id = i, name = c24, dept = c2, extra = c3);
+CreateTable
+   relName     =class
+   attrCount   =4
+   attributes[0].attrName=id   attrType=INT   attrLength=4
+   attributes[1].attrName=name   attrType=STRING   attrLength=24
+   attributes[2].attrName=dept   attrType=STRING   attrLength=2
+   attributes[3].attrName=extra   attrType=STRING   attrLength=3
+
+REDBASE >> create table department (dept = c2, name = c24);
+CreateTable
+   relName     =department
+   attrCount   =2
+   attributes[0].attrName=dept   attrType=STRING   attrLength=2
+   attributes[1].attrName=name   attrType=STRING   attrLength=24
+
+REDBASE >> create table empty (nothing = c10);
+CreateTable
+   relName     =empty
+   attrCount   =1
+   attributes[0].attrName=nothing   attrType=STRING   attrLength=10
+
+REDBASE >> create table empty2 (nothing = c10);
+CreateTable
+   relName     =empty2
+   attrCount   =1
+   attributes[0].attrName=nothing   attrType=STRING   attrLength=10
 
 REDBASE >> load soaps("../data/soaps.data");
 Load
    relName =soaps
    fileName=../data/soaps.data
-
-REDBASE >> create table soaps_truncated (soapid = i, sname = c1, network = c4, rating = f);
-CreateTable
-   relName     =soaps_truncated
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=1
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps_truncated("../data/soaps.data");
-Load
-   relName =soaps_truncated
-   fileName=../data/soaps.data
-
-REDBASE >> print soaps;
-Print
-   relName=soaps
-soapid      sname                       network rating      
-------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
-5           The Young and the Restless  CBS     5.500000    
-6           As the World Turns          CBS     7.000000    
-7           Another World               NBC     1.970000    
-8           All My Children             ABC     8.820000    
-
-9 tuple(s).
-
-REDBASE >> print soaps_truncated;
-Print
-   relName=soaps_truncated
-soapid      sname network rating      
---------------------------------------
-0           D     NBC     7.020000    
-1           G     ABC     9.810000    
-2           G     CBS     4.020000    
-3           O     ABC     2.310000    
-4           S     NBC     6.440000    
-5           T     CBS     5.500000    
-6           A     CBS     7.000000    
-7           A     NBC     1.970000    
-8           A     ABC     8.820000    
-
-9 tuple(s).
-
-REDBASE >> drop table soaps_truncated;
-DropTable
-   relName=soaps_truncated
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.badint1.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.badint1.data
-bad insert
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.badint2.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.badint2.data
-bad insert
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.badfloat1.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.badfloat1.data
-bad insert
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.badfloat2.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.badfloat2.data
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.nullstring.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.nullstring.data
-
-REDBASE >> print soaps;
-Print
-   relName=soaps
-soapid      sname                       network rating      
-------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
-5           The Young and the Restless  CBS     5.500000    
-6           As the World Turns          CBS     7.000000    
-7           Another World               NBC     1.970000    
-8           All My Children             ABC     8.820000    
-9                                               9.000000    
-10                                              10.000000   
-11                                              11.000000   
-12          hi sophia :D                        12.000000   
-
-13 tuple(s).
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> create table soaps_extra (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps_extra
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.data
-
-REDBASE >> load soaps_extra("../data/soaps.extra.data");
-Load
-   relName =soaps_extra
-   fileName=../data/soaps.extra.data
-
-REDBASE >> print soaps;
-Print
-   relName=soaps
-soapid      sname                       network rating      
-------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
-5           The Young and the Restless  CBS     5.500000    
-6           As the World Turns          CBS     7.000000    
-7           Another World               NBC     1.970000    
-8           All My Children             ABC     8.820000    
-
-9 tuple(s).
-
-REDBASE >> print soaps_extra;
-Print
-   relName=soaps_extra
-soapid      sname                       network rating      
-------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
-5           The Young and the Restless  CBS     5.500000    
-6           As the World Turns          CBS     7.000000    
-7           Another World               NBC     1.970000    
-8           All My Children             ABC     8.820000    
-
-9 tuple(s).
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> drop table soaps_extra;
-DropTable
-   relName=soaps_extra
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/missingfloat.data");
-Load
-   relName =soaps
-   fileName=../data/missingfloat.data
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (sname = c28, network = c4, rating = f, soapid = i);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=sname   attrType=STRING   attrLength=28
-   attributes[1].attrName=network   attrType=STRING   attrLength=4
-   attributes[2].attrName=rating   attrType=FLOAT   attrLength=4
-   attributes[3].attrName=soapid   attrType=INT   attrLength=4
-
-REDBASE >> load soaps("../data/missingint.data");
-Load
-   relName =soaps
-   fileName=../data/missingint.data
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, network = c4, rating = f, sname = c28);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=network   attrType=STRING   attrLength=4
-   attributes[2].attrName=rating   attrType=FLOAT   attrLength=4
-   attributes[3].attrName=sname   attrType=STRING   attrLength=28
-
-REDBASE >> load soaps("../data/missingstring.data");
-Load
-   relName =soaps
-   fileName=../data/missingstring.data
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> Bye.
-running test # 1 ****************
-ERROR: ld.so: object '/usr/lib/valgrind/vgpreload_core-amd64-linux.so' from LD_PRELOAD cannot be preloaded: ignored.
-ERROR: ld.so: object '/usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so' from LD_PRELOAD cannot be preloaded: ignored.
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> create table stars (starid = i, stname = c20, plays = c12, soapid = i);
-CreateTable
-   relName     =stars
-   attrCount   =4
-   attributes[0].attrName=starid   attrType=INT   attrLength=4
-   attributes[1].attrName=stname   attrType=STRING   attrLength=20
-   attributes[2].attrName=plays   attrType=STRING   attrLength=12
-   attributes[3].attrName=soapid   attrType=INT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.data
-
-REDBASE >> print soaps;
-Print
-   relName=soaps
-soapid      sname                       network rating      
-------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
-5           The Young and the Restless  CBS     5.500000    
-6           As the World Turns          CBS     7.000000    
-7           Another World               NBC     1.970000    
-8           All My Children             ABC     8.820000    
-
-9 tuple(s).
-
-REDBASE >> create index stars(starid);
-CreateIndex
-   relName =stars
-   attrName=starid
-
-REDBASE >> create index stars(stname);
-CreateIndex
-   relName =stars
-   attrName=stname
 
 REDBASE >> load stars("../data/stars.data");
 Load
    relName =stars
    fileName=../data/stars.data
 
-REDBASE >> print stars;
-Print
-   relName=stars
-starid      stname              plays       soapid      
---------------------------------------------------------
-0           Hayes Kathryn       Kim         6           
-1           DeFreitas Scott     Andy        6           
-2           Grahn Nancy         Julia       4           
-3           Linder Kate         Esther      5           
-4           Cooper Jeanne       Katherine   5           
-5           Ehlers Beth         Harley      2           
-6           Novak John          Keith       4           
-7           Elliot Patricia     Renee       3           
-8           Hutchinson Fiona    Gabrielle   5           
-9           Carey Phil          Asa         5           
-10          Walker Nicholas     Max         3           
-11          Ross Charlotte      Eve         0           
-12          Anthony Eugene      Stan        8           
-13          Douglas Jerry       John        5           
-14          Holbrook Anna       Sharlene    7           
-15          Hammer Jay          Fletcher    2           
-16          Sloan Tina          Lillian     2           
-17          DuClos Danielle     Lisa        3           
-18          Tuck Jessica        Megan       3           
-19          Ashford Matthew     Jack        0           
-20          Novak John          Keith       4           
-21          Larson Jill         Opal        8           
-22          McKinnon Mary       Denise      7           
-23          Barr Julia          Brooke      8           
-24          Borlenghi Matt      Brian       8           
-25          Hughes Finola       Anna        1           
-26          Rogers Tristan      Robert      1           
-27          Richardson Cheryl   Jenny       1           
-28          Evans Mary Beth     Kayla       0           
-
-29 tuple(s).
-
-REDBASE >> ls;
-attrcat
-relcat
-soaps
-stars
-stars.0
-stars.1
-
-REDBASE >> Bye.
-running test # 1 ****************
-ERROR: ld.so: object '/usr/lib/valgrind/vgpreload_core-amd64-linux.so' from LD_PRELOAD cannot be preloaded: ignored.
-ERROR: ld.so: object '/usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so' from LD_PRELOAD cannot be preloaded: ignored.
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> create table stars (starid = i, stname = c20, plays = c12, soapid = i);
-CreateTable
-   relName     =stars
-   attrCount   =4
-   attributes[0].attrName=starid   attrType=INT   attrLength=4
-   attributes[1].attrName=stname   attrType=STRING   attrLength=20
-   attributes[2].attrName=plays   attrType=STRING   attrLength=12
-   attributes[3].attrName=soapid   attrType=INT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.data");
+REDBASE >> load enroll("../data/MoreData/enroll.data");
 Load
-   relName =soaps
-   fileName=../data/soaps.data
+   relName =enroll
+   fileName=../data/MoreData/enroll.data
 
-REDBASE >> print soaps;
-Print
-   relName=soaps
-soapid      sname                       network rating      
-------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
-5           The Young and the Restless  CBS     5.500000    
-6           As the World Turns          CBS     7.000000    
-7           Another World               NBC     1.970000    
-8           All My Children             ABC     8.820000    
-
-9 tuple(s).
-
-REDBASE >> create index stars(starid);
-CreateIndex
-   relName =stars
-   attrName=starid
-
-REDBASE >> create index stars(stname);
-CreateIndex
-   relName =stars
-   attrName=stname
-
-REDBASE >> load stars("../data/stars.data");
+REDBASE >> load class("../data/MoreData/class.data");
 Load
-   relName =stars
-   fileName=../data/stars.data
+   relName =class
+   fileName=../data/MoreData/class.data
 
-REDBASE >> print stars;
-Print
-   relName=stars
-starid      stname              plays       soapid      
---------------------------------------------------------
-0           Hayes Kathryn       Kim         6           
-1           DeFreitas Scott     Andy        6           
-2           Grahn Nancy         Julia       4           
-3           Linder Kate         Esther      5           
-4           Cooper Jeanne       Katherine   5           
-5           Ehlers Beth         Harley      2           
-6           Novak John          Keith       4           
-7           Elliot Patricia     Renee       3           
-8           Hutchinson Fiona    Gabrielle   5           
-9           Carey Phil          Asa         5           
-10          Walker Nicholas     Max         3           
-11          Ross Charlotte      Eve         0           
-12          Anthony Eugene      Stan        8           
-13          Douglas Jerry       John        5           
-14          Holbrook Anna       Sharlene    7           
-15          Hammer Jay          Fletcher    2           
-16          Sloan Tina          Lillian     2           
-17          DuClos Danielle     Lisa        3           
-18          Tuck Jessica        Megan       3           
-19          Ashford Matthew     Jack        0           
-20          Novak John          Keith       4           
-21          Larson Jill         Opal        8           
-22          McKinnon Mary       Denise      7           
-23          Barr Julia          Brooke      8           
-24          Borlenghi Matt      Brian       8           
-25          Hughes Finola       Anna        1           
-26          Rogers Tristan      Robert      1           
-27          Richardson Cheryl   Jenny       1           
-28          Evans Mary Beth     Kayla       0           
-
-29 tuple(s).
-
-REDBASE >> ls;
-attrcat
-relcat
-soaps
-stars
-stars.0
-stars.1
-
-REDBASE >> Bye.
-running test # 5 ****************
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> create table stars (starid = i, stname = c20, plays = c12, soapid = i);
-CreateTable
-   relName     =stars
-   attrCount   =4
-   attributes[0].attrName=starid   attrType=INT   attrLength=4
-   attributes[1].attrName=stname   attrType=STRING   attrLength=20
-   attributes[2].attrName=plays   attrType=STRING   attrLength=12
-   attributes[3].attrName=soapid   attrType=INT   attrLength=4
-
-REDBASE >> load soaps("../data/soapsbadfile.data");
+REDBASE >> load student("../data/MoreData/student.data");
 Load
-   relName =soaps
-   fileName=../data/soapsbadfile.data
-cannot open file :( 
-SM warning: invalid/bad load file
+   relName =student
+   fileName=../data/MoreData/student.data
 
-REDBASE >> print soaps;
-Print
-   relName=soaps
+REDBASE >> load department("../data/MoreData/dept.data");
+Load
+   relName =department
+   fileName=../data/MoreData/dept.data
+
+REDBASE >> update soaps set  sname =  "Bogus"where  sname > "Zooey";
+Update
+   relName = soaps
+   updAttr:NULL.sname
+   rhs is value: AttrType: STRING (char *)data=Bogus
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.sname
+      op= >
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: STRING (char *)data=Zooey
+PRINTING QUERY PLAN
+--SEL: 
+NULL.sname>Zooey 
+	--REL: soaps using filescan.
 soapid      sname                       network rating      
 ------------------------------------------------------------
 
 0 tuple(s).
 
-REDBASE >> load soaps("../data/soaps.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.data
-
-REDBASE >> create table soaps_truncated (soapid = i, sname = c1, network = c4, rating = f);
-CreateTable
-   relName     =soaps_truncated
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=1
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps_truncated("../data/soaps.data");
-Load
-   relName =soaps_truncated
-   fileName=../data/soaps.data
-
-REDBASE >> print soaps;
-Print
-   relName=soaps
+REDBASE >> update soaps set  sname =  networkwhere  rating > 0.000000;
+Update
+   relName = soaps
+   updAttr:NULL.sname
+   rhs is attribute: NULL.network
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.rating
+      op= >
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: FLOAT *(float *)data=0
+PRINTING QUERY PLAN
+--SEL: 
+NULL.rating>0.000000 
+	--REL: soaps using filescan.
 soapid      sname                       network rating      
 ------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
-5           The Young and the Restless  CBS     5.500000    
-6           As the World Turns          CBS     7.000000    
-7           Another World               NBC     1.970000    
-8           All My Children             ABC     8.820000    
+0           NBC                         NBC     7.020000    
+1           ABC                         ABC     9.810000    
+2           CBS                         CBS     4.020000    
+3           ABC                         ABC     2.310000    
+4           NBC                         NBC     6.440000    
+5           CBS                         CBS     5.500000    
+6           CBS                         CBS     7.000000    
+7           NBC                         NBC     1.970000    
+8           ABC                         ABC     8.820000    
 
 9 tuple(s).
 
-REDBASE >> print soaps_truncated;
-Print
-   relName=soaps_truncated
-soapid      sname network rating      
---------------------------------------
-0           D     NBC     7.020000    
-1           G     ABC     9.810000    
-2           G     CBS     4.020000    
-3           O     ABC     2.310000    
-4           S     NBC     6.440000    
-5           T     CBS     5.500000    
-6           A     CBS     7.000000    
-7           A     NBC     1.970000    
-8           A     ABC     8.820000    
+REDBASE >> update soaps set  sname =  "More Bogus";
+Update
+   relName = soaps
+   updAttr:NULL.sname
+   rhs is value: AttrType: STRING (char *)data=More Bogus
+   nCondtions = 0
+PRINTING QUERY PLAN
+--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           More Bogus                  NBC     7.020000    
+1           More Bogus                  ABC     9.810000    
+2           More Bogus                  CBS     4.020000    
+3           More Bogus                  ABC     2.310000    
+4           More Bogus                  NBC     6.440000    
+5           More Bogus                  CBS     5.500000    
+6           More Bogus                  CBS     7.000000    
+7           More Bogus                  NBC     1.970000    
+8           More Bogus                  ABC     8.820000    
 
 9 tuple(s).
 
-REDBASE >> drop table soaps_truncated;
-DropTable
-   relName=soaps_truncated
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.badint1.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.badint1.data
-bad insert
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.badint2.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.badint2.data
-bad insert
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.badfloat1.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.badfloat1.data
-bad insert
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.badfloat2.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.badfloat2.data
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
-DropTable
-   relName=soaps
-
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/soaps.nullstring.data");
-Load
-   relName =soaps
-   fileName=../data/soaps.nullstring.data
-
-REDBASE >> print soaps;
-Print
-   relName=soaps
+REDBASE >> update soaps set  soapid =  100where  soapid < 5;
+Update
+   relName = soaps
+   updAttr:NULL.soapid
+   rhs is value: AttrType: INT *(int *)data=100
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= <
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=5
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid<5 
+	--REL: soaps using filescan.
 soapid      sname                       network rating      
 ------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
-5           The Young and the Restless  CBS     5.500000    
-6           As the World Turns          CBS     7.000000    
-7           Another World               NBC     1.970000    
-8           All My Children             ABC     8.820000    
-9                                               9.000000    
-10                                              10.000000   
-11                                              11.000000   
-12          hi sophia :D                        12.000000   
+100         More Bogus                  NBC     7.020000    
+100         More Bogus                  ABC     9.810000    
+100         More Bogus                  CBS     4.020000    
+100         More Bogus                  ABC     2.310000    
+100         More Bogus                  NBC     6.440000    
 
-13 tuple(s).
+5 tuple(s).
+
+REDBASE >> update empty set  nothing =  "10";
+Update
+   relName = empty
+   updAttr:NULL.nothing
+   rhs is value: AttrType: STRING (char *)data=10
+   nCondtions = 0
+PRINTING QUERY PLAN
+--REL: empty using filescan.
+nothing   
+----------
+
+0 tuple(s).
+
+REDBASE >> update empty set  nothing =  "10"where  nothing = "11";
+Update
+   relName = empty
+   updAttr:NULL.nothing
+   rhs is value: AttrType: STRING (char *)data=10
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.nothing
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: STRING (char *)data=11
+PRINTING QUERY PLAN
+--SEL: 
+NULL.nothing=11 
+	--REL: empty using filescan.
+nothing   
+----------
+
+0 tuple(s).
+
+REDBASE >> create index soaps(soapid);
+CreateIndex
+   relName =soaps
+   attrName=soapid
+
+REDBASE >> update soaps set  soapid =  200where  soapid = 100;
+Update
+   relName = soaps
+   updAttr:NULL.soapid
+   rhs is value: AttrType: INT *(int *)data=200
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=100
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid=100 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+200         More Bogus                  NBC     7.020000    
+200         More Bogus                  ABC     9.810000    
+200         More Bogus                  CBS     4.020000    
+200         More Bogus                  ABC     2.310000    
+200         More Bogus                  NBC     6.440000    
+
+5 tuple(s).
 
 REDBASE >> drop table soaps;
 DropTable
    relName=soaps
+DropIndex
+   relName =soaps
+   attrName=soapid
 
 REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
 CreateTable
    relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> create table soaps_extra (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps_extra
    attrCount   =4
    attributes[0].attrName=soapid   attrType=INT   attrLength=4
    attributes[1].attrName=sname   attrType=STRING   attrLength=28
@@ -787,21 +279,255 @@ Load
    relName =soaps
    fileName=../data/soaps.data
 
-REDBASE >> load soaps_extra("../data/soaps.extra.data");
+REDBASE >> delete soaps ;
+Delete
+   relName = soaps
+   nCondtions = 0
+PRINTING QUERY PLAN
+--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           Days of Our Lives           NBC     7.020000    
+1           General Hospital            ABC     9.810000    
+2           Guiding Light               CBS     4.020000    
+3           One Life to Live            ABC     2.310000    
+4           Santa Barbara               NBC     6.440000    
+5           The Young and the Restless  CBS     5.500000    
+6           As the World Turns          CBS     7.000000    
+7           Another World               NBC     1.970000    
+8           All My Children             ABC     8.820000    
+
+9 tuple(s).
+
+REDBASE >> load soaps("../data/soaps.data");
 Load
-   relName =soaps_extra
-   fileName=../data/soaps.extra.data
+   relName =soaps
+   fileName=../data/soaps.data
+
+REDBASE >> delete soaps where  rating > 0.000000;
+Delete
+   relName = soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.rating
+      op= >
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: FLOAT *(float *)data=0
+PRINTING QUERY PLAN
+--SEL: 
+NULL.rating>0.000000 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           Days of Our Lives           NBC     7.020000    
+1           General Hospital            ABC     9.810000    
+2           Guiding Light               CBS     4.020000    
+3           One Life to Live            ABC     2.310000    
+4           Santa Barbara               NBC     6.440000    
+5           The Young and the Restless  CBS     5.500000    
+6           As the World Turns          CBS     7.000000    
+7           Another World               NBC     1.970000    
+8           All My Children             ABC     8.820000    
+
+9 tuple(s).
+
+REDBASE >> load soaps("../data/soaps.data");
+Load
+   relName =soaps
+   fileName=../data/soaps.data
+
+REDBASE >> delete soaps where  soapid > 100;
+Delete
+   relName = soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= >
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=100
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid>100 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+
+0 tuple(s).
+
+REDBASE >> delete empty ;
+Delete
+   relName = empty
+   nCondtions = 0
+PRINTING QUERY PLAN
+--REL: empty using filescan.
+nothing   
+----------
+
+0 tuple(s).
+
+REDBASE >> delete empty where  nothing = "11";
+Delete
+   relName = empty
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.nothing
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: STRING (char *)data=11
+PRINTING QUERY PLAN
+--SEL: 
+NULL.nothing=11 
+	--REL: empty using filescan.
+nothing   
+----------
+
+0 tuple(s).
+
+REDBASE >> select  *
+ from  soaps
+where  soapid < 5;
+Select
+   nSelAttrs = 1
+   selAttrs[0]:NULL.*
+   nRelations = 1
+   relations[0] soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= <
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=5
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid<5 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           Days of Our Lives           NBC     7.020000    
+1           General Hospital            ABC     9.810000    
+2           Guiding Light               CBS     4.020000    
+3           One Life to Live            ABC     2.310000    
+4           Santa Barbara               NBC     6.440000    
+
+5 tuple(s).
+
+REDBASE >> create index soaps(soapid);
+CreateIndex
+   relName =soaps
+   attrName=soapid
+
+REDBASE >> select  *
+ from  soaps
+where  soapid < 5;
+Select
+   nSelAttrs = 1
+   selAttrs[0]:NULL.*
+   nRelations = 1
+   relations[0] soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= <
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=5
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid<5 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+0           Days of Our Lives           NBC     7.020000    
+1           General Hospital            ABC     9.810000    
+2           Guiding Light               CBS     4.020000    
+3           One Life to Live            ABC     2.310000    
+4           Santa Barbara               NBC     6.440000    
+
+5 tuple(s).
+
+REDBASE >> update soaps set  soapid =  10where  soapid < 5;
+Update
+   relName = soaps
+   updAttr:NULL.soapid
+   rhs is value: AttrType: INT *(int *)data=10
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= <
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=5
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid<5 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+10          Days of Our Lives           NBC     7.020000    
+10          General Hospital            ABC     9.810000    
+10          Guiding Light               CBS     4.020000    
+10          One Life to Live            ABC     2.310000    
+10          Santa Barbara               NBC     6.440000    
+
+5 tuple(s).
+
+REDBASE >> select  *
+ from  soaps
+where  soapid = 4;
+Select
+   nSelAttrs = 1
+   selAttrs[0]:NULL.*
+   nRelations = 1
+   relations[0] soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=4
+PRINTING QUERY PLAN
+--REL: soaps using index on attribute soapid = 4 
+soapid      sname                       network rating      
+------------------------------------------------------------
+
+0 tuple(s).
+
+REDBASE >> drop index soaps(soapid);
+DropIndex
+   relName =soaps
+   attrName=soapid
+
+REDBASE >> select  *
+ from  soaps
+where  soapid = 4;
+Select
+   nSelAttrs = 1
+   selAttrs[0]:NULL.*
+   nRelations = 1
+   relations[0] soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=4
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid=4 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+
+0 tuple(s).
 
 REDBASE >> print soaps;
 Print
    relName=soaps
 soapid      sname                       network rating      
 ------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
+10          Days of Our Lives           NBC     7.020000    
+10          General Hospital            ABC     9.810000    
+10          Guiding Light               CBS     4.020000    
+10          One Life to Live            ABC     2.310000    
+10          Santa Barbara               NBC     6.440000    
 5           The Young and the Restless  CBS     5.500000    
 6           As the World Turns          CBS     7.000000    
 7           Another World               NBC     1.970000    
@@ -809,16 +535,175 @@ soapid      sname                       network rating
 
 9 tuple(s).
 
-REDBASE >> print soaps_extra;
-Print
-   relName=soaps_extra
+REDBASE >> create index soaps(soapid);
+CreateIndex
+   relName =soaps
+   attrName=soapid
+
+REDBASE >> insert into soaps values (  100, "Zooey", "ABCD", 1.000000);
+Insert
+   relName = soaps
+   nValues = 4
+   values[0]:AttrType: INT *(int *)data=100
+   values[1]:AttrType: STRING (char *)data=Zooey
+   values[2]:AttrType: STRING (char *)data=ABCD
+   values[3]:AttrType: FLOAT *(float *)data=1
 soapid      sname                       network rating      
 ------------------------------------------------------------
-0           Days of Our Lives           NBC     7.020000    
-1           General Hospital            ABC     9.810000    
-2           Guiding Light               CBS     4.020000    
-3           One Life to Live            ABC     2.310000    
-4           Santa Barbara               NBC     6.440000    
+100         Zooey                       ABCD    1.000000    
+
+1 tuple(s).
+
+REDBASE >> select  *
+ from  soaps
+where  soapid = 100;
+Select
+   nSelAttrs = 1
+   selAttrs[0]:NULL.*
+   nRelations = 1
+   relations[0] soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=100
+PRINTING QUERY PLAN
+--REL: soaps using index on attribute soapid = 100 
+soapid      sname                       network rating      
+------------------------------------------------------------
+100         Zooey                       ABCD    1.000000    
+
+1 tuple(s).
+
+REDBASE >> drop index soaps(soapid);
+DropIndex
+   relName =soaps
+   attrName=soapid
+
+REDBASE >> select  *
+ from  soaps
+where  soapid = 100;
+Select
+   nSelAttrs = 1
+   selAttrs[0]:NULL.*
+   nRelations = 1
+   relations[0] soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=100
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid=100 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+100         Zooey                       ABCD    1.000000    
+
+1 tuple(s).
+
+REDBASE >> print soaps;
+Print
+   relName=soaps
+soapid      sname                       network rating      
+------------------------------------------------------------
+10          Days of Our Lives           NBC     7.020000    
+10          General Hospital            ABC     9.810000    
+10          Guiding Light               CBS     4.020000    
+10          One Life to Live            ABC     2.310000    
+10          Santa Barbara               NBC     6.440000    
+5           The Young and the Restless  CBS     5.500000    
+6           As the World Turns          CBS     7.000000    
+7           Another World               NBC     1.970000    
+8           All My Children             ABC     8.820000    
+100         Zooey                       ABCD    1.000000    
+
+10 tuple(s).
+
+REDBASE >> create index soaps(soapid);
+CreateIndex
+   relName =soaps
+   attrName=soapid
+
+REDBASE >> delete soaps where  soapid = 100;
+Delete
+   relName = soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=100
+PRINTING QUERY PLAN
+--REL: soaps using index on attribute soapid = 100 
+soapid      sname                       network rating      
+------------------------------------------------------------
+100         Zooey                       ABCD    1.000000    
+
+1 tuple(s).
+
+REDBASE >> select  *
+ from  soaps
+where  soapid = 100;
+Select
+   nSelAttrs = 1
+   selAttrs[0]:NULL.*
+   nRelations = 1
+   relations[0] soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=100
+PRINTING QUERY PLAN
+--REL: soaps using index on attribute soapid = 100 
+soapid      sname                       network rating      
+------------------------------------------------------------
+
+0 tuple(s).
+
+REDBASE >> drop index soaps(soapid);
+DropIndex
+   relName =soaps
+   attrName=soapid
+
+REDBASE >> select  *
+ from  soaps
+where  soapid = 100;
+Select
+   nSelAttrs = 1
+   selAttrs[0]:NULL.*
+   nRelations = 1
+   relations[0] soaps
+   nCondtions = 1
+   conditions[0]:
+      lhsAttr:NULL.soapid
+      op= =
+      bRshIsAttr=FALSE
+      rhsValue:AttrType: INT *(int *)data=100
+PRINTING QUERY PLAN
+--SEL: 
+NULL.soapid=100 
+	--REL: soaps using filescan.
+soapid      sname                       network rating      
+------------------------------------------------------------
+
+0 tuple(s).
+
+REDBASE >> print soaps;
+Print
+   relName=soaps
+soapid      sname                       network rating      
+------------------------------------------------------------
+10          Days of Our Lives           NBC     7.020000    
+10          General Hospital            ABC     9.810000    
+10          Guiding Light               CBS     4.020000    
+10          One Life to Live            ABC     2.310000    
+10          Santa Barbara               NBC     6.440000    
 5           The Young and the Restless  CBS     5.500000    
 6           As the World Turns          CBS     7.000000    
 7           Another World               NBC     1.970000    
@@ -830,65 +715,32 @@ REDBASE >> drop table soaps;
 DropTable
    relName=soaps
 
-REDBASE >> drop table soaps_extra;
+REDBASE >> drop table stars;
 DropTable
-   relName=soaps_extra
+   relName=stars
 
-REDBASE >> create table soaps (soapid = i, sname = c28, network = c4, rating = f);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=sname   attrType=STRING   attrLength=28
-   attributes[2].attrName=network   attrType=STRING   attrLength=4
-   attributes[3].attrName=rating   attrType=FLOAT   attrLength=4
-
-REDBASE >> load soaps("../data/missingfloat.data");
-Load
-   relName =soaps
-   fileName=../data/missingfloat.data
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
+REDBASE >> drop table student;
 DropTable
-   relName=soaps
+   relName=student
 
-REDBASE >> create table soaps (sname = c28, network = c4, rating = f, soapid = i);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=sname   attrType=STRING   attrLength=28
-   attributes[1].attrName=network   attrType=STRING   attrLength=4
-   attributes[2].attrName=rating   attrType=FLOAT   attrLength=4
-   attributes[3].attrName=soapid   attrType=INT   attrLength=4
-
-REDBASE >> load soaps("../data/missingint.data");
-Load
-   relName =soaps
-   fileName=../data/missingint.data
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
+REDBASE >> drop table enroll;
 DropTable
-   relName=soaps
+   relName=enroll
 
-REDBASE >> create table soaps (soapid = i, network = c4, rating = f, sname = c28);
-CreateTable
-   relName     =soaps
-   attrCount   =4
-   attributes[0].attrName=soapid   attrType=INT   attrLength=4
-   attributes[1].attrName=network   attrType=STRING   attrLength=4
-   attributes[2].attrName=rating   attrType=FLOAT   attrLength=4
-   attributes[3].attrName=sname   attrType=STRING   attrLength=28
-
-REDBASE >> load soaps("../data/missingstring.data");
-Load
-   relName =soaps
-   fileName=../data/missingstring.data
-SM warning: invalid/bad load file
-
-REDBASE >> drop table soaps;
+REDBASE >> drop table class;
 DropTable
-   relName=soaps
+   relName=class
+
+REDBASE >> drop table department;
+DropTable
+   relName=department
+
+REDBASE >> drop table empty;
+DropTable
+   relName=empty
+
+REDBASE >> drop table empty2;
+DropTable
+   relName=empty2
 
 REDBASE >> Bye.

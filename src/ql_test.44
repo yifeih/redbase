@@ -1,0 +1,43 @@
+/* SQL Test Commands : SELECT */
+
+create table soaps(soapid i, sname c28, network c4, rating f);
+create table stars(starid  i, stname  c20, plays  c12, soapid  i);
+create table student(id i, name c12, major c3, gpa f, extra c3);
+create table enroll (id i, id2 i, season c10, year i, grade c2, extra c3); 
+create table class(id i, name c24, dept c3, extra c3);
+create table department(dept c2, name c24);
+
+
+load soaps("../data/soaps.data");
+load stars("../data/stars.data");
+load enroll("../data/MoreData/enroll.data");
+load class("../data/MoreData/class.data");
+load student("../data/MoreData/student.data");
+load department("../data/MoreData/dept.data");
+
+create index soaps(sname);
+create index stars(starid);
+create index soaps(soapid);
+create index class(id);
+
+select * from soaps;
+select * from stars;
+
+select * from soaps, stars;
+select soapid from soaps;
+select rating, network from soaps;
+select sname from soaps where sname="Days of Our Lives";
+select sname from soaps where sname<"B";
+select sname from soaps where sname!="derp";
+select soaps.soapid, stars.soapid, soaps.sname from soaps, stars where stars.soapid=soaps.soapid; 
+select soaps.soapid, stars.soapid, soaps.sname from soaps, stars where stars.soapid=soaps.soapid and sname="S";
+select soaps.soapid, stars.soapid, soaps.sname from soaps, stars where stars.soapid=soaps.soapid and sname="Santa Barbara";
+
+select * from soaps, stars where soaps.network=stars.plays;
+select soaps.rating from soaps, stars where soaps.soapid = stars.starid and soaps.sname="One Life to Live";
+
+
+select * from department, class where department.dept=class.dept;
+select student.extra from student, enroll, class where student.extra=enroll.extra and student.extra=class.extra and class.id=1;
+select * from student, enroll, class where student.id=enroll.id and class.id=enroll.id2 and class.dept="CS";
+select * from student, enroll, class where student.id=enroll.id and class.id=enroll.id2;

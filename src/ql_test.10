@@ -1,0 +1,66 @@
+/*
+ * ql_test.1: tests load and simple select
+ */
+
+/* create some tables */
+create table major(majorid c5, name c50, deptid c5);
+create table student(studentid i, name c21, majorid c5, gpa f, extra c100);
+create table enroll(studentid i, classid i, quarter c6, year i, grade c2, extra c100);
+create table class(classid i, name c21, deptid c5, extra c100);
+create table dept(deptid c5, name c50);
+
+/* load the tables */
+load major("../data/MoreData/major.data");
+load student("../data/MoreData/student.data");
+load enroll("../data/MoreData/enroll.data");
+load class("../data/MoreData/class.data");
+load dept("../data/MoreData/dept.data");
+
+/* Now print out the contents using select */
+select major.majorid, major.name, major.deptid
+from major;
+/* ------
+ * Answer: 3 Tuples 
+ * ------  */
+
+select student.studentid, student.name, student.majorid, student.gpa
+from student;
+/* ------
+ * Answer: 15 Tuples 
+ * ------  */
+
+select enroll.studentid, enroll.classid, enroll.quarter, enroll.year, enroll.grade
+from enroll;
+/* ------
+ * Answer: 40 Tuples 
+ * ------  */
+
+select class.classid, class.name, class.deptid
+from class;
+/* ------
+ * Answer: 10 Tuples 
+ * ------  */
+
+select dept.deptid, dept.name
+from dept;
+/* ------
+ * Answer: 2 Tuples 
+ * ------  */
+
+/* Now lets drop all tables except the last and select it again */
+drop table major;
+drop table student;
+drop table enroll;
+drop table class;
+
+select dept.deptid, dept.name
+from dept;
+/* ------
+ * Answer: 2 Tuples 
+ * ------  */
+
+/* Finally, drop the last table */
+drop table dept;
+!ls;
+
+exit;
