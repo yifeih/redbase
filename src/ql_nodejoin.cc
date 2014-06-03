@@ -31,6 +31,7 @@ QL_NodeJoin::QL_NodeJoin(QL_Manager &qlm, QL_Node &node1, QL_Node &node2) :
   condIndex = 0;
   firstNodeSize = 0;
   gotFirstTuple = false;
+  useIndexJoin = false;
 }
 
 /*
@@ -97,8 +98,14 @@ RC QL_NodeJoin::SetUpNode(int numConds){
  */
 RC QL_NodeJoin::OpenIt(){
   RC rc = 0;
-  if((rc = node1.OpenIt()) || (rc = node2.OpenIt()))
-    return (rc);
+  if(!useIndexJoin){
+    if((rc = node1.OpenIt()) || (rc = node2.OpenIt()))
+      return (rc);
+  }
+  else{
+    if((rc = node1.OpenIt() ))
+      return (rc);
+  }
   gotFirstTuple = false;
  
   return (0);
@@ -110,12 +117,19 @@ RC QL_NodeJoin::OpenIt(){
 RC QL_NodeJoin::GetNext(char *data){
   RC rc = 0;
   // Retrieve the first tuple, marking the start of the iterator
-  if(gotFirstTuple == false){
+  if(gotFirstTuple == false && ! useIndexJoin){
     if((rc = node1.GetNext(buffer)))
-    return (rc);
+      return (rc);
+  }
+  else if(gotFirstTuple == false && useIndexJoin){
+    if((rc = node1.GetNext(buffer)))
+      return (rc);
+    int offset = qlm.attrEntries[indexAttr].offset;
+    if((rc = node2.OpenIt(buffer + offset)))
+      return (rc);
   }
   gotFirstTuple = true;
-  while(true){
+  while(true && !useIndexJoin){
     if((rc = node2.GetNext(buffer + firstNodeSize)) && rc == QL_EOI){
       // no more in buffer2, restart it, and get the next node in buf1
       if((rc = node1.GetNext(buffer)))
@@ -128,6 +142,21 @@ RC QL_NodeJoin::GetNext(char *data){
     // keep retrieving until condition is met
     RC comp = CheckConditions(buffer);
     if(comp == 0)
+      break;
+  }
+  while(true && useIndexJoin){
+    if((rc = node2.GetNext(buffer + firstNodeSize)) && rc == QL_EOI){
+      // no more in buffer 2, restart it and get the next node in buf1
+      if((rc = node1.GetNext(buffer)))
+        return (rc);
+      int offset = qlm.attrEntries[indexAttr].offset;
+      if((rc = node2.CloseIt()) || (rc = node2.OpenIt(buffer + offset)))
+        return (rc);
+      if((rc = node2.GetNext(buffer + firstNodeSize)))
+        return (rc);
+    }
+    RC comp = CheckConditions(buffer);
+    if (comp == 0)
       break;
   }
   memcpy(data, buffer, tupleLength);
@@ -190,5 +219,22 @@ RC QL_NodeJoin::DeleteNodes(){
   return (0);
 }
 
+RC QL_NodeJoin::UseIndexJoin(int indexAttr, int indexNumber){
+  useIndexJoin = true;
+  this->indexAttr = indexAttr;
+  node2.UseIndex(indexAttr, indexNumber, NULL);
+  return (0);
+}
 
+bool QL_NodeJoin::IsRelNode(){
+  return false;
+}
+
+RC QL_NodeJoin::OpenIt(void *data){
+  return (QL_BADCALL);
+}
+
+RC QL_NodeJoin::UseIndex(int attrNum, int indexNumber, void *data){
+  return (QL_BADCALL);
+}
 

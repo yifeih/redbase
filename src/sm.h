@@ -29,6 +29,8 @@ typedef struct RelCatEntry{
   int attrCount;
   int indexCount;
   int indexCurrNum;
+  int numTuples;
+  bool statsInitialized;
 } RelCatEntry;
 
 // Define catalog entry for an attribute
@@ -40,6 +42,9 @@ typedef struct AttrCatEntry{
   int attrLength;
   int indexNo;
   int attrNum;
+  int numDistinct;
+  float maxValue;
+  float minValue;
 } AttrCatEntry;
 
 // This is used to specify information about an attribute
@@ -51,6 +56,9 @@ typedef struct Attr{
   int indexNo;
   IX_IndexHandle ih;
   bool (*recInsert) (char *, std::string, int);
+  int numDistinct;
+  float maxValue;
+  float minValue;
 } Attr;
 
 //
@@ -122,9 +130,15 @@ private:
 
   // Opens a file and loads it
   RC OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr* attributes, 
-    int attrCount, int recLength);
+    int attrCount, int recLength, int &loadedRecs);
   // Cleans up the Attr array after loading
   RC CleanUpAttr(Attr* attributes, int attrCount);
+  float ConvertStrToFloat(char *string);
+  RC PrintStats(const char *relName);
+  RC CalcStats(const char *relName);
+
+  RC PrintPageStats();
+  RC ResetPageStats();
 
   IX_Manager &ixm;
   RM_Manager &rmm;
@@ -134,6 +148,10 @@ private:
   bool printIndex; // Whether to print the index or not when
                    // help is called on a specific table
 
+  bool useQO;
+
+  bool calcStats;
+  bool printPageStats;
 };
 
 /*
@@ -167,7 +185,8 @@ void SM_PrintError(RC rc);
 #define SM_INDEXEDALREADY       (START_SM_WARN + 5)
 #define SM_NOINDEX              (START_SM_WARN + 6)
 #define SM_BADLOADFILE          (START_SM_WARN + 7)
-#define SM_LASTWARN             SM_BADLOADFILE
+#define SM_BADSET               (START_SM_WARN + 8)
+#define SM_LASTWARN             SM_BADSET
 
 #define SM_INVALIDDB            (START_SM_ERR - 0)
 #define SM_ERROR                (START_SM_ERR - 1) // error

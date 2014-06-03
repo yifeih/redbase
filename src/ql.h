@@ -21,6 +21,13 @@
 #include "sm.h"
 #include "ql_node.h"
 
+
+typedef struct QO_Rel{
+  int relIdx;
+  int indexAttr;
+  int indexCond;
+} QO_Rel;
+
 //
 // QL_Manager: query language (DML)
 //
@@ -31,6 +38,7 @@ class QL_Manager {
     friend class QL_NodeRel;
     friend class QL_NodeSel;
     friend class QL_NodeProj;
+    friend class QO_Manager;
 public:
     QL_Manager (SM_Manager &smm, IX_Manager &ixm, RM_Manager &rmm);
     ~QL_Manager();                       // Destructor
@@ -112,6 +120,13 @@ private:
   RC SetUpFirstNode(QL_Node *&topNode);
   // Sets up the entire query tree and returns the top node in topNode
   RC SetUpNodes(QL_Node *&topNode, int nSelAttrs, const RelAttr selAttrs[]);
+  // Sets up the entire query tree based on the return of the Query optimizer and returns the 
+  // top node in topNode
+  RC SetUpNodesWithQO(QL_Node *&topNode, QO_Rel* qorels, int nSelAttrs, const RelAttr selAttrs[]);
+  RC SetUpFirstNodeWithQO(QL_Node *&topNode, QO_Rel* qorels);
+  RC JoinRelationWithQO(QL_Node *&topNode, QO_Rel* qorels, QL_Node *currNode, int relIndex);
+  RC RecalcCondToRel(QO_Rel* qorels);
+  RC AttrToRelIndex(const RelAttr attr, int& relIndex);
   // Creates a join node and a relation node for the relation specified, and
   // returns the top node in topNode
   RC JoinRelation(QL_Node *&topNode, QL_Node *currNode, int relIndex);
@@ -119,6 +134,7 @@ private:
   // Set up the printing parameters
   RC SetUpPrinter(QL_Node *topNode, DataAttrInfo *attributes);
   RC SetUpPrinterInsert(DataAttrInfo *attributes);
+
 
 
   RM_Manager &rmm;
@@ -168,6 +184,8 @@ void QL_PrintError(RC rc);
 #define QL_CONDNOTMET           (START_QL_WARN + 6) // Condition has not been met
 #define QL_BADUPDATE            (START_QL_WARN + 7) // Bad update statement
 #define QL_EOI                  (START_QL_WARN + 8) // End of iterator
+#define QO_BADCONDITION         (START_QL_WARN + 9)
+#define QO_INVALIDBIT           (START_QL_WARN + 10)
 #define QL_LASTWARN             QL_EOI
 
 #define QL_INVALIDDB            (START_QL_ERR - 0)

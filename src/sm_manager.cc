@@ -13,12 +13,19 @@
 #include "sm.h"
 #include "ix.h"
 #include "rm.h"
+#undef max
+#include <vector>
 #include <string>
 #include <set>
 #include "stddef.h"
+#include "statistics.h"
+#include <cfloat>
+
 
 using namespace std;
 
+extern StatisticsMgr *pStatisticsMgr;
+extern void PF_Statistics();
 /* 
  * These functions are used to parse string forms of int, flaot or
  * string, and move them into the record object during load
@@ -58,6 +65,9 @@ bool recInsert_string(char *location, string value, int length){
  */
 SM_Manager::SM_Manager(IX_Manager &ixm, RM_Manager &rmm) : ixm(ixm), rmm(rmm){
   printIndex = false;
+  useQO = false;
+  calcStats = false;
+  printPageStats = false;
 }
 
 SM_Manager::~SM_Manager()
@@ -221,6 +231,9 @@ RC SM_Manager::InsertRelCat(const char *relName, int attrCount, int recSize){
   rEntry->attrCount = attrCount;                 // # of attributes
   rEntry->indexCount = 0;             // starting # of incides
   rEntry->indexCurrNum = 0;           // starting enumeration of indices
+  // FOR EX component
+  rEntry->numTuples = 0;
+  rEntry->statsInitialized = false;
 
   // Insert into relcat
   RID relRID;
@@ -246,6 +259,10 @@ RC SM_Manager::InsertAttrCat(const char *relName, AttrInfo attr, int offset, int
   aEntry->attrLength = attr.attrLength;   // length
   aEntry->indexNo = NO_INDEXES;           // index number
   aEntry->attrNum = attrNum;              // attribute # in sequence for this relation
+  // For EX component
+  aEntry->numDistinct = 0;
+  aEntry->maxValue = FLT_MIN;
+  aEntry->minValue = FLT_MAX;
 
   // Do insertion
   RID attrRID;
@@ -572,6 +589,9 @@ RC SM_Manager::PrepareAttr(RelCatEntry *rEntry, Attr* attributes){
     attributes[slot].type = aEntry->attrType;
     attributes[slot].length = aEntry->attrLength;
     attributes[slot].indexNo = aEntry->indexNo;
+    attributes[slot].numDistinct = aEntry->numDistinct;
+    attributes[slot].maxValue = aEntry->maxValue;
+    attributes[slot].minValue = aEntry->minValue;
 
     // Open the index if there is one associated with it
     if((aEntry->indexNo != NO_INDEXES)){
@@ -611,6 +631,8 @@ RC SM_Manager::Load(const char *relName,
   RelCatEntry *rEntry;
   if((rc = GetRelEntry(relName, relRec, rEntry))) // retrieve the relation
     return (rc);
+  if(rEntry->statsInitialized == false)
+    calcStats = true;
 
   // Creates a struct containing info about the attributes to 
   // help with loading
@@ -618,7 +640,7 @@ RC SM_Manager::Load(const char *relName,
   for(int i=0; i < rEntry->attrCount; i++){
     memset((void*)&attributes[i], 0, sizeof(attributes[i]));
     IX_IndexHandle ih;
-    attributes[i] = (Attr) {0, 0, 0, 0, ih, recInsert_string};
+    attributes[i] = (Attr) {0, 0, 0, 0, ih, recInsert_string, 0, FLT_MAX, FLT_MIN};
   }
   if((rc = PrepareAttr(rEntry, attributes)))
     return (rc);
@@ -627,10 +649,40 @@ RC SM_Manager::Load(const char *relName,
   RM_FileHandle relFH;
   if((rc = rmm.OpenFile(relName, relFH)))
     return (rc);
-
+  int totalRecs = 0;
   rc = OpenAndLoadFile(relFH, fileName, attributes, rEntry->attrCount,
-    rEntry->tupleLength);
+    rEntry->tupleLength, totalRecs);
   RC rc2;
+
+  // write back attribute and rel stats;
+  if(calcStats){
+    rEntry->numTuples = totalRecs;
+    rEntry->statsInitialized = true;
+    if((rc = relcatFH.UpdateRec(relRec)) || (rc = relcatFH.ForcePages()))
+      return (rc);
+
+    SM_AttrIterator attrIt;
+    if((rc = attrIt.OpenIterator(attrcatFH, rEntry->relName)))
+      return (rc);
+    RM_Record attrRec;
+    AttrCatEntry *aEntry;
+    for(int i = 0; i < rEntry->attrCount; i++){
+      if((rc = attrIt.GetNextAttr(attrRec, aEntry)))
+        return (rc);
+      // For each attribute, place its information in the appropriate slot
+      int slot = aEntry->attrNum;
+      aEntry->minValue = attributes[slot].minValue;
+      aEntry->maxValue = attributes[slot].maxValue;
+      aEntry->numDistinct = attributes[slot].numDistinct;
+      if((rc = attrcatFH.UpdateRec(attrRec)))
+        return (rc);
+    }
+    if((rc = attrIt.CloseIterator()))
+      return (rc);
+    if((rc = attrcatFH.ForcePages()))
+      return (rc);
+    calcStats = false;
+  }
 
   // Destroy and close the pointers in Attr struct
   if((rc2 = CleanUpAttr(attributes, rEntry->attrCount)))
@@ -653,16 +705,10 @@ RC SM_Manager::Load(const char *relName,
  * will be dealt with by truncation, and no error will be returned
  */
 RC SM_Manager::OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr* attributes, int attrCount, 
-  int recLength){
+  int recLength, int &loadedRecs){
   RC rc = 0;
+  loadedRecs = 0;
 
-  /*
-  // Malloc space t ohold the record contents
-  char* record = (char *)malloc(recLength);
-  //memset(record, 0, sizeof(*record));
-  memset((void*)record, 0, sizeof(*record));
-  *record = {'\0'};
-  */
   char *record = (char *)calloc(recLength, 1);
 
   // Open load file
@@ -673,6 +719,7 @@ RC SM_Manager::OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr*
     return (SM_BADLOADFILE);
   }
 
+  vector<set<string> > numDistinct(attrCount);
  
   string line, token;
   string delimiter = ","; // tuples separated by comma
@@ -694,7 +741,6 @@ RC SM_Manager::OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr*
       // If parsing is bad, recInsert should return false;
       if(attributes[i].recInsert(record + attributes[i].offset, token, attributes[i].length) == false){
         rc = SM_BADLOADFILE;
-        printf("bad insert\n");
         free(record);
         f.close();
         return (rc);
@@ -717,8 +763,32 @@ RC SM_Manager::OpenAndLoadFile(RM_FileHandle &relFH, const char *fileName, Attr*
           return (rc);
         }
       }
+      if(calcStats){
+        int offset = attributes[i].offset;
+        string attr(record + offset, record + offset + attributes[i].length);
+        numDistinct[i].insert(attr);
+        float attrValue = 0.0;
+        if(attributes[i].type == STRING)
+          attrValue = ConvertStrToFloat(record + offset);
+        else if(attributes[i].type == INT)
+          attrValue = (float) *((int*) (record + offset));
+        else{
+          attrValue = *((float*) (record + offset));
+        }
+        if(attrValue > attributes[i].maxValue)
+          attributes[i].maxValue = attrValue;
+        if(attrValue < attributes[i].minValue)
+          attributes[i].minValue = attrValue;
+      }
+
+      
     }
+    loadedRecs++;
     //printf("record : %d, %d\n", *(int*)record, *(int*)(record+4));
+  }
+  for(int i=0; i < attrCount; i++){
+    attributes[i].numDistinct = numDistinct[i].size();
+    //printf("num attributes: %d for index %d \n", attributes[i].numDistinct, i);
   }
 
 
@@ -834,17 +904,98 @@ RC SM_Manager::SetUpPrint(RelCatEntry* rEntry, DataAttrInfo *attributes){
  */
 RC SM_Manager::Set(const char *paramName, const char *value)
 {
+    RC rc = 0;
     cout << "Set\n"
          << "   paramName=" << paramName << "\n"
          << "   value    =" << value << "\n";
     if(strncmp(paramName, "printIndex", 10) == 0 && strncmp(value, "true", 4) ==0){
       printIndex = true;
+      return (0);
     }
     else if(strncmp(paramName, "printIndex", 10) == 0 && strncmp(value, "false", 5) ==0){
       printIndex = false;
+      return (0);
+    }
+    if(strncmp(paramName, "printPageStats", 14) == 0  && strncmp(value, "true", 4) == 0){
+      printPageStats = true;
+      return (0);
+    }
+    if(strncmp(paramName, "printPageStats", 14) == 0  && strncmp(value, "true", 4) == 0){
+      printPageStats = false;
+      return (0);
+    }
+    if(strncmp(paramName, "printPageStats", 14) == 0 ){
+      int *piGP = pStatisticsMgr->Get(PF_GETPAGE);
+      int *piPF = pStatisticsMgr->Get(PF_PAGEFOUND);
+      int *piPNF = pStatisticsMgr->Get(PF_PAGENOTFOUND);
+
+      cout << "PF Layer Statistics" << endl;
+      cout << "-------------------" << endl;
+      if(piGP)
+        cout << "Total number of calls to GetPage Routine: " << *piGP << endl;
+      else
+        cout << "Total number of calls to GetPage Routine: None" << endl;
+      if(piPF)
+        cout << "  Number found: " << *piPF << endl;
+      else
+        cout << "  Number found: None" << endl;
+      if(piPNF)
+        cout << "  Number not found: " << *piPNF << endl;
+      else
+        cout << "  Number found: None" << endl;
+      return (0);
+    }
+    if(strncmp(paramName, "resetPageStats", 14) == 0){
+      pStatisticsMgr->Reset();
+      return (0);
     }
 
-    return (0);
+    if(strncmp(paramName, "useQO", 5) == 0 && strncmp(value, "true", 4) ==0){
+      useQO = true;
+      return (0);
+    }
+    if(strncmp(paramName, "useQO", 5) == 0 && strncmp(value, "false", 5) ==0){
+      useQO = false;
+      return (0);
+    }
+    if(strncmp(paramName, "printStats", 10) == 0){
+      PrintStats(value);
+      return (0);
+    }
+    if(strncmp(paramName, "calcStats", 9) == 0){
+      CalcStats(value);
+      return (0);
+    }
+
+
+    return (SM_BADSET);
+}
+
+RC SM_Manager::ResetPageStats(){
+  pStatisticsMgr->Reset();
+  return (0);
+}
+
+RC SM_Manager::PrintPageStats(){
+  int *piGP = pStatisticsMgr->Get(PF_GETPAGE);
+  int *piPF = pStatisticsMgr->Get(PF_PAGEFOUND);
+  int *piPNF = pStatisticsMgr->Get(PF_PAGENOTFOUND);
+
+  cout << "PF Layer Statistics" << endl;
+  cout << "-------------------" << endl;
+  if(piGP)
+    cout << "Total number of calls to GetPage Routine: " << *piGP << endl;
+  else
+    cout << "Total number of calls to GetPage Routine: None" << endl;
+  if(piPF)
+    cout << "  Number found: " << *piPF << endl;
+  else
+    cout << "  Number found: None" << endl;
+  if(piPNF)
+    cout << "  Number not found: " << *piPNF << endl;
+  else
+    cout << "  Number found: None" << endl;
+  return (0);
 }
 
 /*
@@ -1039,5 +1190,138 @@ RC SM_Manager::SetUpAttrCatAttributes(DataAttrInfo *attributes){
   return (0);
 }
 
+float SM_Manager::ConvertStrToFloat(char *string){
+  float value = (float) string[0];
+  return value;
+}
 
+RC SM_Manager::PrintStats(const char *relName){
+  RC rc = 0;
+  cout << "Printing stats for relation " << relName << endl;
+  if(strlen(relName) > MAXNAME) // check for whether this is a valid name
+    return (SM_BADRELNAME);
+
+  // Retrieve the record associated with the relation
+  RM_Record relRec;
+  RelCatEntry *relEntry;
+  if((rc = GetRelEntry(relName, relRec, relEntry)))
+    return (rc);
+
+  cout << "Total Tuples in Relation: " << relEntry->numTuples << endl;
+  cout << endl;
+  
+  AttrCatEntry *aEntry;
+  SM_AttrIterator attrIt;
+  RM_Record attrRec;
+  if((rc = attrIt.OpenIterator(attrcatFH, relEntry->relName)))
+    return (rc);
+
+  for(int i=0; i < relEntry->attrCount; i++){
+    if((rc = attrIt.GetNextAttr(attrRec, aEntry))){
+      return (rc);
+    }
+    //int slot = aEntry->attrNum; // insert its info in the appropriate slot
+
+    cout << "  Attribute: " << aEntry->attrName << endl;
+    cout << "    Num attributes: " << aEntry->numDistinct << endl;
+    cout << "    Max value: " << aEntry->maxValue << endl;
+    cout << "    Min value: " << aEntry->minValue << endl;
+  }
+  if((rc = attrIt.CloseIterator()))
+    return (rc);
+
+  return (0);
+}
+
+RC SM_Manager::CalcStats(const char *relName){
+  RC rc = 0;
+  cout << "Calculating stats for relation " << relName << endl;
+  if(strlen(relName) > MAXNAME) // check for whether this is a valid name
+    return (SM_BADRELNAME);
+
+  // Retrieve the record associated with the relation
+  RM_Record relRec;
+  RelCatEntry *relEntry;
+  if((rc = GetRelEntry(relName, relRec, relEntry)))
+    return (rc);
+
+  // Creates a struct containing info about the attributes to 
+  // help with loading
+  Attr* attributes = (Attr *)malloc(sizeof(Attr)*relEntry->attrCount);
+  for(int i=0; i < relEntry->attrCount; i++){
+    memset((void*)&attributes[i], 0, sizeof(attributes[i]));
+    IX_IndexHandle ih;
+    attributes[i] = (Attr) {0, 0, 0, 0, ih, recInsert_string, 0, FLT_MIN, FLT_MAX};
+  }
+  if((rc = PrepareAttr(relEntry, attributes)))
+    return (rc);
+
+  vector<set<string> > numDistinct(relEntry->attrCount);
+  for(int i=0; i < relEntry->attrCount; i++){
+    attributes[i].numDistinct = 0;
+    attributes[i].maxValue = FLT_MIN;
+    attributes[i].minValue = FLT_MAX;
+  }
+  relEntry->numTuples = 0;
+  relEntry->statsInitialized = true;
+
+  // Open the relation and iterate through it
+  RM_FileScan fs;
+  RM_FileHandle fh;
+  RM_Record rec;
+  if((rc = rmm.OpenFile(relName, fh)) || (rc = fs.OpenScan(fh, INT, 0, 0, NO_OP, NULL)))
+    return (rc);
+  while(RM_EOF != fs.GetNextRec(rec)){
+    char * recData;
+    if((rc = rec.GetData(recData)))
+      return (rc);
+
+    for(int i = 0;  i < relEntry->attrCount; i++){
+      int offset = attributes[i].offset;
+      string attr(recData + offset, recData + offset + attributes[i].length);
+      numDistinct[i].insert(attr);
+      float attrValue = 0.0;
+      if(attributes[i].type == STRING)
+        attrValue = ConvertStrToFloat(recData + offset);
+      else if(attributes[i].type == INT)
+        attrValue = (float) *((int*) (recData + offset));
+      else
+        attrValue = *((float*)(recData + offset));
+      if(attrValue > attributes[i].maxValue)
+        attributes[i].maxValue = attrValue;
+      if(attrValue < attributes[i].minValue)
+        attributes[i].minValue = attrValue;
+    }
+    relEntry->numTuples++;
+
+  }
+
+  // write everything back
+  if((rc = relcatFH.UpdateRec(relRec)) || (rc = relcatFH.ForcePages()))
+    return (rc);
+
+  SM_AttrIterator attrIt;
+  if((rc = attrIt.OpenIterator(attrcatFH, relEntry->relName)))
+    return (rc);
+  RM_Record attrRec;
+  AttrCatEntry *aEntry;
+  for(int i = 0; i < relEntry->attrCount; i++){
+    if((rc = attrIt.GetNextAttr(attrRec, aEntry)))
+      return (rc);
+    // For each attribute, place its information in the appropriate slot
+    int slot = aEntry->attrNum;
+    aEntry->minValue = attributes[slot].minValue;
+    aEntry->maxValue = attributes[slot].maxValue;
+    aEntry->numDistinct = numDistinct[slot].size();
+    if((rc = attrcatFH.UpdateRec(attrRec)))
+      return (rc);
+  }
+  if((rc = attrIt.CloseIterator()))
+    return (rc);
+  if((rc = attrcatFH.ForcePages()))
+    return (rc);
+
+
+  return (0);
+}
 

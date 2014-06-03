@@ -76,6 +76,19 @@ RC QL_NodeRel::OpenIt(){
   return (0);
 }
 
+RC QL_NodeRel::OpenIt(void *data){
+  RC rc = 0;
+  isOpen = true;
+  value = data;
+  if((rc = qlm.ixm.OpenIndex(relName, indexNo, ih)))
+    return (rc);
+  if((rc = is.OpenScan(ih, EQ_OP, value)))
+    return (rc);
+  if((rc = qlm.rmm.OpenFile(relName, fh)))
+    return (rc);
+  return (0);
+}
+
 /*
  * Retrieve the next record data and copy it to the pointer passed in
  */
@@ -223,4 +236,7 @@ RC QL_NodeRel::DeleteNodes(){
   return (0);
 }
 
+bool QL_NodeRel::IsRelNode(){
+  return true;
+}
 

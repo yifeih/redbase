@@ -177,3 +177,15 @@ RC QL_NodeProj::DeleteNodes(){
   listsInitialized = false;
   return (0);
 }
+
+bool QL_NodeProj::IsRelNode(){
+  return false;
+}
+
+RC QL_NodeProj::OpenIt(void *data){
+  return (QL_BADCALL);
+}
+
+RC QL_NodeProj::UseIndex(int attrNum, int indexNumber, void *data){
+  return (QL_BADCALL);
+}

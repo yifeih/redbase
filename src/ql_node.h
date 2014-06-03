@@ -36,6 +36,9 @@ public:
   virtual RC CloseIt() = 0;
   virtual RC DeleteNodes() = 0;
   virtual RC PrintNode(int numTabs) = 0;
+  virtual bool IsRelNode() = 0;
+  virtual RC OpenIt(void *data) = 0;
+  virtual RC UseIndex(int attrNum, int indexNumber, void *data) = 0;
   // Prints a condition
   RC PrintCondition(const Condition condition);
   // Given a index of an attribute, returns its offset and length
@@ -76,6 +79,9 @@ public:
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
   RC PrintNode(int numTabs);
+  bool IsRelNode();
+  RC OpenIt(void *data);
+  RC UseIndex(int attrNum, int indexNumber, void *data);
 
   // Add a projection by specifying the index of the attribute to keep
   RC AddProj(int attrIndex);
@@ -103,6 +109,9 @@ public:
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
   RC PrintNode(int numTabs);
+  bool IsRelNode();
+  RC OpenIt(void *data);
+  RC UseIndex(int attrNum, int indexNumber, void *data);
 
   RC AddCondition(const Condition conditions, int condNum);
   RC SetUpNode(int numConds);
@@ -125,7 +134,11 @@ public:
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
   RC PrintNode(int numTabs);
+  bool IsRelNode();
+  RC OpenIt(void *data);
+  RC UseIndex(int attrNum, int indexNumber, void *data);
 
+  RC UseIndexJoin(int indexAttr, int indexNumber);
   RC AddCondition(const Condition conditions, int condNum);
   RC SetUpNode(int numConds);
 private:
@@ -135,6 +148,9 @@ private:
   char * buffer;
 
   bool gotFirstTuple;
+
+  bool useIndexJoin;
+  int indexAttr;
 };
 
 /* Relation nodes
@@ -150,9 +166,11 @@ public:
   RC GetNextRec(RM_Record &rec);
   RC DeleteNodes();
   RC PrintNode(int numTabs);
+  bool IsRelNode();
 
   RC SetUpNode(int *attrs, int attrlistSize);
   RC UseIndex(int attrNum, int indexNumber, void *data);
+  RC OpenIt(void *data);
 private:
   RC RetrieveNextRec(RM_Record &rec, char *&recData);
   // relation name, and indicator for whether it's been malloced
