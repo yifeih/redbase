@@ -227,7 +227,8 @@ RC QO_Manager::CalculateJoin(int relsInJoin, int newRel, int relSize,
   }
   if(useIdx == true){
     cost = optcost[relSize-1][relsInJoin]->cost + 
-          optcost[relSize-1][relsInJoin]->numTuples * ((float)attrs[indexAttr].numDistinct);
+          optcost[relSize-1][relsInJoin]->numTuples * ((float)qlm.relEntries[newRel].numTuples)/((float)attrs[indexAttr].numDistinct);
+    cout << "cost of index join: " << cost << endl;
   }
   else{
     int newRelBitmap = 0;
@@ -354,9 +355,11 @@ RC QO_Manager::InitializeBaseCases(){
     costEntry->numTuples = totalTuples;
 
     if(useIdx){
-      costEntry->cost = (float) attrs[indexAttr].numDistinct;
+      //costEntry->cost = ((float) attrs[indexAttr].numDistinct);
+      costEntry->cost = 3;
       costEntry->indexAttr = indexAttr;
       costEntry->indexCond = indexCond;
+      //cout << costEntry->cost << endl;
     }
     else{
       costEntry->cost = CalculateNumPages(rels[i].numTuples, rels[i].tupleLength);

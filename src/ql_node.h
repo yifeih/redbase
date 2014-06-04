@@ -81,7 +81,7 @@ public:
   RC PrintNode(int numTabs);
   bool IsRelNode();
   RC OpenIt(void *data);
-  RC UseIndex(int attrNum, int indexNumber, void *data);
+   RC UseIndex(int attrNum, int indexNumber, void *data);
 
   // Add a projection by specifying the index of the attribute to keep
   RC AddProj(int attrIndex);
@@ -111,7 +111,7 @@ public:
   RC PrintNode(int numTabs);
   bool IsRelNode();
   RC OpenIt(void *data);
-  RC UseIndex(int attrNum, int indexNumber, void *data);
+   RC UseIndex(int attrNum, int indexNumber, void *data);
 
   RC AddCondition(const Condition conditions, int condNum);
   RC SetUpNode(int numConds);
@@ -138,7 +138,7 @@ public:
   RC OpenIt(void *data);
   RC UseIndex(int attrNum, int indexNumber, void *data);
 
-  RC UseIndexJoin(int indexAttr, int indexNumber);
+  RC UseIndexJoin(int indexAttr, int subNodeAttr, int indexNumber);
   RC AddCondition(const Condition conditions, int condNum);
   RC SetUpNode(int numConds);
 private:
@@ -167,6 +167,7 @@ public:
   RC DeleteNodes();
   RC PrintNode(int numTabs);
   bool IsRelNode();
+
 
   RC SetUpNode(int *attrs, int attrlistSize);
   RC UseIndex(int attrNum, int indexNumber, void *data);

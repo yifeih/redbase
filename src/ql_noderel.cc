@@ -202,8 +202,13 @@ RC QL_NodeRel::PrintNode(int numTabs){
   }
   cout << "--REL: " << relName;
   if(useIndex){
-    cout << " using index on attribute " << qlm.attrEntries[indexAttr].attrName <<
-      " = ";
+    cout << " using index on attribute " << qlm.attrEntries[indexAttr].attrName;
+    if(value == NULL){
+      cout << endl;
+    }
+    else{
+      cout << " = ";
+    
     if(qlm.attrEntries[indexAttr].attrType == INT){
       print_int(value, 4);
     }
@@ -214,6 +219,7 @@ RC QL_NodeRel::PrintNode(int numTabs){
       print_string(value, strlen((char *)value));
     }
     cout << "\n";
+  }
   }
   else{
     cout << " using filescan." << endl;

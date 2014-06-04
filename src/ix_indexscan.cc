@@ -236,6 +236,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid){
     }
     else if(foundFirstValue == true){
       foundLastValue = true;
+      return (IX_EOF);
     }
 
   }

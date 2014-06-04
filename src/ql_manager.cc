@@ -71,6 +71,9 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 {
   int i;
   RC rc = 0;
+  if(smm.printPageStats){
+    smm.ResetPageStats();
+  }
 
   cout << "Select\n";
 
@@ -151,10 +154,22 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
       *(qorels + i) = (QO_Rel){ 0.0, -1.0, -1.0};
     }
     qom->Compute(qorels);
-    //qom->PrintRels();
+    qom->PrintRels();
     RecalcCondToRel(qorels);
     if((rc = SetUpNodesWithQO(topNode, qorels, nSelAttrs, selAttrs)))
       return (rc);
+    
+    for(int i=0; i < nRels; i++){
+      int index = qorels[i].relIdx;
+      cout << relEntries[index].relName << endl;
+      cout << "  associated conds: ";
+      for(int j=0; j < nConds; j++){
+        if(conditionToRel[j] == index)
+          cout << j;
+        }
+        cout << endl;
+      }
+
     delete qom;
     free(qorels);
   }
@@ -163,6 +178,9 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
     if((rc = SetUpNodes(topNode, nSelAttrs, selAttrs)))
       return (rc);
   }
+
+  
+
   //QL_Node *topNode;
   // Construct the query tree
   //if((rc = SetUpNodes(topNode, nSelAttrs, selAttrs)))
@@ -174,13 +192,19 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
     topNode->PrintNode(0);
   }
 
+  
   // run select
   if((rc = RunSelect(topNode)))
     return (rc);
+    
   
   // clean up query tree
   if((rc = CleanUpNodes(topNode)))
     return (rc);
+
+  if(smm.printPageStats){
+    smm.PrintPageStats();
+  }
     
   free(relEntries);
   free(attrEntries);
@@ -489,12 +513,24 @@ RC QL_Manager::JoinRelationWithQO(QL_Node *&topNode, QO_Rel* qorels, QL_Node *cu
   if(qorels[qoIdx].indexAttr != -1){
     int condIdx = qorels[qoIdx].indexCond;
     int index = qorels[qoIdx].indexAttr;
-    if((attrEntries[index].indexNo != -1) && condptr[condIdx].bRhsIsAttr){ // add only if there is an index on this attribute
+    int index1 = 0;
+    int index2 = 0;
+    GetAttrCatEntryPos(condptr[condIdx].lhsAttr, index1);
+    if(condptr[condIdx].bRhsIsAttr)
+      GetAttrCatEntryPos(condptr[condIdx].rhsAttr, index2);
+    int otherAttr;
+    if(index1 == index)
+      otherAttr = index2;
+    else
+      otherAttr = index1;
+    if((attrEntries[index].indexNo != -1) && !condptr[condIdx].bRhsIsAttr){ // add only if there is an index on this attribute
+      cout << "adding index join on attr " << index; 
       if((rc = relNode->UseIndex(index, attrEntries[index].indexNo, condptr[condIdx].rhsValue.data) ))
         return (rc);
     }
-    else if((attrEntries[index].indexNo != -1) && !condptr[condIdx].bRhsIsAttr){
-      if((rc = joinNode->UseIndexJoin(index, attrEntries[index].indexNo)))
+    else if((attrEntries[index].indexNo != -1) && condptr[condIdx].bRhsIsAttr){
+      cout << "adding, lhs attr: " << otherAttr << ", rhsATtr: " << index << endl;
+      if((rc = joinNode->UseIndexJoin(otherAttr, index, attrEntries[index].indexNo)))
         return (rc);
     }
   }

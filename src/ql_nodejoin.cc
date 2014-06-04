@@ -124,7 +124,8 @@ RC QL_NodeJoin::GetNext(char *data){
   else if(gotFirstTuple == false && useIndexJoin){
     if((rc = node1.GetNext(buffer)))
       return (rc);
-    int offset = qlm.attrEntries[indexAttr].offset;
+    int offset, length;
+    IndexToOffset(indexAttr, offset, length);
     if((rc = node2.OpenIt(buffer + offset)))
       return (rc);
   }
@@ -145,15 +146,24 @@ RC QL_NodeJoin::GetNext(char *data){
       break;
   }
   while(true && useIndexJoin){
-    if((rc = node2.GetNext(buffer + firstNodeSize)) && rc == QL_EOI){
+    if((rc = node2.GetNext(buffer + firstNodeSize)) ){
       // no more in buffer 2, restart it and get the next node in buf1
+      int found = false;
+      while(found == false){
       if((rc = node1.GetNext(buffer)))
         return (rc);
-      int offset = qlm.attrEntries[indexAttr].offset;
+      int offset, length;
+      IndexToOffset(indexAttr, offset, length);
       if((rc = node2.CloseIt()) || (rc = node2.OpenIt(buffer + offset)))
         return (rc);
-      if((rc = node2.GetNext(buffer + firstNodeSize)))
-        return (rc);
+      if((rc = node2.GetNext(buffer + firstNodeSize)) && rc == QL_EOI){
+       //return (rc);
+        found = false;
+      }
+      else
+        found = true;
+
+      }
     }
     RC comp = CheckConditions(buffer);
     if (comp == 0)
@@ -219,10 +229,10 @@ RC QL_NodeJoin::DeleteNodes(){
   return (0);
 }
 
-RC QL_NodeJoin::UseIndexJoin(int indexAttr, int indexNumber){
+RC QL_NodeJoin::UseIndexJoin(int indexAttr, int subNodeAttr, int indexNumber){
   useIndexJoin = true;
   this->indexAttr = indexAttr;
-  node2.UseIndex(indexAttr, indexNumber, NULL);
+  node2.UseIndex(subNodeAttr, indexNumber, NULL);
   return (0);
 }
 

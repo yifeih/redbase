@@ -67,7 +67,7 @@ SM_Manager::SM_Manager(IX_Manager &ixm, RM_Manager &rmm) : ixm(ixm), rmm(rmm){
   printIndex = false;
   useQO = false;
   calcStats = false;
-  printPageStats = false;
+  printPageStats = true;
 }
 
 SM_Manager::~SM_Manager()
@@ -920,7 +920,7 @@ RC SM_Manager::Set(const char *paramName, const char *value)
       printPageStats = true;
       return (0);
     }
-    if(strncmp(paramName, "printPageStats", 14) == 0  && strncmp(value, "true", 4) == 0){
+    if(strncmp(paramName, "printPageStats", 14) == 0  && strncmp(value, "false", 4) == 0){
       printPageStats = false;
       return (0);
     }
