@@ -65,7 +65,7 @@ bool recInsert_string(char *location, string value, int length){
  */
 SM_Manager::SM_Manager(IX_Manager &ixm, RM_Manager &rmm) : ixm(ixm), rmm(rmm){
   printIndex = false;
-  useQO = false;
+  useQO = true;
   calcStats = false;
   printPageStats = true;
 }
@@ -951,10 +951,12 @@ RC SM_Manager::Set(const char *paramName, const char *value)
     }
 
     if(strncmp(paramName, "useQO", 5) == 0 && strncmp(value, "true", 4) ==0){
+      cout << "Using QO" << endl;
       useQO = true;
       return (0);
     }
     if(strncmp(paramName, "useQO", 5) == 0 && strncmp(value, "false", 5) ==0){
+      cout << "disabling QO" << endl;
       useQO = false;
       return (0);
     }

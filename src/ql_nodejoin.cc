@@ -233,6 +233,7 @@ RC QL_NodeJoin::UseIndexJoin(int indexAttr, int subNodeAttr, int indexNumber){
   useIndexJoin = true;
   this->indexAttr = indexAttr;
   node2.UseIndex(subNodeAttr, indexNumber, NULL);
+  node2.useIndexJoin= true;
   return (0);
 }
 

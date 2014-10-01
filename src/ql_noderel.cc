@@ -37,6 +37,7 @@ QL_NodeRel::QL_NodeRel(QL_Manager &qlm, RelCatEntry *rEntry) : QL_Node(qlm){
   indexNo = 0;
   indexAttr = 0;
   void *value = NULL;
+  useIndexJoin = false;
 }
 
 /*
@@ -201,7 +202,7 @@ RC QL_NodeRel::PrintNode(int numTabs){
     cout << "\t";
   }
   cout << "--REL: " << relName;
-  if(useIndex){
+  if(useIndex && ! useIndexJoin){
     cout << " using index on attribute " << qlm.attrEntries[indexAttr].attrName;
     if(value == NULL){
       cout << endl;
@@ -220,6 +221,9 @@ RC QL_NodeRel::PrintNode(int numTabs){
     }
     cout << "\n";
   }
+  }
+  else if(useIndexJoin && useIndex){
+    cout << " using index join on attribute " <<qlm.attrEntries[indexAttr].attrName << endl;
   }
   else{
     cout << " using filescan." << endl;

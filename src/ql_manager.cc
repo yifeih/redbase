@@ -145,20 +145,21 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
   free(qorels);
   */
   QL_Node *topNode;
+  float cost, tupleEst;
   if(smm.useQO){
-    cout << "using QO" << endl;
+    //cout << "using QO" << endl;
     QO_Manager *qom = new QO_Manager(*this, nRels, relEntries, nAttrs, attrEntries,
       nConds, condptr);
     QO_Rel * qorels = (QO_Rel*)(malloc(sizeof(QO_Rel)*nRels));
     for(int i=0; i < nRels; i++){
       *(qorels + i) = (QO_Rel){ 0.0, -1.0, -1.0};
     }
-    qom->Compute(qorels);
+    qom->Compute(qorels, cost, tupleEst);
     qom->PrintRels();
     RecalcCondToRel(qorels);
     if((rc = SetUpNodesWithQO(topNode, qorels, nSelAttrs, selAttrs)))
       return (rc);
-    
+    /*
     for(int i=0; i < nRels; i++){
       int index = qorels[i].relIdx;
       cout << relEntries[index].relName << endl;
@@ -169,6 +170,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
         }
         cout << endl;
       }
+      */
 
     delete qom;
     free(qorels);
@@ -187,22 +189,31 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
   //  return (rc);
 
   // Print the query tree
+  
+
+  
+  // run select
+  if((rc = RunSelect(topNode)))
+    return (rc);
+
+  if(smm.useQO){
+    cout << "estimated cost: " << cost << endl;
+    cout << "estimated # tuples: " << tupleEst << endl;
+  }
+    
+
   if(bQueryPlans){
     cout << "PRINTING QUERY PLAN" <<endl;
     topNode->PrintNode(0);
   }
 
   
-  // run select
-  if((rc = RunSelect(topNode)))
-    return (rc);
-    
-  
   // clean up query tree
   if((rc = CleanUpNodes(topNode)))
     return (rc);
 
   if(smm.printPageStats){
+    cout << endl;
     smm.PrintPageStats();
   }
     
@@ -428,6 +439,29 @@ RC QL_Manager::JoinRelation(QL_Node *&topNode, QL_Node *currNode, int relIndex){
           useIndex = true;
         }
       }
+      else if(condptr[i].op == EQ_OP && condptr[i].bRhsIsAttr && useIndex == false &&
+        !relNode->useIndex ) {
+        int index1, index2;
+        if((rc = GetAttrCatEntryPos(condptr[i].lhsAttr, index1)))
+          return (rc);
+        if((rc = GetAttrCatEntryPos(condptr[i].rhsAttr, index2)))
+          return (rc);
+        int relIdx1, relIdx2;
+        AttrToRelIndex(condptr[i].lhsAttr, relIdx1);
+        AttrToRelIndex(condptr[i].rhsAttr, relIdx2);
+        if(relIdx2 == relIndex && attrEntries[index2].indexNo != -1){
+          if((rc = joinNode->UseIndexJoin(index1, index2, attrEntries[index2].indexNo)))
+            return (rc);
+          added = true;
+          useIndex = true;
+        }
+        else if(relIdx1 == relIndex && attrEntries[index1].indexNo != -1){
+          if((rc = joinNode->UseIndexJoin(index2, index1, attrEntries[index1].indexNo)))
+            return (rc);
+          added = true;
+          useIndex = true;
+        }
+      }
       // Otherwise, add this condition to the join node.
       if(! added){
         if((rc = topNode->AddCondition(condptr[i], i)))
@@ -524,12 +558,12 @@ RC QL_Manager::JoinRelationWithQO(QL_Node *&topNode, QO_Rel* qorels, QL_Node *cu
     else
       otherAttr = index1;
     if((attrEntries[index].indexNo != -1) && !condptr[condIdx].bRhsIsAttr){ // add only if there is an index on this attribute
-      cout << "adding index join on attr " << index; 
+      //cout << "adding index join on attr " << index; 
       if((rc = relNode->UseIndex(index, attrEntries[index].indexNo, condptr[condIdx].rhsValue.data) ))
         return (rc);
     }
     else if((attrEntries[index].indexNo != -1) && condptr[condIdx].bRhsIsAttr){
-      cout << "adding, lhs attr: " << otherAttr << ", rhsATtr: " << index << endl;
+      //cout << "adding, lhs attr: " << otherAttr << ", rhsATtr: " << index << endl;
       if((rc = joinNode->UseIndexJoin(otherAttr, index, attrEntries[index].indexNo)))
         return (rc);
     }
@@ -638,6 +672,7 @@ RC QL_Manager::SetUpFirstNodeWithQO(QL_Node *&topNode, QO_Rel* qorels){
     int index = qorels[0].indexAttr;
     int condIdx = qorels[0].indexCond;
     if((attrEntries[index].indexNo != -1)){ // add only if there is an index on this attribute
+      //cout << "using index" << endl;
       if((rc = relNode->UseIndex(index, attrEntries[index].indexNo, condptr[condIdx].rhsValue.data) ))
         return (rc);
     }

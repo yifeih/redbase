@@ -26,6 +26,8 @@ typedef struct Cond{
  * The abstract class for nodes
  */
 class QL_Node {
+  friend class QL_Manager;
+  friend class QL_NodeJoin;
 public:
   QL_Node(QL_Manager &qlm);
   ~QL_Node();
@@ -64,11 +66,13 @@ protected:
   int condIndex; // the # of conditions currently in this node
   int* condsInNode; // maps the condition from the index in this list, to the 
                     // index in the list in QL
+   bool useIndexJoin;
 };
 
 /* Project nodes
  */
 class QL_NodeProj: public QL_Node {
+  friend class QL_Manager;
 public:
   QL_NodeProj(QL_Manager &qlm, QL_Node &prevNode);
   ~QL_NodeProj();
@@ -99,6 +103,7 @@ private:
 /* Select nodes
  */
 class QL_NodeSel: public QL_Node {
+  friend class QL_Manager;
 public:
   QL_NodeSel(QL_Manager &qlm, QL_Node &prevNode);
   ~QL_NodeSel();
@@ -124,6 +129,7 @@ private:
 /* Join nodes
  */
 class QL_NodeJoin: public QL_Node {
+  friend class QL_Manager;
 public:
   QL_NodeJoin(QL_Manager &qlm, QL_Node &node1, QL_Node &node2);
   ~QL_NodeJoin();
@@ -156,6 +162,8 @@ private:
 /* Relation nodes
  */
 class QL_NodeRel: public QL_Node {
+  friend class QL_Manager;
+  friend class QL_NodeJoin;
 public:
   QL_NodeRel(QL_Manager &qlm, RelCatEntry *rEntry);
   ~QL_NodeRel();
@@ -187,6 +195,7 @@ private:
   IX_IndexHandle ih;
   RM_FileScan fs;
   IX_IndexScan is;
+
 };
 
 
