@@ -1,3 +1,4 @@
+
 RelCat and AttrCat:
 The entries of relcat and attract are specified with the following fields:
 typedef struct RelCatEntry{
@@ -16,19 +17,43 @@ typedef struct AttrCatEntry{
   int indexNo;
   int attrNum;
 } AttrCatEntry;
-In particular, I added indexCurrNum to always point to a valid number that can be used for an index. For example, if I keep adding and dropping indices, indexCount will always equal the current number of indices, but indexCurrNum will equal the total number of indices ever created. This is so I don’t have to iterate through and figure out which index number can be used for a specific attribute. This introduces a design flaw that I can’t create too many indices (over integer overflow), but the likelihood of reaching that number is very low.
-I also added attrNum to attrCat. This is to keep track of the order of the attributes in a certain relation. This helps a lot with loading. When I load, I stream through the loadfile, so the attributes need to be in order. Therefore, attrNum will tell me which slot in the Attr array (the helper struct containing info about attributes) a certain attribute will go into. More on Attr below.
+
+In particular, I added indexCurrNum to always point to a valid number that can
+be used for an index. For example, if I keep adding and dropping indices,
+indexCount will always equal the current number of indices, but indexCurrNum
+will equal the total number of indices ever created. This is so I don't have to
+iterate through and figure out which index number can be used for a specific
+attribute. This introduces a design flaw that I can't create too many indices
+(over integer overflow), but the likelihood of reaching that number is very low.
+I also added attrNum to attrCat. This is to keep track of the order of the
+attributes in a certain relation. This helps a lot with loading. When I load,
+I stream through the loadfile, so the attributes need to be in order. Therefore,
+attrNum will tell me which slot in the Attr array (the helper struct containing
+info about attributes) a certain attribute will go into. More on Attr below.
 
 Iterating through the attributes: SM_AttrIterator
-To facilitate iterating through the attrcat file for attributes related to a certain relation, I created the SM_AttrIterator class, which basically wraps around a RM_FileScan to scan through attrcat. I thought this was a cleaner way to do it since iterating through the attrcat file happens so often.
+To facilitate iterating through the attrcat file for attributes related to a
+certain relation, I created the SM_AttrIterator class, which basically wraps
+around a RM_FileScan to scan through attrcat. I thought this was a cleaner way
+to do it since iterating through the attrcat file happens so often.
 
 On Loading:
-For loading, I create a temporary struct Attr* that contains information about each attribute in the appropriate order. It contains info about its type, length, offset, index, holds an indexHandle reference associated with its index (if it has one), and a pointer to the appropriate parser for parsing ints/floats/strings.
+For loading, I create a temporary struct Attr* that contains information about
+each attribute in the appropriate order. It contains info about its type,
+length, offset, index, holds an indexHandle reference associated with its index
+(if it has one), and a pointer to the appropriate parser for parsing
+ints/floats/strings.
 
-The load file MUST have the right number of attributes or more in order for the load to pass. If there are more attributes in the file than specified, then it will only load what it can fit into the table, truncating the rest off. 
-Null values are only allowed for string. If there is nothing specified for a string (i.e. two commas after each other), then it will just enter ‘\0’ for the value. An error will be returned if a null value (or an invalid value) is specified for int or float (i.e. it doesn’t parse over to a valid int or float).
+The load file MUST have the right number of attributes or more in order for the
+load to pass. If there are more attributes in the file than specified, then it
+will only load what it can fit into the table, truncating the rest off. 
+Null values are only allowed for string. If there is nothing specified for a
+string (i.e. two commas after each other), then it will just enter "0" for the
+value. An error will be returned if a null value (or an invalid value) is
+specified for int or float (i.e. it doesn't parse over to a valid int or float).
 
-Testing: Sophia and I wrote many tests, which we have added to the group repository. We tested for:
+Testing: Sophia and I wrote many tests, which we have added to the group
+repository. We tested for:
 Create Table
 - Inserting duplicate attributes for same relation
 - Inserting 2 attributes of same name for 2 different relations - should pass?
@@ -62,11 +87,14 @@ Load
 - load file with too-long character strings 
 - load file with no value for an int or float attribute (should fail)
 - load file with no value for string attribute (should pass)
-- load file with more tuples than there should be (should pass? maybe just truncate?)
-- load file with less tuples than there should be (should pass if missing tuples are strings, fail if ints/floats)
+- load file with more tuples than there should be (should pass? maybe just
+truncate?)
+- load file with less tuples than there should be (should pass if missing
+tuples are strings, fail if ints/floats)
 
 
 Known bugs:
 Not yet
 
-Help: I received some help from Jaeho about specifications for the output of the print functions. I worked with Sophia on writing 
+Help: I received some help from Jaeho about specifications for the output of
+the print functions. I worked with Sophia on writing 

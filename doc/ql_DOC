@@ -3,34 +3,67 @@ The QL component is divided into 3 components:
 2.  Node generation
 3.  Running
 
-In the parsing stage, we make sure that the query entered is a valid query. During this stage, it creates a list of relation entries and a list of attribute entries. The relation entries are put in an array in the order that they are entered. The attribute entries are also in the order that they appear in the relation, and if i<j, then attributes for relation i would appear before those in relation j. For example, if we have tables R(A,B,C) and S(D,E,F), the relation entries will be:
+In the parsing stage, we make sure that the query entered is a valid query.
+During this stage, it creates a list of relation entries and a list of attribute
+entries. The relation entries are put in an array in the order that they are
+entered. The attribute entries are also in the order that they appear in the
+relation, and if i<j, then attributes for relation i would appear before those
+in relation j. For example, if we have tables R(A,B,C) and S(D,E,F), the
+relation entries will be:
 [R, S]
 and the attribute list would be:
 [A,B,C,D,E,F]
 These structures make query processing easier later on.
 
-For parsing, the code uses a few data structures to keep track of certain mappings for more efficient computation.
+For parsing, the code uses a few data structures to keep track of certain
+mappings for more efficient computation.
 
-A mapping from the relation name to the index # it appears in in the relation list
+A mapping from the relation name to the index # it appears in in the relation
+list
 A mapping from relation name to the index of the first attribute in the relation
 A mapping from the attribute name to the set of relations that contain them
-A mapping from the index of the condition in the condition list to the relation index with the largest index that the condition contains
+A mapping from the index of the condition in the condition list to the relation
+index with the largest index that the condition contains
 
-The first 3 mappings facilitate with checking whether this is a valid query. It first checks whether the relations are unique. Attributes are valid if either 1) a relation in the query has been specified or 2) it’s an attribute in only one of the relations. A condition is valid if the attribute types of the comparison are compatible. If two strings that are of different lengths are compared, then the shorter one is null-padded before comparison. 
+The first 3 mappings facilitate with checking whether this is a valid query. It
+first checks whether the relations are unique. Attributes are valid if either 1)
+a relation in the query has been specified or 2) it's an attribute in only one
+of the relations. A condition is valid if the attribute types of the comparison
+are compatible. If two strings that are of different lengths are compared, then
+the shorter one is null-padded before comparison. 
 
-With string setting and inserts, we allow it only if the value or attribute that the old will be set to is of shorter length. It does this by checking the length of the value, or the length of the RHS attribute.
+With string setting and inserts, we allow it only if the value or attribute
+that the old will be set to is of shorter length. It does this by checking the
+length of the value, or the length of the RHS attribute.
 
-During parsing, each condition is mapped to the index of the relation that it contains. If there are two attributes in the condition, it takes the larger index. This is helpful for node generation. During node/query tree generation, it iterates through all the relations in order. For each relation, it create a relation node, and joins it with the previous “topNode” with a join node. It then resets the “topNode” to the new join node, and keeps doing this until all relations are put in the query tree. At each relation, it will add conditions to the join node. However, if it’s a equality condition on a value, then the relation node is set to use indices, instead of putting the selection at the join node. Therefore, we only use indices if there is a R.A=v selection at a relation.
+During parsing, each condition is mapped to the index of the relation that it
+contains. If there are two attributes in the condition, it takes the larger
+index. This is helpful for node generation. During node/query tree generation,
+it iterates through all the relations in order. For each relation, it create a
+relation node, and joins it with the previous "topNode" with a join node. It
+then resets the "topNode" to the new join node, and keeps doing this until all
+relations are put in the query tree. At each relation, it will add conditions
+to the join node. However, if it's a equality condition on a value, then the
+relation node is set to use indices, instead of putting the selection at the
+join node. Therefore, we only use indices if there is a R.A=v selection at a
+relation.
 
-After joining the relation, we add a project node and add the indices of the attributes to project.
+After joining the relation, we add a project node and add the indices of the
+attributes to project.
 
-After this, it will execute the nodes by opening an iterator, and retrieving records. The top node will open/retrieve/close iterators for its previous nodes until it retrieves a record that satisfies all conditions.
+After this, it will execute the nodes by opening an iterator, and retrieving
+records. The top node will open/retrieve/close iterators for its previous nodes
+until it retrieves a record that satisfies all conditions.
 
 ABOUT THE CODE:
-I keep an abstract class QL_Node. Its children are specific nodes: select, relation, join, and project.
+I keep an abstract class QL_Node. Its children are specific nodes: select,
+relation, join, and project.
 
 Testing:
-Sophia and I wrote a few tests to test the basic functionality of our QL component. We put them in the /usr/class/cs346/redbase/testers/ql_tests
+Sophia and I wrote a few tests to test the basic functionality of our QL
+component. We put them in the /usr/class/cs346/redbase/testers/ql_tests
 
 Help:
-I received help for the iterator idea from Jaeho. I also discussed with Sophia some of the best ways to do the query parsing (checking whether a query was valid or not) with maps. 
+I received help for the iterator idea from Jaeho. I also discussed with Sophia
+some of the best ways to do the query parsing (checking whether a query was
+valid or not) with maps. 
