@@ -3,13 +3,13 @@ A mini relational databased for the CS346 Stanford class. See the website for mo
 To compile, type "make".
 
 To create a database:
-./dbcreate <dbname>
+./dbcreate "dbname"
 
 To use the database created:
-./redbase <dbname>
+./redbase "dbname"
 
 To destroy the database:
-./dedestroy <dbname>
+./dedestroy "dbname"
 
 My implementation documentation for each layer can be found in the "doc" folder.
 
